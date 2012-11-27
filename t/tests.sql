@@ -10,10 +10,12 @@
 
 -- SET client_min_messages TO WARNING;
 
+/* manual cleanup */
 DROP ROLE IF EXISTS "acc1";
 DROP ROLE IF EXISTS "acc2";
 DROP ROLE IF EXISTS "user1";
 DROP ROLE IF EXISTS "user2";
+DROP ROLE IF EXISTS "user3";
 DROP ROLE IF EXISTS "userN";
 
 TRUNCATE public.roles CASCADE;
@@ -27,6 +29,7 @@ SELECT * FROM create_account('acc2');
 
 SELECT '=====Create users user1(acc1), user2(acc2) and userN(acc1, acc2)=====';
 SELECT * FROM create_user('user1', 'password1', '{acc1}');
+SELECT * FROM create_user('user3', 'password1', '{acc1}');
 SELECT * FROM create_user('user2', 'password2', '{acc2}');
 SELECT * FROM create_user('userN', 'passwordN', '{acc1, acc2}');
 
@@ -44,12 +47,7 @@ SELECT * FROM public.roles;
 -- cleanup
 SELECT '====Cleanup====';
 
-SET ROLE postgres;
+SELECT drop_account('acc1');
+SELECT drop_account('acc2');
 
-DROP ROLE IF EXISTS "acc1";
-DROP ROLE IF EXISTS "acc2";
-DROP ROLE IF EXISTS "user1";
-DROP ROLE IF EXISTS "user2";
-DROP ROLE IF EXISTS "userN";
 
-TRUNCATE public.roles CASCADE;
