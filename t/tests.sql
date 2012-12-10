@@ -31,7 +31,7 @@ DROP ROLE IF EXISTS pgfactory;
 TRUNCATE public.roles CASCADE;
 
 SELECT '====Install pgfactory and wh_nagios====';
-CREATE EXTENSION "pgfactory-core";
+CREATE EXTENSION pgfactory_core;
 CREATE EXTENSION hstore;
 CREATE EXTENSION wh_nagios;
 
@@ -92,4 +92,4 @@ SELECT drop_account('acc2');
 SET ROLE :admincluster;
 
 DROP EXTENSION wh_nagios;
-DROP EXTENSION "pgfactory-core";
+DROP EXTENSION pgfactory_core;
