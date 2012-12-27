@@ -127,7 +127,7 @@ sub log_message
 	if ($syslog)
 	{
 		setlogsock('unix');
-		openlog('yang','','user');
+		openlog('nagios_dispatcher','','user');
 		syslog('info',$message);
 		closelog();
 	}
