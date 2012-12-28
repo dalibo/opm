@@ -4,8 +4,10 @@
 
 Authors :
   marc.cousin@dalibo.com
+  jgdr@dalibo.com
 
 Version 1.0 : 2012-11-19
+Version 1.1 : 2012-12-28
 
 Name : nagios_dispatcher.pl
 
