@@ -407,6 +407,9 @@ sub watch_directory {
     my ( $dirname, $frequency, $hostname_filter, $service_filter,
         $label_filter )
         = @_;
+    my $num_files = 0;
+
+    log_message "LOG: start working.";
 
     while (1) {
         my $dir;
@@ -445,6 +448,8 @@ sub watch_directory {
             unlink("$dirname/$entry")
                 or die "FATAL: Can't remove '$dirname/$entry': $!\n";
 
+            $num_files++;
+
             $debug and log_message "DEBUG: File '$dirname/$entry' processed.";
 
             $dbh->commit();
@@ -452,8 +457,13 @@ sub watch_directory {
 
         # database handle's garbage collector
         $dbh and $dbh->disconnect();
-
         undef $dbh;
+
+        # log our activity every 5 minutes
+        my ($sec, $min) = (localtime())[0,1];
+        log_message sprintf("LOG: Processed %u nagios performance files so far.", $num_files)
+            if ($sec + ($min%5)*60) < $frequency%60;
+
         sleep $frequency;
     }
 }
