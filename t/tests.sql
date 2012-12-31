@@ -1,95 +1,175 @@
--- to execute as postgres superuser
-\timing off
-\t on
+\unset ECHO
+\i t/setup.sql
 
-\set admincluster postgres
+SELECT plan( 32 );
 
-\set dbfactory pgfactory
-\set ownerfactory pgfactory
-\set adminfactory pgf_admins
-\set userfactory user1
+SELECT diag('====Install pgfactory-core ====');
 
-DROP DATABASE IF EXISTS :dbfactory;
-CREATE DATABASE :dbfactory;
-
-\c :dbfactory
-
--- SET client_min_messages TO WARNING;
-
-/* manual cleanup */
-DROP ROLE IF EXISTS "acc1";
-DROP ROLE IF EXISTS "acc2";
-DROP ROLE IF EXISTS "user1";
-DROP ROLE IF EXISTS "user2";
-DROP ROLE IF EXISTS "user3";
-DROP ROLE IF EXISTS "userN";
-DROP ROLE IF EXISTS pgf_roles;
-DROP ROLE IF EXISTS pgf_admins;
-DROP ROLE IF EXISTS pgfactory;
-
-
-TRUNCATE public.roles CASCADE;
-
-SELECT '====Install pgfactory and wh_nagios====';
 CREATE EXTENSION pgfactory_core;
+
+SELECT has_schema('public', 'Schema wh_nagios should not exists anymore.' );
+SELECT has_table('public', 'roles', 'Schema public should contains table ''roles'' of pgfactory-core.' );
+SELECT has_table('public', 'services', 'Schema public should contains table ''services'' of pgfactory-core.' );
+
+
+SELECT diag('====Install wh_nagios ====');
+
 CREATE EXTENSION hstore;
 CREATE EXTENSION wh_nagios;
 
-SELECT '====Create some fake services====';
-INSERT INTO services (hostname, warehouse, service) VALUES ('barbapapa1', 'wh_nagios', 'Service1');
-INSERT INTO services (hostname, warehouse, service) VALUES ('barbapapa2', 'wh_nagios', 'Service1');
-INSERT INTO services (hostname, warehouse, service) VALUES ('barbapapa2', 'wh_nagios', 'Service2');
+SELECT has_schema('wh_nagios', 'Le schéma wh_nagios doit exister.' );
 
--- normal tests
-SET ROLE :adminfactory;
+SELECT diag('==== Create somes accounts ====');
 
-SELECT '=====Create account acc1 & acc2=====';
-SELECT * FROM create_account('acc1');
-SELECT * FROM create_account('acc2');
+-- Creates account "acc1"
+SELECT set_eq(
+    $$SELECT * FROM create_account('acc1')$$,
+    $$VALUES (1, 'acc1')$$,
+    'Account ''acc1'' should be created.'
+);
 
-SELECT '=====Create users user1(acc1), user2(acc2) and userN(acc1, acc2)=====';
-SELECT * FROM create_user('user1', 'password1', '{acc1}');
-SELECT * FROM create_user('user3', 'password1', '{acc1}');
-SELECT * FROM create_user('user2', 'password2', '{acc2}');
-SELECT * FROM create_user('userN', 'passwordN', '{acc1, acc2}');
+-- Role "acc1" exists ?
+SELECT has_role('acc1', 'Role ''acc1'' should exist.');
 
-SELECT '====Grant user1 to access service id=1====';
-SELECT * FROM grant_service(1, 'user1');
+-- Does "acc1" exists in table roles ?
+SELECT set_eq(
+    $$SELECT id, rolname FROM public.roles WHERE id=1$$,
+    $$VALUES (1, 'acc1')$$,
+    'Account ''acc1'' should exists in public.roles.'
+);
 
-SELECT '====Roles réels====';
-\du
+-- Is "acc1" member of pgf_roles ?
+SELECT is_member_of('pgf_roles', 'acc1', 'Account ''acc1'' should be a member of ''pgf_roles''.');
 
-SELECT '====From API====';
-SELECT * FROM public.list_users();
+-- Is "acc1" a pgfactory role ?
+SELECT set_eq(
+    $$SELECT id, rolname, rolcanlogin FROM is_pgf_role('acc1')$$,
+    $$VALUES (1, 'acc1'::name, false)$$,
+    'Account ''acc1'' should be a pgfactory role.'
+);
 
--- security tests
+-- Is "acc1" an account ?
+SELECT set_eq(
+    $$SELECT is_account('acc1')$$,
+    $$VALUES (true)$$,
+    'Account ''acc1'' should be an account.'
+);
 
-SELECT '====Table public.roles: permission denied====';
-SELECT * FROM public.roles;
+-- Is "acc1" a user ?
+SELECT set_eq(
+    $$SELECT is_user('acc1')$$,
+    $$VALUES (false)$$,
+    'Account ''acc1'' should not be a user.'
+);
 
-SELECT '====Table public.services: permission denied====';
-SELECT * FROM public.services;
+-- Creates account "acc2"
+SELECT set_eq(
+    $$SELECT * FROM create_account('acc2')$$,
+    $$VALUES (2, 'acc2')$$,
+    'Account ''acc2'' should be created.'
+);
 
-SELECT '====What admin sees====';
-SELECT * FROM public.list_services();
+-- Does "acc1" exists in table roles ?
+SELECT has_role('acc2', 'Role ''acc2'' should exist.');
 
-\c :dbfactory :userfactory;
+-- Role "acc2" exists ?
+SELECT set_eq(
+    $$SELECT id, rolname FROM public.roles WHERE id=2$$,
+    $$VALUES (2, 'acc2')$$,
+    'Account ''acc2'' should exists in public.roles.'
+);
 
-SELECT '====What user1 sees====';
-SELECT * FROM public.list_services();
+-- Is "acc2" member of pgf_roles ?
+SELECT is_member_of('pgf_roles', 'acc2', 'Account ''acc2'' should be a member of ''pgf_roles''.');
 
-SELECT * FROM wh_nagios.hub;
+-- Is "acc2" a pgfactory role ?
+SELECT set_eq(
+    $$SELECT id, rolname, rolcanlogin FROM is_pgf_role('acc2')$$,
+    $$VALUES (2, 'acc2'::name, false)$$,
+    'Account ''acc2'' should be a pgfactory role.'
+);
 
---SET ROLE :adminfactory;
-\c :dbfactory :admincluster;
+-- Is "acc2" an account ?
+SELECT set_eq(
+    $$SELECT is_account('acc2')$$,
+    $$VALUES (true)$$,
+    'Account ''acc2'' should be an account.'
+);
 
--- cleanup
-SELECT '====Cleanup====';
+-- Is "acc2" a user ?
+SELECT set_eq(
+    $$SELECT is_user('acc2')$$,
+    $$VALUES ('f'::bool)$$,
+    'Account ''acc2'' should not be a user.'
+);
 
-SELECT drop_account('acc1');
-SELECT drop_account('acc2');
+SELECT diag('==== Drop accounts ====');
 
-SET ROLE :admincluster;
+-- Drop "acc1"
+SELECT set_eq(
+    $$SELECT * FROM drop_account('acc1')$$,
+    $$VALUES ('acc1')$$,
+    'Account ''acc1'' should be deleted.'
+);
+
+-- "acc1" role should not exists anymore
+SELECT hasnt_role('acc1', 'Role ''acc1'' should not exist.');
+
+-- test role existance-related functions on "acc1"
+-- They all should returns NULL
+SELECT set_eq(
+    $$SELECT id FROM is_pgf_role('acc1')$$,
+    $$VALUES (NULL::bigint)$$,
+    'Account ''acc1'' should not be a pgfactory role.'
+);
+
+SELECT set_eq(
+    $$SELECT is_account('acc1')$$,
+    $$VALUES (NULL::boolean)$$,
+    'is_account should not return the ''acc1'' account.'
+);
+
+SELECT set_eq(
+    $$SELECT is_user('acc1')$$,
+    $$VALUES (NULL::boolean)$$,
+    'is_user should not return the ''acc1'' account.'
+);
+
+-- Drop account "acc2"
+SELECT set_eq(
+    $$SELECT * FROM drop_account('acc2')$$,
+    $$VALUES ('acc2')$$,
+    'Account ''acc2'' should be deleted.'
+);
+
+SELECT hasnt_role('acc2', 'Role ''acc2'' should not exist.');
+
+SELECT diag('==== Drop wh_nagios ====');
 
 DROP EXTENSION wh_nagios;
+SELECT hasnt_table('wh_nagios', 'hub', 'Table ''hub'' of schema wh_nagios should not exists anymore.' );
+
+DROP SCHEMA wh_nagios;
+SELECT hasnt_schema('wh_nagios', 'Schema wh_nagios should not exists anymore.' );
+
+SELECT diag('==== Drop pgfactory_core ====');
+
 DROP EXTENSION pgfactory_core;
+
+SELECT hasnt_table('public', 'roles', 'Schema public should not contains table ''roles'' of pgfactory-core.' );
+SELECT hasnt_table('public', 'services', 'Schema public should not contains table ''services'' of pgfactory-core.' );
+
+DROP EXTENSION hstore;
+
+DROP ROLE pgfactory;
+DROP ROLE pgf_admins;
+DROP ROLE pgf_roles;
+
+SELECT hasnt_role('pgfactory', 'Role ''pgfactory'' should not exists anymore.');
+SELECT hasnt_role('pgf_admins', 'Role ''pgf_admins'' should not exists anymore.');
+SELECT hasnt_role('pgf_roles', 'Role ''pgf_roles'' should not exists anymore.');
+
+-- Finish the tests and clean up.
+SELECT * FROM finish();
+
+ROLLBACK;
