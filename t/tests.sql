@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan( 32 );
+SELECT plan( 36 );
 
 SELECT diag('====Install pgfactory-core ====');
 
@@ -103,6 +103,41 @@ SELECT set_eq(
     'Account ''acc2'' should not be a user.'
 );
 
+
+
+SELECT diag('==== Create somes users ====');
+
+-- Creates user "u1"
+SELECT set_eq(
+    $$SELECT * FROM create_user('u1', 'pass1', '{acc1}')$$,
+    $$VALUES (3, 'u1')$$,
+    'Account ''u1'' should be created.'
+);
+
+-- Creates user "u2"
+SELECT set_eq(
+    $$SELECT * FROM create_user('u2', 'pass2', '{acc2}')$$,
+    $$VALUES (4, 'u2')$$,
+    'Account ''u2'' should be created.'
+);
+
+-- Creates user "u3"
+SELECT set_eq(
+    $$SELECT * FROM create_user('u3', 'pass3', '{acc1,acc2}')$$,
+    $$VALUES (5, 'u3')$$,
+    'Account ''u3'' should be created.'
+);
+
+
+SELECT diag('==== Drop user ====');
+
+-- Drop user "u1"
+SELECT set_eq(
+    $$SELECT * FROM drop_user('u1')$$,
+    $$VALUES (3, 'u1')$$,
+    'Account ''u1'' should be deleted.'
+);
+
 SELECT diag('==== Drop accounts ====');
 
 -- Drop "acc1"
@@ -138,7 +173,7 @@ SELECT set_eq(
 -- Drop account "acc2"
 SELECT set_eq(
     $$SELECT * FROM drop_account('acc2')$$,
-    $$VALUES ('acc2')$$,
+    $$VALUES ('acc2'), ('u2'), ('u3')$$,
     'Account ''acc2'' should be deleted.'
 );
 
