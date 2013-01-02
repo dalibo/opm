@@ -3616,14 +3616,16 @@ BEGIN
     SELECT ARRAY(
         SELECT quote_ident($2[i])
           FROM generate_series(1, array_upper($2, 1)) s(i)
-          LEFT JOIN pg_catalog.pg_user ON usename = $2[i]
-         WHERE usesysid IS NULL
-            OR NOT usesysid = ANY ( _grolist($1) )
+          LEFT JOIN pg_catalog.pg_roles ON rolname = $2[i]
+         WHERE oid IS NULL
+            OR NOT oid = ANY ( _grolist($1) )
          ORDER BY s.i
     ) INTO missing;
+
     IF missing[1] IS NULL THEN
         RETURN ok( true, $3 );
     END IF;
+
     RETURN ok( false, $3 ) || E'\n' || diag(
         '    Users missing from the ' || quote_ident($1) || E' group:\n        ' ||
         array_to_string( missing, E'\n        ')
@@ -7400,3 +7402,56 @@ RETURNS TEXT AS $$
     );
 $$ LANGUAGE sql;
 
+
+CREATE OR REPLACE FUNCTION _extension_properties(NAME,
+    OUT extname NAME, OUT rolname NAME, OUT nspname NAME
+)
+AS $$
+    SELECT e.extname, r.rolname, n.nspname
+    FROM pg_extension AS e
+        JOIN pg_namespace AS n ON (e.extnamespace=n.oid)
+        JOIN pg_roles AS r ON (e.extowner=r.oid)
+    WHERE extname = $1;
+$$ LANGUAGE SQL;
+
+-- has_extension( extension )
+CREATE OR REPLACE FUNCTION has_extension( NAME )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).extname IS NOT NULL, 'Extension ' || quote_ident($1) || ' should exists');
+$$ LANGUAGE SQL;
+
+-- has_extension( extension, description )
+CREATE OR REPLACE FUNCTION has_extension( NAME, TEXT )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).extname IS NOT NULL, $2);
+$$ LANGUAGE SQL;
+
+-- has_extension( extension )
+CREATE OR REPLACE FUNCTION has_extension( NAME )
+RETURNS TEXT AS $$
+    SELECT has_extension( $1, 'Extension ' || quote_ident($1) || ' should exists');
+$$ LANGUAGE SQL;
+
+-- has_extension( extension, description )
+CREATE OR REPLACE FUNCTION hasnt_extension( NAME, TEXT )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).extname IS NULL, $2);
+$$ LANGUAGE SQL;
+
+-- has_extension( extension )
+CREATE OR REPLACE FUNCTION hasnt_extension( NAME )
+RETURNS TEXT AS $$
+    SELECT hasnt_extension( $1, 'Extension ' || quote_ident($1) || ' should exists');
+$$ LANGUAGE SQL;
+
+-- extension_ower_is( extension, owner, description)
+CREATE OR REPLACE FUNCTION extension_owner_is( NAME, NAME, TEXT )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).rolname = $2, $3);
+$$ LANGUAGE SQL;
+
+-- extension_ower_is( extension, owner)
+CREATE OR REPLACE FUNCTION extension_owner_is( NAME, NAME, TEXT )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).rolname = $2, 'Owner of extension ' || quote_ident($1) || ' should be ' || quote_ident($2) );
+$$ LANGUAGE SQL;
