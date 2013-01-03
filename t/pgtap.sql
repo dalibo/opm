@@ -7455,3 +7455,194 @@ CREATE OR REPLACE FUNCTION extension_owner_is( NAME, NAME, TEXT )
 RETURNS TEXT AS $$
     SELECT ok( (_extension_properties($1)).rolname = $2, 'Owner of extension ' || quote_ident($1) || ' should be ' || quote_ident($2) );
 $$ LANGUAGE SQL;
+
+-- extension_schema_is( extension, owner)
+CREATE OR REPLACE FUNCTION extension_schema_is( NAME, NAME, TEXT )
+RETURNS TEXT AS $$
+    SELECT ok( (_extension_properties($1)).nspname = $2, 'Schema of extension ' || quote_ident($1) || ' should be ' || quote_ident($2) );
+$$ LANGUAGE SQL;
+
+-- _schema_privileges(schema)
+CREATE OR REPLACE FUNCTION _schema_privileges(NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT grantor.rolname, grantee.rolname, (sub.acl).privilege_type, (sub.acl).is_grantable
+    FROM (
+        SELECT aclexplode(nspacl) AS acl
+        FROM pg_namespace AS n
+        WHERE n.nspname=$1
+    ) AS sub
+        JOIN pg_roles AS grantor ON ((sub.acl).grantor=grantor.oid)
+        JOIN pg_roles AS grantee ON ((sub.acl).grantee=grantee.oid);
+$$ LANGUAGE SQL;
+
+-- _schema_privileges(schema, grantee)
+CREATE OR REPLACE FUNCTION _schema_privileges(NAME, NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT *
+    FROM _schema_privileges($1)
+    WHERE grantee = $2;
+$$ LANGUAGE SQL;
+
+-- schema_privs_are(schema, role, [priv], msg)
+CREATE OR REPLACE FUNCTION schema_privs_are(NAME, NAME, TEXT[], TEXT)
+RETURNS TEXT
+AS $$
+DECLARE
+    want text;
+    have text;
+BEGIN
+
+    SELECT INTO want coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($3::text[]) AS a(priv);
+
+    SELECT INTO have coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($3::text[]) AS a(priv)
+        JOIN _schema_privileges($1, $2) as s ON (a.priv = s.privilege);
+
+    IF have = want THEN
+        RETURN ok(true, $4);
+    END IF;
+
+    RETURN ok(false, $4) || E'\n' || diag(
+        '        have: ' || quote_ident(have) || E'\n' ||
+        '        want: ' || quote_ident(want)
+    );
+END
+$$ LANGUAGE plpgsql;
+
+-- schema_privs_are(schema, role, [privs])
+CREATE OR REPLACE FUNCTION schema_privs_are(NAME, NAME, TEXT[])
+RETURNS TEXT
+AS $$
+    SELECT schema_privs_are($1, $2, $3, 'Role ' || quote_ident($2)
+        || ' should only have privs ' || array_to_string($3, ',')
+        || ' on schema ' || quote_ident($1)
+    );
+$$ LANGUAGE SQL;
+
+
+-- _relation_privileges(schema, name, kind)
+CREATE OR REPLACE FUNCTION _relation_privileges(NAME, NAME, CHAR)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT grantor.rolname, grantee.rolname, (sub.acl).privilege_type, (sub.acl).is_grantable
+    FROM (
+        SELECT aclexplode(relacl) AS acl
+        FROM pg_class AS c
+            JOIN pg_namespace AS n ON (n.oid=c.relnamespace)
+        WHERE n.nspname=$1
+            AND c.relname=$2
+            AND c.relkind=$3
+    ) AS sub
+        JOIN pg_roles AS grantor ON ((sub.acl).grantor=grantor.oid)
+        JOIN pg_roles AS grantee ON ((sub.acl).grantee=grantee.oid);
+$$ LANGUAGE SQL;
+
+-- _table_privileges(schema, table)
+CREATE OR REPLACE FUNCTION _table_privileges(NAME, NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT * FROM _relation_privileges($1, $2, 'r');
+$$ LANGUAGE SQL;
+
+-- _table_privileges(schema, table, grantee)
+CREATE OR REPLACE FUNCTION _table_privileges(NAME, NAME, NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT *
+    FROM _table_privileges($1, $2)
+    WHERE grantee = $3;
+$$ LANGUAGE SQL;
+
+-- table_privs_are(schema, table, role, [priv], msg)
+CREATE OR REPLACE FUNCTION table_privs_are(NAME, NAME, NAME, TEXT[], TEXT)
+RETURNS TEXT
+AS $$
+DECLARE
+    want text;
+    have text;
+BEGIN
+
+    SELECT INTO want coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($4::text[]) AS a(priv);
+
+    SELECT INTO have coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($4::text[]) AS a(priv)
+        JOIN _table_privileges($1, $2, $3) as p ON (a.priv = p.privilege);
+
+    IF have = want THEN
+        RETURN ok(true, $5);
+    END IF;
+
+    RETURN ok(false, $5) || E'\n' || diag(
+        '        have: ' || quote_ident(have) || E'\n' || 
+        '        want: ' || quote_ident(want)
+    );
+END
+$$ LANGUAGE plpgsql;
+
+-- table_privs_are(schema, table, role, [priv])
+CREATE OR REPLACE FUNCTION table_privs_are(NAME, NAME, NAME, TEXT[])
+RETURNS TEXT
+AS $$
+    SELECT table_privs_are($1, $2, $3, $4, 'Role ' || quote_ident($3)
+        || ' should only have privs ' || array_to_string($4, ',')
+        || ' on table ' || quote_ident($1) || '.' || quote_ident($2)
+    );
+$$ LANGUAGE SQL;
+
+
+-- _sequence_privileges(schema, sequence)
+CREATE OR REPLACE FUNCTION _sequence_privileges(NAME, NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT * FROM _relation_privileges($1, $2, 'S');
+$$ LANGUAGE SQL;
+
+-- _sequence_privileges(schema, sequence, grantee)
+CREATE OR REPLACE FUNCTION _sequence_privileges(NAME, NAME, NAME)
+RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
+AS $$
+    SELECT *
+    FROM _sequence_privileges($1, $2)
+    WHERE grantee = $3;
+$$ LANGUAGE SQL;
+
+-- sequence_privs_are(schema, sequence, role, [priv], msg)
+CREATE OR REPLACE FUNCTION sequence_privs_are(NAME, NAME, NAME, TEXT[], TEXT)
+RETURNS TEXT
+AS $$
+DECLARE
+    want text;
+    have text;
+BEGIN
+
+    SELECT INTO want coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($4::text[]) AS a(priv);
+
+    SELECT INTO have coalesce(string_agg(a.priv, ',' ORDER BY a.priv ASC), '(empty)')
+    FROM unnest($4::text[]) AS a(priv)
+        JOIN _sequence_privileges($1, $2, $3) as p ON (a.priv = p.privilege);
+
+    IF have = want THEN
+        RETURN ok(true, $5);
+    END IF;
+
+    RETURN ok(false, $5) || E'\n' || diag(
+        '        have: ' || quote_ident(have) || E'\n' ||
+        '        want: ' || quote_ident(array_to_string($4, ','))
+    );
+END
+$$ LANGUAGE plpgsql;
+
+-- sequence_privs_are(schema, sequence, role, [priv])
+CREATE OR REPLACE FUNCTION sequence_privs_are(NAME, NAME, NAME, TEXT[])
+RETURNS TEXT
+AS $$
+    SELECT sequence_privs_are($1, $2, $3, $4, 'Role ' || quote_ident($3)
+        || ' should only have privs ' || array_to_string($4, ',')
+        || ' on sequence ' || quote_ident($1) || '.' || quote_ident($2)
+    );
+$$ LANGUAGE SQL;
