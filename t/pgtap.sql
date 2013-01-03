@@ -7468,7 +7468,10 @@ RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
 AS $$
     SELECT grantor.rolname, grantee.rolname, (sub.acl).privilege_type, (sub.acl).is_grantable
     FROM (
-        SELECT aclexplode(nspacl) AS acl
+        SELECT pg_catalog.aclexplode(
+            pg_catalog.acldefault('n',
+                (SELECT oid FROM pg_roles WHERE rolname = 'pgfactory')
+            ) || nspacl) AS acl
         FROM pg_namespace AS n
         WHERE n.nspname=$1
     ) AS sub
@@ -7529,7 +7532,13 @@ RETURNS TABLE(grantor NAME, grantee NAME, privilege TEXT, grantable BOOLEAN)
 AS $$
     SELECT grantor.rolname, grantee.rolname, (sub.acl).privilege_type, (sub.acl).is_grantable
     FROM (
-        SELECT aclexplode(relacl) AS acl
+        SELECT pg_catalog.aclexplode(
+            pg_catalog.acldefault(CASE $3
+                    WHEN 'S' THEN 's'
+                    ELSE 'r'::"char"
+                END,
+                (SELECT oid FROM pg_roles WHERE rolname = 'pgfactory')
+            ) || relacl) AS acl
         FROM pg_class AS c
             JOIN pg_namespace AS n ON (n.oid=c.relnamespace)
         WHERE n.nspname=$1
