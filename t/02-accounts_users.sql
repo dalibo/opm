@@ -134,6 +134,31 @@ SELECT set_eq(
     'Should list all the users.'
 );
 
+-- Creates user "admin1"
+SELECT set_eq(
+    $$SELECT * FROM create_user('admin1', 'passadmin1', '{pgf_admins}')$$,
+    $$VALUES (7, 'admin1')$$,
+    'User "admin1" in account "admin1" should be created.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM is_admin('admin1')$$,
+    $$VALUES (true)$$,
+    'User "admin1" should be admin.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM is_admin('u1')$$,
+    $$VALUES (false)$$,
+    'User "u1" should not be admin.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM is_admin('not_a_user')$$,
+    $$VALUES (NULL)$$,
+    'User "not_a_user" should not exist.'
+);
+
 SELECT set_eq(
     $$SELECT * FROM list_users('acc1')$$,
     $$VALUES (3, 'acc1', 'u1'),
