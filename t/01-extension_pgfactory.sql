@@ -42,8 +42,6 @@ SELECT hasnt_extension('pgfactory_core', 'Extension "pgfactory_core" should not 
 SELECT hasnt_table('public', 'roles', 'Schema public should not contains table "roles" of pgfactory-core.' );
 SELECT hasnt_table('public', 'services', 'Schema public should not contains table "services" of pgfactory-core.' );
 
-ALTER DATABASE pgfactory OWNER TO postgres;
-
 DROP ROLE pgfactory;
 DROP ROLE pgf_admins;
 DROP ROLE pgf_roles;
