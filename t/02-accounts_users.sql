@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan( 38 );
+SELECT plan( 50 );
 
 SELECT diag('==== Setup environnement ====');
 
@@ -155,8 +155,14 @@ SELECT set_eq(
 
 SELECT set_eq(
     $$SELECT * FROM is_admin('not_a_user')$$,
-    $$VALUES (NULL)$$,
+    $$VALUES (NULL::boolean)$$,
     'User "not_a_user" should not exist.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM list_users() WHERE rolname = 'admin1'$$,
+    $$VALUES (7, 'pgf_admins', 'admin1')$$,
+    'Should only list admin admin1.'
 );
 
 SELECT set_eq(
@@ -169,7 +175,28 @@ SELECT set_eq(
 
 -- We cannot test this call for a simple user yet :/
 
-SELECT diag('==== Drop user ====');
+SELECT diag('==== Drop admin and user ====');
+
+-- Drop admin "admin1"
+SELECT set_eq(
+    $$SELECT * FROM drop_user('admin1')$$,
+    $$VALUES (7, 'admin1')$$,
+    'User "admin1" should be deleted using drop_user.'
+);
+
+SELECT hasnt_role('admin1', 'Role "admin1" should not exist anymore.');
+
+SELECT set_hasnt(
+    $$SELECT * FROM list_users()$$,
+    $$VALUES (7, 'pgf_admins', 'admin1')$$,
+    'User "admin1" is not listed by list_users() anymore.'
+);
+
+SELECT set_hasnt(
+    $$SELECT id, rolname FROM public.roles WHERE rolname = 'admin1'$$,
+    $$VALUES (7, 'admin1')$$,
+    'User "admin1" is not in table "publi.roles" anymore.'
+);
 
 SELECT diag('=== User u1 belongs to acc1 only ===');
 
@@ -177,32 +204,45 @@ SELECT diag('=== User u1 belongs to acc1 only ===');
 SELECT set_eq(
     $$SELECT * FROM drop_user('u1')$$,
     $$VALUES (3, 'u1')$$,
-    'User "u1" should be deleted by drop_user.'
+    'User "u1" deleted using drop_user.'
 );
 
-SELECT hasnt_role('u1', 'Role "u1" should not exist anymore.');
+SELECT hasnt_role('u1', 'Role "u1" does not exist anymore.');
 
 SELECT set_hasnt(
     $$SELECT * FROM list_users()$$,
     $$VALUES (3, 'acc1', 'u1')$$,
-    'User "u1" should not be listed in public.roles anymore.'
+    'User "u1" should not be listed by list_users() anymore.'
+);
+
+SELECT set_hasnt(
+    $$SELECT id, rolname FROM public.roles WHERE rolname = 'u1'$$,
+    $$VALUES (3, 'u1')$$,
+    'User "u1" is not in table "publi.roles" anymore.'
 );
 
 SELECT diag('=== User u4 belongs to acc1 and acc2 ===');
+
 -- Drop user "u4"
 SELECT set_eq(
     $$SELECT * FROM drop_user('u4')$$,
     $$VALUES (6, 'u4')$$,
-    'User "u4" should be deleted by drop_user.'
+    'User "u4" deleted unsing drop_user.'
 );
 
-SELECT hasnt_role('u1', 'Role "u4" should not exist anymore.');
+SELECT hasnt_role('u1', 'Role "u4" does not exist anymore.');
 
 SELECT set_hasnt(
     $$SELECT * FROM list_users()$$,
     $$VALUES (6, 'acc1', 'u4'),
         (6, 'acc2', 'u4')$$,
-    'User "u4" should not be listed in public.roles anymore.'
+    'User "u4" not listed by list_users anymore.'
+);
+
+SELECT set_hasnt(
+    $$SELECT id, rolname FROM public.roles WHERE rolname = 'u4'$$,
+    $$VALUES (6, 'u4')$$,
+    'User "u4" is not in table "publi.roles" anymore.'
 );
 
 SELECT diag('==== Drop accounts ====');
@@ -265,7 +305,13 @@ SELECT hasnt_role('acc2', 'Role "acc2" should not exist.');
 SELECT set_eq(
     $$SELECT count(*) FROM list_users()$$,
     $$VALUES (0::bigint)$$,
-    'No more users should exist now.'
+    'Function list_users() list nothing.'
+);
+
+SELECT set_eq(
+    $$SELECT count(*) FROM public.roles$$,
+    $$VALUES (0::bigint)$$,
+    'Table "publi.roles" empty.'
 );
 
 -- Finish the tests and clean up.
