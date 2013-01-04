@@ -1,13 +1,15 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan( 44 );
+SELECT plan(50);
 
-SELECT diag('====Install pgfactory-core ====');
+SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
 SELECT has_schema('public', 'Schema public exists.' );
 
-CREATE EXTENSION pgfactory_core;
+SELECT lives_ok(
+    $$CREATE EXTENSION pgfactory_core$$,
+    'Create extension "pgfactory_core"');
 
 SELECT has_extension('pgfactory_core', 'Extension "pgfactory_core" is installed.');
 
@@ -15,6 +17,7 @@ SELECT has_role('pgfactory', 'Role "pgfactory" exists.');
 SELECT has_role('pgf_admins', 'Role "pgf_admins" exists.');
 SELECT has_role('pgf_roles', 'Role "pgf_roles" exists.');
 SELECT is_member_of('pgfactory', 'pgf_admins', 'Role "pgf_admins" is member of "pgfactory".');
+SELECT is_member_of('pgf_roles', 'pgf_admins', 'Role "pgf_admins" is member of "pgf_roles".');
 
 SELECT has_table('public', 'roles', 'Schema public contains table "roles" of pgfactory-core.' );
 SELECT has_table('public', 'services', 'Schema public contains table "services" of pgfactory-core.' );
@@ -23,6 +26,7 @@ SELECT has_function('public', 'create_account', '{text}', 'Function "create_acco
 SELECT has_function('public', 'create_user', '{text, text, name[]}', 'Function "create_user" exists.');
 SELECT has_function('public', 'drop_account', '{name}', 'Function "drop_account" exists.');
 SELECT has_function('public', 'drop_user', '{name}', 'Function "drop_user" exists.');
+SELECT has_function('public', 'list_accounts', '{}', 'Function "list_accounts" exists.');
 SELECT has_function('public', 'list_users', '{name}', 'Function "list_users" exists.');
 SELECT has_function('public', 'is_pgf_role', '{name}', 'Function "is_pgf_role" exists.');
 SELECT has_function('public', 'is_user', '{name}', 'Function "is_user" exists.');
@@ -35,9 +39,18 @@ SELECT has_function('public', 'grant_service', '{bigint,name}', 'Function "grant
 SELECT has_function('public', 'revoke_service', '{bigint,name}', 'Function "revoke_service" exists.');
 SELECT has_function('public', 'list_services', '{}', 'Function "list_services" exists.');
 
-SELECT diag('==== Drop pgfactory_core ====');
+-- Does "pgf_admins" is in table roles ?
+SELECT set_eq(
+    $$SELECT id, rolname FROM public.roles WHERE rolname='pgf_admins'$$,
+    $$VALUES (1, 'pgf_admins')$$,
+    'Account "pgf_admins" exists in public.roles.'
+);
 
-DROP EXTENSION pgfactory_core;
+SELECT diag(E'\n==== Drop pgfactory_core ====\n');
+
+SELECT lives_ok(
+    $$DROP EXTENSION pgfactory_core$$,
+    'Drop extension "pgfactory_core"');
 
 SELECT hasnt_extension('pgfactory_core', 'Extension "pgfactory_core" does not exist.');
 SELECT hasnt_table('public', 'roles', 'Schema public does not contains table "roles" of pgfactory-core.' );
@@ -55,10 +68,11 @@ SELECT hasnt_function('public', 'create_account', '{text}', 'Function "create_ac
 SELECT hasnt_function('public', 'create_user', '{text, text, name[]}', 'Function "create_user" does not exist.');
 SELECT hasnt_function('public', 'drop_account', '{name}', 'Function "drop_account" does not exist.');
 SELECT hasnt_function('public', 'drop_user', '{name}', 'Function "drop_user" does not exist.');
+SELECT hasnt_function('public', 'list_accounts', '{name}', 'Function "list_accounts" does not exists.');
 SELECT hasnt_function('public', 'list_users', '{}', 'Function "list_users" does not exist.');
 SELECT hasnt_function('public', 'is_pgf_role', '{name}', 'Function "is_pgf_role" does not exist.');
 SELECT hasnt_function('public', 'is_user', '{name}', 'Function "is_user" does not exist.');
-SELECT hasnt_function('public', 'is_account', '{name}', 'Function "is_account" does not exist.');
+SELECT hasnt_function('public', 'is_account', '{}', 'Function "is_account" does not exist.');
 SELECT hasnt_function('public', 'is_admin', '{name}', 'Function "is_admin" does not exist.');
 SELECT hasnt_function('public', 'wh_exists', '{name}', 'Function "wh_exists" does not exist.');
 SELECT hasnt_function('public', 'grant_dispatcher', '{name,name}', 'Function "grant_dispatcher" does not exist.');
