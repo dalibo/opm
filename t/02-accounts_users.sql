@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(64);
+SELECT plan(71);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -159,6 +159,50 @@ SELECT set_eq(
     'User "not_a_user" should not exist.'
 );
 
+SELECT diag(E'\n==== Grant and revoke accounts ====\n');
+
+SELECT set_eq(
+    $$SELECT * FROM revoke_account('u1','acc1')$$,
+    $$VALUES (FALSE)$$,
+    'Account "acc1" shoud not be removed from user "u1": only 1 account.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM grant_account('u1','acc2')$$,
+    $$VALUES (TRUE)$$,
+    'Account "acc2" shoud be added to user "u1".'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM revoke_account('u1','acc2')$$,
+    $$VALUES (TRUE)$$,
+    'Account "acc2" shoud be removed from user "u1".'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM revoke_account('u1','not_an_account')$$,
+    $$VALUES (NULL::boolean)$$,
+    'Function revoke_account should notice "not_an_account" does not exist.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM revoke_account('not_a_user','acc2')$$,
+    $$VALUES (NULL::boolean)$$,
+    'Function revoke_account should notice "not_a_user" does not exist.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM grant_account('u1','not_an_account')$$,
+    $$VALUES (NULL::boolean)$$,
+    'Function grant_account should notice "not_an_account" does not exist.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM grant_account('not_a_user','acc2')$$,
+    $$VALUES (NULL::boolean)$$,
+    'Function grant_account should notice "not_a_user" does not exist.'
+);
+
 SELECT diag(E'\n==== functions list_users and list_accounts ====\n');
 
 SELECT set_eq(
@@ -298,7 +342,7 @@ SELECT set_hasnt(
 SELECT set_hasnt(
     $$SELECT id, rolname FROM public.roles WHERE rolname = 'admin1'$$,
     $$VALUES (8, 'admin1')$$,
-    'User "admin1" is not in table "publi.roles" anymore.'
+    'User "admin1" is not in table "public.roles" anymore.'
 );
 
 -- User u1 belongs to acc1 only
@@ -321,7 +365,7 @@ SELECT set_hasnt(
 SELECT set_hasnt(
     $$SELECT id, rolname FROM public.roles WHERE rolname = 'u1'$$,
     $$VALUES (4, 'u1')$$,
-    'User "u1" is not in table "publi.roles" anymore.'
+    'User "u1" is not in table "public.roles" anymore.'
 );
 
 -- User u4 belongs to acc1 and acc2
@@ -345,7 +389,7 @@ SELECT set_hasnt(
 SELECT set_hasnt(
     $$SELECT id, rolname FROM public.roles WHERE rolname = 'u4'$$,
     $$VALUES (7, 'u4')$$,
-    'User "u4" is not in table "publi.roles" anymore.'
+    'User "u4" is not in table "public.roles" anymore.'
 );
 
 SELECT diag(E'\n==== Drop accounts ====\n');
@@ -422,7 +466,7 @@ SELECT throws_matching(
 SELECT set_eq(
     $$SELECT count(*) FROM public.roles$$,
     $$VALUES (1::bigint)$$,
-    'Table "publi.roles" contains one account.'
+    'Table "public.roles" contains one account.'
 );
 
 -- Finish the tests and clean up.
