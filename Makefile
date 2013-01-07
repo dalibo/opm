@@ -1,4 +1,5 @@
-
+all: pgfactory_core wh_nagios
+	
 pgfactory_core:
 	@cd core; \
 	$(MAKE) install
