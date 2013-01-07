@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(50);
+SELECT plan(55);
 
 SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
@@ -46,7 +46,53 @@ SELECT set_eq(
     'Account "pgf_admins" exists in public.roles.'
 );
 
+SELECT diag(E'\n==== List warehouses and processes ====\n');
+
+SELECT set_eq(
+    $$SELECT COUNT(*) FROM list_warehouses()$$,
+    $$VALUES (0)$$,
+    'Should not find any warehouse.'
+);
+
+SELECT set_eq(
+    $$SELECT COUNT(*) FROM list_processes()$$,
+    $$VALUES (0)$$,
+    'Should not find any process.'
+);
+
+SELECT lives_ok(
+    $$CREATE EXTENSION hstore$$,
+    'Create extension "hstore"');
+
+SELECT lives_ok(
+    $$CREATE EXTENSION wh_nagios$$,
+    'Create extension "wh_nagios"');
+
+SELECT set_eq(
+    $$SELECT * FROM list_warehouses()$$,
+    $$VALUES ('wh_nagios')$$,
+    'Should find warehouse wh_nagios.'
+);
+
+SELECT lives_ok(
+    $$CREATE EXTENSION pr_grapher$$,
+    'Create extension "pr_grapher"');
+
+SELECT set_eq(
+    $$SELECT * FROM list_processes()$$,
+    $$VALUES ('pr_grapher')$$,
+    'Should find process pr_grapher.'
+);
+
 SELECT diag(E'\n==== Drop pgfactory_core ====\n');
+
+SELECT lives_ok(
+    $$DROP EXTENSION pr_grapher$$,
+    'Drop extension "pr_grapher"');
+
+SELECT lives_ok(
+    $$DROP EXTENSION wh_nagios$$,
+    'Drop extension "wh_nagios"');
 
 SELECT lives_ok(
     $$DROP EXTENSION pgfactory_core$$,

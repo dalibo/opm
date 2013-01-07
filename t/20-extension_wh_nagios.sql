@@ -1,20 +1,28 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(49);
+SELECT plan(53);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
-CREATE EXTENSION pgfactory_core;
-
-SELECT diag('CREATE EXTENSION pgfactory_core: done'); 
-
-CREATE EXTENSION hstore;
-SELECT diag('CREATE EXTENSION hstore: done');
+SELECT lives_ok(
+    $$CREATE EXTENSION pgfactory_core$$,
+    'Create extension "pgfactory_core"');
 
 SELECT diag(E'\n==== Install wh_nagios ====\n');
 
-CREATE EXTENSION wh_nagios;
+SELECT throws_matching(
+    $$CREATE EXTENSION wh_nagios$$,
+    'required extension "hstore" is not installed',
+    'Should not create extension "wh_nagios"');
+
+SELECT lives_ok(
+    $$CREATE EXTENSION hstore$$,
+    'Create extension "hstore"');
+
+SELECT lives_ok(
+    $$CREATE EXTENSION wh_nagios$$,
+    'Create extension "wh_nagios"');
 
 SELECT has_extension('wh_nagios', 'Extension "wh_nagios" should exist.');
 SELECT extension_schema_is('wh_nagios', 'wh_nagios',
