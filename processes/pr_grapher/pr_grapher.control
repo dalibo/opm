@@ -1,0 +1,7 @@
+# wh_nagios extension
+comment = 'Grapher process for pgFactory'
+default_version = '1.0'
+module_pathname = '$libdir/pr_grapher'
+superuser = false
+relocatable = false
+schema = 'pr_grapher'
