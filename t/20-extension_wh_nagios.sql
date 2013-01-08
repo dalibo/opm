@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(56);
+SELECT plan(57);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -515,7 +515,9 @@ SELECT hasnt_table('wh_nagios', 'counters_detail_3',
 
 SELECT diag(E'\n==== Drop wh_nagios ====\n');
 
-DROP EXTENSION wh_nagios CASCADE;
+SELECT lives_ok(
+	$$DROP EXTENSION wh_nagios CASCADE;$$,
+	'Drop extension "wh_nagios"');
 
 SELECT hasnt_table('wh_nagios', 'hub',
     'Table "hub" of schema "wh_nagios" should not exists anymore.'
