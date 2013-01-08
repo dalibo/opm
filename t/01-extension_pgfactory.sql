@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(55);
+SELECT plan(68);
 
 SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
@@ -32,7 +32,10 @@ SELECT has_function('public', 'is_pgf_role', '{name}', 'Function "is_pgf_role" e
 SELECT has_function('public', 'is_user', '{name}', 'Function "is_user" exists.');
 SELECT has_function('public', 'is_account', '{name}', 'Function "is_account" exists.');
 SELECT has_function('public', 'is_admin', '{name}', 'Function "is_admin" exists.');
+SELECT has_function('public', 'list_warehouses', '{}', 'Function "list_warehouses" exists.');
 SELECT has_function('public', 'wh_exists', '{name}', 'Function "wh_exists" exists.');
+SELECT has_function('public', 'list_processes', '{}', 'Function "list_processes" exists.');
+SELECT has_function('public', 'pr_exists', '{name}', 'Function "pr_exists" exists.');
 SELECT has_function('public', 'grant_dispatcher', '{name,name}', 'Function "grant_dispatcher" exists.');
 SELECT has_function('public', 'revoke_dispatcher', '{name,name}', 'Function "revoke_dispatcher" exists.');
 SELECT has_function('public', 'grant_service', '{bigint,name}', 'Function "grant_service" exists.');
@@ -55,9 +58,21 @@ SELECT set_eq(
 );
 
 SELECT set_eq(
+    $$SELECT * FROM wh_exists('wh_nagios')$$,
+    $$VALUES (FALSE)$$,
+    'Should not find warehouse wh_nagios.'
+);
+
+SELECT set_eq(
     $$SELECT COUNT(*) FROM list_processes()$$,
     $$VALUES (0)$$,
     'Should not find any process.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM pr_exists('pr_grapher')$$,
+    $$VALUES (FALSE)$$,
+    'Should not find process pr_grapher.'
 );
 
 SELECT lives_ok(
@@ -74,6 +89,12 @@ SELECT set_eq(
     'Should find warehouse wh_nagios.'
 );
 
+SELECT set_eq(
+    $$SELECT * FROM wh_exists('wh_nagios')$$,
+    $$VALUES (TRUE)$$,
+    'Should find warehouse wh_nagios.'
+);
+
 SELECT lives_ok(
     $$CREATE EXTENSION pr_grapher$$,
     'Create extension "pr_grapher"');
@@ -84,6 +105,12 @@ SELECT set_eq(
     'Should find process pr_grapher.'
 );
 
+SELECT set_eq(
+    $$SELECT * FROM pr_exists('pr_grapher')$$,
+    $$VALUES (TRUE)$$,
+    'Should find process pr_grapher.'
+);
+
 SELECT diag(E'\n==== Drop pgfactory_core ====\n');
 
 SELECT lives_ok(
@@ -91,8 +118,16 @@ SELECT lives_ok(
     'Drop extension "pr_grapher"');
 
 SELECT lives_ok(
+    $$DROP SCHEMA pr_grapher$$,
+    'Drop schema "pr_grapher"');
+
+SELECT lives_ok(
     $$DROP EXTENSION wh_nagios$$,
     'Drop extension "wh_nagios"');
+
+SELECT lives_ok(
+    $$DROP SCHEMA wh_nagios$$,
+    'Drop schema "wh_nagios"');
 
 SELECT lives_ok(
     $$DROP EXTENSION pgfactory_core$$,

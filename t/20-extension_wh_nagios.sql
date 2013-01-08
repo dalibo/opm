@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(53);
+SELECT plan(56);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -52,6 +52,16 @@ SELECT diag(
     'Create account: ' || public.create_account('acc1') || 
     E'\nCreate user: ' || public.create_user('u1', 'pass', '{acc1}') ||
     E'\n'
+);
+
+SELECT schema_privs_are('wh_nagios', 'pgf_roles', '{USAGE}',
+    'Group "pgf_roles" should only have priv "USAGE" on schema "wh_nagios".'
+);
+
+SELECT set_eq(
+    $$SELECT COUNT(*) FROM wh_nagios.list_label(1)$$,
+    $$VALUES (0)$$,
+    'User "u1" should have access to list_label function in "wh_nagios".'
 );
 
 -- grant dispatching to u1
@@ -221,6 +231,12 @@ SELECT set_eq(
 -- check table wh_nagios.counters_detail_1
 SELECT has_table('wh_nagios', 'counters_detail_1',
     'Table "wh_nagios.counters_detail_1" should exists.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.list_label(1)$$,
+    $$VALUES (1::bigint,'template0')$$,
+    'list_label should see label template0.'
 );
 
 SELECT set_eq(
