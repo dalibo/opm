@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(71);
+SELECT plan(84);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -219,10 +219,14 @@ SELECT set_eq(
     'Only list users of account "acc1".'
 );
 
+--Need to allow u3 to create temp tables for pgtap
+SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u3',current_database()),'Grant TEMPORARY on current db to u3');
+
 -- User should only see account/users member of their own account
 -- u3 is in both accounts
-SET SESSION AUTHORIZATION u3;
-SET ROLE u3;
+SELECT lives_ok('SET SESSION AUTHORIZATION u3','Set session authorization to u3');
+SELECT lives_ok('SET ROLE u3','Set role u3');
+
 SELECT results_eq(
     $$SELECT current_user, session_user$$,
     $$VALUES ('u3'::name, 'u3'::name)$$,
@@ -247,17 +251,25 @@ SELECT set_eq(
     'Only list accounts of "u3".'
 );
 
-RESET SESSION AUTHORIZATION;
+SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+
+--Revoke from u3 create temp tables
+SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u3',current_database()),'Revoke TEMPORARY on current db from u3');
+
 SELECT results_ne(
     $$SELECT current_user, session_user$$,
     $$VALUES ('u3'::name, 'u3'::name)$$,
     'Reset session authorization.'
 );
 
+--Need to allow u3 to create temp tables for pgtap
+SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u1',current_database()),'Grant TEMPORARY on current db to u1');
+
 -- User should only see account/users member of their own account
 -- u1 is only in acc1.
-SET SESSION AUTHORIZATION u1;
-SET ROLE u1;
+SELECT lives_ok('SET SESSION AUTHORIZATION u1','Set session authorization u1');
+SELECT lives_ok('SET ROLE u1','Set role u1');
+
 SELECT results_eq(
     $$SELECT current_user, session_user$$,
     $$VALUES ('u1'::name, 'u1'::name)$$,
@@ -278,7 +290,10 @@ SELECT set_eq(
     'Only list accounts of "u1".'
 );
 
-RESET SESSION AUTHORIZATION;
+SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+--Revoke from u1 create temp tables
+SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),'Revoke TEMPORARY on current db from u1');
+
 SELECT results_ne(
     $$SELECT current_user, session_user$$,
     $$VALUES ('u1'::name, 'u1'::name)$$,
@@ -287,8 +302,9 @@ SELECT results_ne(
 
 -- User should only see account/users member of their own account
 -- u1 is only in acc1.
-SET SESSION AUTHORIZATION admin1;
-SET ROLE admin1;
+SELECT lives_ok('SET SESSION AUTHORIZATION admin1','Set session authorization admin1');
+SELECT lives_ok('SET ROLE admin1','Set role admin1');
+
 SELECT results_eq(
     $$SELECT current_user, session_user$$,
     $$VALUES ('admin1'::name, 'admin1'::name)$$,
@@ -315,7 +331,8 @@ SELECT set_eq(
     'Admin can see all accounts.'
 );
 
-RESET SESSION AUTHORIZATION;
+SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+
 SELECT results_ne(
     $$SELECT current_user, session_user$$,
     $$VALUES ('admin1'::name, 'admin1'::name)$$,

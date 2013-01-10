@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(68);
+SELECT plan(73);
 
 SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
@@ -137,9 +137,16 @@ SELECT hasnt_extension('pgfactory_core', 'Extension "pgfactory_core" does not ex
 SELECT hasnt_table('public', 'roles', 'Schema public does not contains table "roles" of pgfactory-core.' );
 SELECT hasnt_table('public', 'services', 'Schema public does not contains table "services" of pgfactory-core.' );
 
-DROP ROLE pgfactory;
-DROP ROLE pgf_admins;
-DROP ROLE pgf_roles;
+SELECT lives_ok(
+    format('REVOKE ALL ON DATABASE %I FROM pgfactory',pg_catalog.current_database()),
+    'Revoke ALL on current db from pgfactory');
+SELECT lives_ok($$DROP ROLE pgfactory$$, 'Drop role pgfactory');
+SELECT lives_ok($$DROP ROLE pgf_admins$$, 'Drop role pgf_admin');
+
+SELECT lives_ok(
+    format('REVOKE CONNECT ON DATABASE %I FROM pgf_roles',pg_catalog.current_database()),
+    'Revoke CONNECT on current db from pgf_roles');
+SELECT lives_ok($$DROP ROLE pgf_roles$$, 'Drop role pgf_roles');
 
 SELECT hasnt_role('pgfactory', 'Role "pgfactory" does not exists anymore.');
 SELECT hasnt_role('pgf_admins', 'Role "pgf_admins" does not exists anymore.');
