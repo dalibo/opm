@@ -1,0 +1,25 @@
+% layout config 'layout';
+% my @acc = @{stash 'acc'};
+
+<h2><%=l 'Profile of' %> <%= session 'user_username' %></h2>
+  <div class="row">
+    <div class="span6">
+      <div class="box">
+        <b><%=l 'Member of' %> :</b><br />
+          <ul>
+            <% foreach my $a (@acc) { %>
+            <%   my %line = %{$a}; %>
+            <li><%= $line{acc} %></li>
+            <% } %>
+          </ul>
+        </div>
+    </div>
+    <div class="span4">
+      <div class="box">
+        <b><%=l 'Language' %> :</b><br />
+            <% while ( my ($key, $value) = each(config 'languages') ){ %>
+            <li><%= $value %></li>
+            <% } %>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,7 @@
+% layout config 'layout';
+
+<div class="row">
+  <div class="span8">
+    TODO
+  </div>
+</div>

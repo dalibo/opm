@@ -1,0 +1,20 @@
+% layout config 'layout';
+% my @services = @{stash 'services'};
+
+<div class="row">
+  <div class="span6">
+    <div class="box">
+        <b><%=l 'List of services' %> :</b><br />
+        <% if (scalar(@services)) { %>
+          <ul>
+            <% foreach my $s (@services) { %>
+              <%   my %line = %{$s}; %>
+              <li><%= $line{servicename} %><% end %> </li>
+            <% } %>
+          </ul>
+        <% } else { %>
+        <p>No service found.</p>
+        <% } %>
+    </div>
+  </div>
+</div>

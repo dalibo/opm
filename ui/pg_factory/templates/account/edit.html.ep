@@ -1,0 +1,61 @@
+% layout config 'layout';
+% my @roles = @{stash 'roles'};
+% my @allroles = @{stash 'allroles'};
+% my $accname = param 'accname';
+
+<div class="row">
+  <h2><%=l 'Account' %> <%= $accname %></h2>
+  <div class="span6">
+    <div class="box">
+        <b><%=l 'List of users' %> :</b><br />
+        <ul>
+          <% foreach my $r (@roles) { %>
+            <%   my %line = %{$r}; %>
+            <li><%= link_to user_edit => {rolname => $line{rolname} } => begin %><%= $line{rolname} %><% end %>
+            <%= link_to account_delrol => {rolname => $line{rolname}, accname => $accname} => begin %><span class="badge badge-important">X</span><% end %>
+            </li>
+          <% } %>
+        </ul>
+    </div>
+  </div>
+  <div class="span4 box">
+    <b><%=l 'Add a user to account' %> <%= param 'accname' %></b><br /><br />
+    <%= form_for account_edit => (method => 'POST') => begin %>
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label" for="username"><%=l 'Username' %>:</label>
+          <div class="controls">
+            <%= text_field 'username', type => 'text', class => 'span3', id => 'username' %>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="password"><%=l 'Password' %>:</label>
+          <div class="controls">
+            <%= text_field 'password', type => 'text', class => 'span3', id => 'password' %>
+          </div>
+        </div>
+        <div class="btn-group pull-left">
+          <%= submit_button l('Create'), name => 'create', class => 'btn btn-primary' %>
+        </div>
+      </fieldset>
+    <% end %>
+
+    <%= form_for account_edit => (method => 'POST') => begin %>
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label" for="existing_user"><%=l 'Existing user' %> :</label>
+            <select name="existing_username" id="existing_username" class="span3">
+            <% foreach my $r (@allroles) { %>
+              <%   my %line = %{$r}; %>
+              <option value="<%= $line{rolname} %>"><%= $line{rolname} %></option>
+            <% } %>
+            </select>
+        </div>
+        <div class="btn-group pull-left">
+          <%= submit_button l('Add'), name => 'add', class => 'btn btn-primary' %>
+        </div>
+      </fieldset>
+    <% end %>
+  </div>
+</div>

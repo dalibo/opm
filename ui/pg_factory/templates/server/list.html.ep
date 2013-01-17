@@ -1,0 +1,20 @@
+% layout config 'layout';
+% my @servers = @{stash 'servers'};
+
+<div class="row">
+  <div class="span6">
+    <div class="box">
+        <b><%=l 'List of servers' %> :</b><br />
+        <% if (scalar(@servers)) { %>
+          <ul>
+            <% foreach my $s (@servers) { %>
+              <%   my %line = %{$s}; %>
+              <li><%= link_to server_host => { hostname => $line{hostname} } => begin %><%= $line{hostname} %><% end %> </li>
+            <% } %>
+          </ul>
+        <% } else { %>
+        <p>No server found.</p>
+        <% } %>
+    </div>
+  </div>
+</div>
