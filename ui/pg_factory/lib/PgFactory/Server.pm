@@ -14,11 +14,11 @@ sub list{
     my $dbh = $self->database();
     my $sql;
 
-    $sql = $dbh->prepare("SELECT hostname FROM public.list_servers() ORDER BY 1;");
+    $sql = $dbh->prepare("SELECT id, hostname FROM public.list_servers() ORDER BY 1;");
     $sql->execute();
     my $servers = [];
-    while (my $v = $sql->fetchrow()){
-        push @{$servers},{hostname => $v};
+    while (my ($id,$hostname) = $sql->fetchrow()){
+        push @{$servers},{id => $id, hostname => $hostname};
     }
     $sql->finish();
 
@@ -50,22 +50,30 @@ sub service{
 sub host{
     my $self = shift;
     my $dbh = $self->database();
-    my $hostname = $self->param('hostname');
+    my $id = $self->param('id');
     my $sql;
 
-    $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(id) FROM public.list_servers() WHERE hostname = ?");
-    $sql->execute($hostname);
+    $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(?)");
+    $sql->execute($id);
     $sql->finish();
+    $dbh->commit();
 
-    $sql = $dbh->prepare("SELECT s1.id,s1.warehouse,s1.service,s1.last_modified,s1.creation_ts,s1.servalid, g.id, g.graph FROM public.list_services() s1 JOIN public.list_servers() s2 ON s2.id = s1.id_server JOIN pr_grapher.graph_services gs ON gs.id_service = s1.id JOIN pr_grapher.graphs g ON g.id = gs.id_graph WHERE s2.hostname = ?;");
-    $sql->execute($hostname);
+    $dbh = $self->database();
+
+    $sql = $dbh->prepare("SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.graph_services gs ON gs.id_service = s.id JOIN pr_grapher.graphs g ON g.id = gs.id_graph WHERE s.id_server = ?;");
+    $sql->execute($id);
     my $services = [];
     while (my ($id,$warehouse,$service,$last_mod,$creation_ts,$servalid,$id_graph,$graphname) = $sql->fetchrow()){
         push @{$services},{ id => $id, warehouse => $warehouse, servicename => $service, lst_mod => $last_mod, creation_ts => $creation_ts, servalid => $servalid, id_graph => $id_graph, graphname => $graphname};
     }
     $sql->finish();
 
-    $self->stash(services => $services);
+    $sql = $dbh->prepare("SELECT hostname FROM public.list_servers() WHERE id = ?");
+    $sql->execute($id);
+    my $hostname = $sql->fetchrow();
+    $sql->finish();
+
+    $self->stash(services => $services, hostname => $hostname);
 
     $dbh->disconnect();
     $self->render();

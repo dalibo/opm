@@ -4,7 +4,7 @@
 <div class="row">
   <div class="span6">
     <div class="box">
-        <b><%=l 'List of services for server ' %><u><%= param 'hostname' %></u> :</b><br />
+        <b><%=l 'List of services for server ' %><u><%= stash 'hostname' %></u> :</b><br />
         <% if (scalar(@services)) { %>
           <ul>
             <% foreach my $s (@services) { %>

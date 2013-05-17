@@ -81,7 +81,7 @@ sub startup {
 
     # Server management
     $r_auth->route('/server')                           ->to('server#list')       ->name('server_list');
-    $r_auth->route('/server/:hostname')                 ->to('server#host')       ->name('server_host');
+    $r_auth->route('/server/:id')                       ->to('server#host')       ->name('server_host');
 
 }
 

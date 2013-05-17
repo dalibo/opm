@@ -9,7 +9,7 @@
           <ul>
             <% foreach my $s (@servers) { %>
               <%   my %line = %{$s}; %>
-              <li><%= link_to server_host => { hostname => $line{hostname} } => begin %><%= $line{hostname} %><% end %> </li>
+              <li><%= link_to server_host => { id => $line{id} } => begin %><%= $line{hostname} %><% end %> </li>
             <% } %>
           </ul>
         <% } else { %>
