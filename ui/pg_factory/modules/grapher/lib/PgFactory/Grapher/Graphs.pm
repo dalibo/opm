@@ -248,6 +248,7 @@ sub data {
     my $properties = {};
     my $config;
     my $isservice = 0;
+    my $data = [ ];
 
     # Double check the input
     if (!defined $y1_query && !defined $y2_query && !defined $id) {
@@ -277,7 +278,6 @@ sub data {
         $sth->finish;
     }
 
-    my $data = [ ];
     if (not $isservice){
         if (defined $y1_query and $y1_query !~ m!^\s*$!) {
             my $series = { };
@@ -342,7 +342,7 @@ sub data {
             $sth->finish;
 
             # Create the final struct: a list of hashes { data: [], label: "col", yaxis : 2 }
-zsh:1: command not found: q
+            foreach my $c (@cols) {
                 push @{$data}, { data => $series->{$c}, label => $c }
             }
         }
