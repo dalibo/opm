@@ -18,7 +18,11 @@
       <% foreach my $g (@graphs) { %>
       <%     my %line = %{$g}; %>
       <tr>
-	<td><%= link_to graphs_show => { id => $line{id} } => begin %><%= $line{graph} %><% end %></td>
+	<td><%= link_to graphs_show => { id => $line{id} } => begin %><%= $line{graph} %>
+        <% if (defined $line{hostname}){ %>
+            ( <%= $line{hostname} %> )
+        <% } %>
+    <% end %></td>
 	<td><%= $line{description} %></td>
 	<td class="span2">
           <%= link_to graphs_edit => { id => $line{id} } => ( class => "btn btn-mini" ) => begin %><i class="icon-pencil hide-text">Edit</i><% end %>
