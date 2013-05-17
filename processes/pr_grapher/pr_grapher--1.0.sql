@@ -92,7 +92,7 @@ WITH RECURSIVE tc(id, category, description, distance, path, cycle) AS (
 ) SELECT id, category, description, distance, path FROM tc WHERE NOT cycle ORDER BY path;
 $$;
 
-CREATE OR REPLACE FUNCTION pr_grapher.create_graph_for_services(OUT rc boolean)
+CREATE OR REPLACE FUNCTION pr_grapher.create_graph_for_services(IN p_server_id bigint, OUT rc boolean)
 AS $$
 DECLARE
   v_state   TEXT;
@@ -101,10 +101,28 @@ DECLARE
   v_hint    TEXT;
   v_context TEXT;
   servicesrow public.services%rowtype;
+  v_nb bigint;
 BEGIN
+  --Does the server exists ?
+  SELECT COUNT(*) INTO v_nb FROM public.servers WHERE id = p_server_id;
+  IF (v_nb <> 1) THEN
+    RAISE WARNING 'Server % does not exists.', p_server_id;
+    rc := false;
+    RETURN;
+  END IF;
+
+  --Is the user allowed to create graphs ?
+  SELECT COUNT(*) INTO v_nb FROM public.list_servers() WHERE id = p_server_id;
+  IF (v_nb <> 1) THEN
+    RAISE WARNING 'User not allowed for server %.', p_server_id;
+    rc := false;
+    RETURN;
+  END IF;
+
   FOR servicesrow IN (SELECT s.* FROM public.services s
     LEFT JOIN pr_grapher.graph_services gs ON gs.id_service = s.id
-    WHERE gs.id_service IS NULL)
+    WHERE s.id_server = p_server_id
+    AND gs.id_service IS NULL)
   LOOP
     WITH new_graphs (id_graph) AS (
       INSERT INTO pr_grapher.graphs (graph, config)
@@ -137,8 +155,8 @@ LANGUAGE plpgsql
 LEAKPROOF
 SECURITY DEFINER;
 
-ALTER FUNCTION pr_grapher.create_graph_for_services(OUT rc boolean) OWNER TO pgfactory;
-REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_services(OUT rc boolean) FROM public;
-GRANT ALL ON FUNCTION pr_grapher.create_graph_for_services(OUT rc boolean) TO pgf_admins;
+ALTER FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) TO pgf_admins;
 
-COMMENT ON FUNCTION pr_grapher.create_graph_for_services(OUT rc boolean) IS 'Create default graphs for all new services.'
+COMMENT ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.'
