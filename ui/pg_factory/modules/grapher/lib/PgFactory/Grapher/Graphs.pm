@@ -137,9 +137,10 @@ sub edit {
 
     my $dbh = $self->database;
 
-    # Get the graph
-    my $sth = $dbh->prepare(qq{SELECT graph, description, y1_query, y2_query, config
-            FROM pr_grapher.graphs
+    # Get the graph, and the service if a service is associated
+    my $sth = $dbh->prepare(qq{SELECT graph, description, y1_query, y2_query, config, id_service
+            FROM pr_grapher.graphs g
+            LEFT JOIN pr_grapher.graph_services s ON g.id = s.id_graph
             WHERE id = ?});
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
@@ -151,6 +152,7 @@ sub edit {
     if (! defined $graph) {
         return $self->render_not_found;
     }
+    my $id_service = $graph->{id_service};
 
     # Save the form
     my $method = $self->req->method;
@@ -168,7 +170,7 @@ sub edit {
                 $self->msg->error("Missing graph name");
                 $e = 1;
             }
-            if ($form->{y1_query} =~ m!^\s*$! && $form->{y2_query} =~ m!^\s*$!) {
+            if ($form->{y1_query} =~ m!^\s*$! && $form->{y2_query} =~ m!^\s*$! && (! scalar $id_service) ){
                 $self->msg->error("Missing query");
                 $e = 1;
             }
@@ -232,6 +234,8 @@ sub edit {
         foreach my $p (keys %$graph) {
             $self->param($p, $graph->{$p});
         }
+        # Is the graph associated with a service ?
+        $self->stash(id_service => $id_service);
     }
 
     $self->render;
