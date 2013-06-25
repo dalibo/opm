@@ -370,7 +370,7 @@ sub data {
             } else{
                 $_to = $newest_record;
             }
-            $sql = $dbh->prepare("SELECT pr_grapher.js_time(timet), value as $label FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);");
+            $sql = $dbh->prepare("SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);");
             $sql->execute($id_label,$_from,$_to,sprintf("%.0f",($_to-$_from)/700));
             $series->{$label} = [ ];
             while (my ($x,$y) = $sql->fetchrow()){
