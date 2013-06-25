@@ -8,8 +8,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Digest::SHA qw(sha256_hex);
 
-
-sub home{
+sub home {
     my $self = shift;
     $self->render();
 }

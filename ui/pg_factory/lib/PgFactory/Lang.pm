@@ -5,11 +5,11 @@ package PgFactory::Lang;
 
 use Mojo::Base 'Mojolicious::Controller';
 
-sub set{
+sub set {
     my $self = shift;
-	my $code = $self->param('code');
-	$self->session(user_lang => $code);
-	$self->redirect_to('/');
+    my $code = $self->param('code');
+    $self->session( user_lang => $code );
+    $self->redirect_to('/');
 }
 
 1;

@@ -8,49 +8,51 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Digest::SHA qw(sha256_hex);
 
-
-sub list{
+sub list {
     my $self = shift;
-    my $dbh = $self->database();
+    my $dbh  = $self->database();
     my $sql;
 
-    $sql = $dbh->prepare("SELECT id, hostname FROM public.list_servers() ORDER BY 1;");
+    $sql = $dbh->prepare(
+        "SELECT id, hostname FROM public.list_servers() ORDER BY 1;");
     $sql->execute();
     my $servers = [];
-    while (my ($id,$hostname) = $sql->fetchrow()){
-        push @{$servers},{id => $id, hostname => $hostname};
+    while ( my ( $id, $hostname ) = $sql->fetchrow() ) {
+        push @{$servers}, { id => $id, hostname => $hostname };
     }
     $sql->finish();
 
-    $self->stash(servers => $servers);
+    $self->stash( servers => $servers );
 
     $dbh->disconnect();
     $self->render();
 }
 
-sub service{
+sub service {
     my $self = shift;
-    my $dbh = $self->database();
+    my $dbh  = $self->database();
     my $sql;
 
-    $sql = $dbh->prepare("SELECT s1.id, s2.hostname FROM public.list_services() s1 JOIN public.list_servers s2 ON s2.id = s1.id_server ORDER BY 1;");
+    $sql = $dbh->prepare(
+        "SELECT s1.id, s2.hostname FROM public.list_services() s1 JOIN public.list_servers s2 ON s2.id = s1.id_server ORDER BY 1;"
+    );
     $sql->execute();
     my $servers = [];
-    while (my $v = $sql->fetchrow()){
-        push @{$servers},{hostname => $v};
+    while ( my $v = $sql->fetchrow() ) {
+        push @{$servers}, { hostname => $v };
     }
     $sql->finish();
 
-    $self->stash(servers => $servers);
+    $self->stash( servers => $servers );
 
     $dbh->disconnect();
     $self->render();
 }
 
-sub host{
+sub host {
     my $self = shift;
-    my $dbh = $self->database();
-    my $id = $self->param('id');
+    my $dbh  = $self->database();
+    my $id   = $self->param('id');
     my $sql;
 
     $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(?)");
@@ -60,24 +62,39 @@ sub host{
 
     $dbh = $self->database();
 
-    $sql = $dbh->prepare("SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.graph_services gs ON gs.id_service = s.id JOIN pr_grapher.graphs g ON g.id = gs.id_graph WHERE s.id_server = ?;");
+    $sql = $dbh->prepare(
+        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.graph_services gs ON gs.id_service = s.id JOIN pr_grapher.graphs g ON g.id = gs.id_graph WHERE s.id_server = ?;"
+    );
     $sql->execute($id);
     my $services = [];
-    while (my ($id,$warehouse,$service,$last_mod,$creation_ts,$servalid,$id_graph,$graphname) = $sql->fetchrow()){
-        push @{$services},{ id => $id, warehouse => $warehouse, servicename => $service, lst_mod => $last_mod, creation_ts => $creation_ts, servalid => $servalid, id_graph => $id_graph, graphname => $graphname};
+    while (
+        my ($id,          $warehouse, $service,  $last_mod,
+            $creation_ts, $servalid,  $id_graph, $graphname )
+        = $sql->fetchrow() )
+    {
+        push @{$services},
+            {
+            id          => $id,
+            warehouse   => $warehouse,
+            servicename => $service,
+            lst_mod     => $last_mod,
+            creation_ts => $creation_ts,
+            servalid    => $servalid,
+            id_graph    => $id_graph,
+            graphname   => $graphname };
     }
     $sql->finish();
 
-    $sql = $dbh->prepare("SELECT hostname FROM public.list_servers() WHERE id = ?");
+    $sql = $dbh->prepare(
+        "SELECT hostname FROM public.list_servers() WHERE id = ?");
     $sql->execute($id);
     my $hostname = $sql->fetchrow();
     $sql->finish();
 
-    $self->stash(services => $services, hostname => $hostname);
+    $self->stash( services => $services, hostname => $hostname );
 
     $dbh->disconnect();
     $self->render();
 }
-
 
 1;

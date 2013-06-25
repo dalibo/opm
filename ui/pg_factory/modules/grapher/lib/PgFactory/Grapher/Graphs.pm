@@ -8,17 +8,19 @@ sub list {
 
     my $dbh = $self->database;
 
-    my $sth = $dbh->prepare(qq{SELECT g.id, g.graph, g.description, s2.hostname FROM pr_grapher.graphs g LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id LEFT JOIN public.list_services() s1 ON s1.id = gs.id_service LEFT JOIN public.list_servers() s2 ON s2.id = s1.id_server ORDER BY hostname, graph});
+    my $sth = $dbh->prepare(
+        qq{SELECT g.id, g.graph, g.description, s2.hostname FROM pr_grapher.graphs g LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id LEFT JOIN public.list_services() s1 ON s1.id = gs.id_service LEFT JOIN public.list_servers() s2 ON s2.id = s1.id_server ORDER BY hostname, graph}
+    );
     $sth->execute;
-    my $graphs = [ ];
-    while (my $row = $sth->fetchrow_hashref) {
+    my $graphs = [];
+    while ( my $row = $sth->fetchrow_hashref ) {
         push @{$graphs}, $row;
     }
     $sth->finish;
     $dbh->commit;
     $dbh->disconnect;
 
-    $self->stash(graphs => $graphs);
+    $self->stash( graphs => $graphs );
 
     $self->render;
 }
@@ -31,7 +33,8 @@ sub show {
     my $dbh = $self->database;
 
     # Get the graph
-    my $sth = $dbh->prepare(qq{SELECT graph, description FROM pr_grapher.graphs WHERE id = ?});
+    my $sth = $dbh->prepare(
+        qq{SELECT graph, description FROM pr_grapher.graphs WHERE id = ?});
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
@@ -40,11 +43,11 @@ sub show {
     $dbh->disconnect;
 
     # Check if it exists (this can be reach by url)
-    if (!defined $graph) {
+    if ( !defined $graph ) {
         return $self->render_not_found;
     }
 
-    $self->stash(graph => $graph);
+    $self->stash( graph => $graph );
 
     $self->render;
 
@@ -53,57 +56,78 @@ sub show {
 sub add {
     my $self = shift;
 
-    my $e = 0;
+    my $e          = 0;
     my $properties = $self->properties->load;
 
     my $method = $self->req->method;
-    if ($method =~ m/^POST$/i) {
-    # process the input data
+    if ( $method =~ m/^POST$/i ) {
+
+        # process the input data
         my $form = $self->req->params->to_hash;
 
-    # Action depends on the name of the button pressed
-        if (exists $form->{cancel}) {
+        # Action depends on the name of the button pressed
+        if ( exists $form->{cancel} ) {
             return $self->redirect_to('graphs_list');
         }
 
-        if (exists $form->{save}) {
-            if ($form->{graph} =~ m!^\s*$!) {
+        if ( exists $form->{save} ) {
+            if ( $form->{graph} =~ m!^\s*$! ) {
                 $self->msg->error("Missing graph name");
                 $e = 1;
             }
-            if ($form->{y1_query} =~ m!^\s*$! && $form->{y2_query} =~ m!^\s*$!) {
+            if (   $form->{y1_query} =~ m!^\s*$!
+                && $form->{y2_query} =~ m!^\s*$! )
+            {
                 $self->msg->error("Missing query");
                 $e = 1;
             }
 
-            if (!$e) {
+            if ( !$e ) {
+
                 # Prepare the configuration: save and clean the $form
                 # hashref to keep only the properties, so that we can
                 # use the plugin
                 delete $form->{save};
                 my $graph = $form->{graph};
                 delete $form->{graph};
-                my $description = ($form->{description} =~ m!^\s*$!) ? undef : $form->{description};
+                my $description =
+                    ( $form->{description} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{description};
                 delete $form->{description};
-                my $y1_query = ($form->{y1_query} =~ m!^\s*$!) ? undef : $form->{y1_query};
+                my $y1_query =
+                    ( $form->{y1_query} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{y1_query};
                 delete $form->{y1_query};
-                my $y2_query = ($form->{y2_query} =~ m!^\s*$!) ? undef : $form->{y2_query};
+                my $y2_query =
+                    ( $form->{y2_query} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{y2_query};
                 delete $form->{y2_query};
 
                 my $props = $self->properties->validate($form);
-                if (!defined $props) {
-                    $self->msg->error("Bad input, please double check the options");
+                if ( !defined $props ) {
+                    $self->msg->error(
+                        "Bad input, please double check the options");
                     return $self->render;
                 }
 
                 # Only save the properties with different values from
                 # the defaults
-                my $config = Mojo::JSON->encode($self->properties->diff($properties, $props));
+                my $config = Mojo::JSON->encode(
+                    $self->properties->diff( $properties, $props ) );
 
                 my $dbh = $self->database;
-                my $sth = $dbh->prepare(qq{INSERT INTO pr_grapher.graphs (graph, description, y1_query, y2_query, config) VALUES (?, ?, ?, ?, ?)});
-                if (! defined $sth->execute($graph, $description, $y1_query, $y2_query, $config)) {
-                    $self->render_exception($dbh->errstr);
+                my $sth = $dbh->prepare(
+                    qq{INSERT INTO pr_grapher.graphs (graph, description, y1_query, y2_query, config) VALUES (?, ?, ?, ?, ?)}
+                );
+                if (
+                    !defined $sth->execute(
+                        $graph,    $description, $y1_query,
+                        $y2_query, $config ) )
+                {
+                    $self->render_exception( $dbh->errstr );
                     $sth->finish;
                     $dbh->rollback;
                     $dbh->disconnect;
@@ -118,9 +142,9 @@ sub add {
         }
     }
 
-    if (!$e) {
-        foreach my $p (keys %$properties) {
-            $self->param($p, $properties->{$p});
+    if ( !$e ) {
+        foreach my $p ( keys %$properties ) {
+            $self->param( $p, $properties->{$p} );
         }
     }
 
@@ -130,18 +154,18 @@ sub add {
 sub edit {
     my $self = shift;
 
-    my $id = $self->param('id');
-    my $e = 0;
+    my $id         = $self->param('id');
+    my $e          = 0;
     my $properties = $self->properties->load;
-
 
     my $dbh = $self->database;
 
     # Get the graph, and the service if a service is associated
-    my $sth = $dbh->prepare(qq{SELECT graph, description, y1_query, y2_query, config, id_service
+    my $sth = $dbh->prepare(
+        qq{SELECT graph, description, y1_query, y2_query, config, id_service
             FROM pr_grapher.graphs g
             LEFT JOIN pr_grapher.graph_services s ON g.id = s.id_graph
-            WHERE id = ?});
+            WHERE id = ?} );
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
@@ -149,62 +173,83 @@ sub edit {
     $dbh->disconnect;
 
     # Check if it exists
-    if (! defined $graph) {
+    if ( !defined $graph ) {
         return $self->render_not_found;
     }
     my $id_service = $graph->{id_service};
 
     # Save the form
     my $method = $self->req->method;
-    if ($method =~ m/^POST$/i) {
+    if ( $method =~ m/^POST$/i ) {
+
         # process the input data
         my $form = $self->req->params->to_hash;
 
-    # Action depends on the name of the button pressed
-        if (exists $form->{cancel}) {
+        # Action depends on the name of the button pressed
+        if ( exists $form->{cancel} ) {
             return $self->redirect_to('graphs_list');
         }
 
-        if (exists $form->{save}) {
-            if ($form->{graph} =~ m!^\s*$!) {
+        if ( exists $form->{save} ) {
+            if ( $form->{graph} =~ m!^\s*$! ) {
                 $self->msg->error("Missing graph name");
                 $e = 1;
             }
-            if ($form->{y1_query} =~ m!^\s*$! && $form->{y2_query} =~ m!^\s*$! && (! scalar $id_service) ){
+            if (   $form->{y1_query} =~ m!^\s*$!
+                && $form->{y2_query} =~ m!^\s*$!
+                && ( !scalar $id_service ) )
+            {
                 $self->msg->error("Missing query");
                 $e = 1;
             }
 
-            if (!$e) {
-            # Prepare the configuration: save and clean the $form
-            # hashref to keep only the properties, so that we can
-            # use the plugin
+            if ( !$e ) {
+
+                # Prepare the configuration: save and clean the $form
+                # hashref to keep only the properties, so that we can
+                # use the plugin
                 delete $form->{save};
                 my $graph = $form->{graph};
                 delete $form->{graph};
-                my $description = ($form->{description} =~ m!^\s*$!) ? undef : $form->{description};
+                my $description =
+                    ( $form->{description} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{description};
                 delete $form->{description};
-                my $y1_query = ($form->{y1_query} =~ m!^\s*$!) ? undef : $form->{y1_query};
+                my $y1_query =
+                    ( $form->{y1_query} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{y1_query};
                 delete $form->{y1_query};
-                my $y2_query = ($form->{y2_query} =~ m!^\s*$!) ? undef : $form->{y2_query};
+                my $y2_query =
+                    ( $form->{y2_query} =~ m!^\s*$! )
+                    ? undef
+                    : $form->{y2_query};
                 delete $form->{y2_query};
 
                 my $props = $self->properties->validate($form);
-                if (!defined $props) {
-                    $self->msg->error("Bad input, please double check the options");
+                if ( !defined $props ) {
+                    $self->msg->error(
+                        "Bad input, please double check the options");
                     return $self->render;
                 }
 
-            # Only save the properties with different values from
-            # the defaults
-                my $config = Mojo::JSON->encode($self->properties->diff($properties, $props));
+                # Only save the properties with different values from
+                # the defaults
+                my $config = Mojo::JSON->encode(
+                    $self->properties->diff( $properties, $props ) );
 
                 my $dbh = $self->database;
-                my $sth = $dbh->prepare(qq{UPDATE pr_grapher.graphs
+                my $sth = $dbh->prepare(
+                    qq{UPDATE pr_grapher.graphs
                         SET graph = ?, description = ?, y1_query = ?, y2_query = ? , config = ?
-                        WHERE id = ?});
-                if (! defined $sth->execute($graph, $description, $y1_query, $y2_query, $config, $id)) {
-                    $self->render_exception($dbh->errstr);
+                        WHERE id = ?} );
+                if (
+                    !defined $sth->execute(
+                        $graph,    $description, $y1_query,
+                        $y2_query, $config,      $id ) )
+                {
+                    $self->render_exception( $dbh->errstr );
                     $sth->finish;
                     $dbh->rollback;
                     $dbh->disconnect;
@@ -219,23 +264,25 @@ sub edit {
         }
     }
 
-    if (!$e) {
+    if ( !$e ) {
+
         # Prepare properties
-        my $config = Mojo::JSON->decode($graph->{config});
+        my $config = Mojo::JSON->decode( $graph->{config} );
         delete $graph->{config};
 
         @$properties{ keys %$config } = values %$config;
 
-        foreach my $p (keys %$properties) {
-            $self->param($p, $properties->{$p});
+        foreach my $p ( keys %$properties ) {
+            $self->param( $p, $properties->{$p} );
         }
 
         # Prefill the rest
-        foreach my $p (keys %$graph) {
-            $self->param($p, $graph->{$p});
+        foreach my $p ( keys %$graph ) {
+            $self->param( $p, $graph->{$p} );
         }
+
         # Is the graph associated with a service ?
-        $self->stash(id_service => $id_service);
+        $self->stash( id_service => $id_service );
     }
 
     $self->render;
@@ -246,149 +293,170 @@ sub remove { }
 sub data {
     my $self = shift;
 
-    my $y1_query = $self->param('y1_query');
-    my $y2_query = $self->param('y2_query');
-    my $id = $self->param('id');
-    my $from = $self->param("from");
-    my $to = $self->param("to");
+    my $y1_query   = $self->param('y1_query');
+    my $y2_query   = $self->param('y2_query');
+    my $id         = $self->param('id');
+    my $from       = $self->param("from");
+    my $to         = $self->param("to");
     my $properties = {};
     my $config;
     my $isservice = 0;
-    my $data = [ ];
+    my $data      = [];
 
     # Double check the input
-    if (!defined $y1_query && !defined $y2_query && !defined $id) {
-        return $self->render('json' => { error => "post: Bad input" });
+    if ( !defined $y1_query && !defined $y2_query && !defined $id ) {
+        return $self->render( 'json' => { error => "post: Bad input" } );
     }
 
     my $dbh = $self->database;
     my $sth;
+
     # When a graph id is received, retrieve the queries and the properties from the DB
-    if (defined $id) {
-        $sth = $dbh->prepare(qq{SELECT y1_query, y2_query, config FROM pr_grapher.graphs WHERE id = ?});
+    if ( defined $id ) {
+        $sth = $dbh->prepare(
+            qq{SELECT y1_query, y2_query, config FROM pr_grapher.graphs WHERE id = ?}
+        );
         $sth->execute($id);
 
-        ($y1_query, $y2_query, $config) = $sth->fetchrow;
+        ( $y1_query, $y2_query, $config ) = $sth->fetchrow;
         $sth->finish;
 
         $properties = $self->properties->load;
-        if (defined $config) {
+        if ( defined $config ) {
             $config = Mojo::JSON->decode($config);
             @$properties{ keys %$config } = values %$config;
         }
+
         #Is the graph linked to a service ?
-        $sth=$dbh->prepare("SELECT COUNT(*) FROM pr_grapher.graph_services WHERE id_graph = ?");
+        $sth = $dbh->prepare(
+            "SELECT COUNT(*) FROM pr_grapher.graph_services WHERE id_graph = ?"
+        );
         $sth->execute($id);
         my $result = $sth->fetchrow;
-        $isservice = 1 if ($result == 1);
+        $isservice = 1 if ( $result == 1 );
         $sth->finish;
     }
 
-    if (not $isservice){
-        if (defined $y1_query and $y1_query !~ m!^\s*$!) {
-            my $series = { };
+    if ( not $isservice ) {
+        if ( defined $y1_query and $y1_query !~ m!^\s*$! ) {
+            my $series = {};
 
             $sth = $dbh->prepare($y1_query);
-            if (! defined $sth->execute) {
-                my $error = { error => '<pre>'.$dbh->errstr.'</pre>' };
+            if ( !defined $sth->execute ) {
+                my $error = { error => '<pre>' . $dbh->errstr . '</pre>' };
                 $sth->finish;
                 $dbh->rollback;
                 $dbh->disconnect;
-                return $self->render('json' => $error);
+                return $self->render( 'json' => $error );
             }
 
             # Use the NAME attribute of the statement handle to have the order
             # of the columns. Since we are working with hashes to build the
             # series form the columns names, this let us output the right
             # order which is not garantied by walking keys of a hash.
-            my @cols = @{$sth->{NAME}};
+            my @cols = @{ $sth->{NAME} };
 
             # The first columns is always the x value of the point.
             my $first_col = shift @cols;
 
             # Build the data struct for Flotr: a hash of series labels with
             # lists of points. Points are list of x,y values)
-            while (my $row = $sth->fetchrow_hashref) {
+            while ( my $row = $sth->fetchrow_hashref ) {
                 my $x = $row->{$first_col};
                 foreach my $c (@cols) {
-                    $series->{$c} = [ ] if ! exists $series->{$c};
-                    push @{$series->{$c}}, [ $x, $row->{$c} ];
+                    $series->{$c} = [] if !exists $series->{$c};
+                    push @{ $series->{$c} }, [ $x, $row->{$c} ];
                 }
             }
             $sth->finish;
 
             # Create the final struct: a list of hashes { data: [], label: "col" }
             foreach my $c (@cols) {
-                push @{$data}, { data => $series->{$c}, label => $c }
+                push @{$data}, { data => $series->{$c}, label => $c };
             }
         }
 
-        if (defined $y2_query and $y2_query !~ m!^\s*$!) {
+        if ( defined $y2_query and $y2_query !~ m!^\s*$! ) {
+
             # Do the same for y2
-            my $series = { };
+            my $series = {};
             $sth = $dbh->prepare($y2_query);
 
-            if (! defined $sth->execute) {
-                my $error = { error => '<pre>'.$dbh->errstr.'</pre>' };
+            if ( !defined $sth->execute ) {
+                my $error = { error => '<pre>' . $dbh->errstr . '</pre>' };
                 $sth->finish;
                 $dbh->rollback;
                 $dbh->disconnect;
-                return $self->render('json' => $error);
+                return $self->render( 'json' => $error );
             }
 
-            my @cols = @{$sth->{NAME}};
+            my @cols      = @{ $sth->{NAME} };
             my $first_col = shift @cols;
-            while (my $row = $sth->fetchrow_hashref) {
+            while ( my $row = $sth->fetchrow_hashref ) {
                 my $x = $row->{$first_col};
                 foreach my $c (@cols) {
-                    $series->{$c} = [ ] if ! exists $series->{$c};
-                    push @{$series->{$c}}, [ $x, $row->{$c} ];
+                    $series->{$c} = [] if !exists $series->{$c};
+                    push @{ $series->{$c} }, [ $x, $row->{$c} ];
                 }
             }
             $sth->finish;
 
             # Create the final struct: a list of hashes { data: [], label: "col", yaxis : 2 }
             foreach my $c (@cols) {
-                push @{$data}, { data => $series->{$c}, label => $c }
+                push @{$data}, { data => $series->{$c}, label => $c };
             }
         }
-    } else{
-        $sth = $dbh->prepare(qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM newest_record) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?});
+    }
+    else {
+        $sth = $dbh->prepare(
+            qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM newest_record) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
+        );
         $sth->execute($id);
 
-        my $series = { };
+        my $series = {};
         my $sql;
-        while ( my ($id_label, $label, $oldest_record, $newest_record) = $sth->fetchrow()){
-            my ($_from, $_to);
-            if (defined $from){
+        while ( my ( $id_label, $label, $oldest_record, $newest_record ) =
+            $sth->fetchrow() )
+        {
+            my ( $_from, $_to );
+            if ( defined $from ) {
                 $_from = $from;
-            } else{
+            }
+            else {
                 $_from = $oldest_record;
             }
-            if (defined $to){
+            if ( defined $to ) {
                 $_to = $to;
-            } else{
+            }
+            else {
                 $_to = $newest_record;
             }
-            $sql = $dbh->prepare("SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);");
-            $sql->execute($id_label,$_from,$_to,sprintf("%.0f",($_to-$_from)/700));
-            $series->{$label} = [ ];
-            while (my ($x,$y) = $sql->fetchrow()){
-                push @{$series->{$label}}, [ $x, $y ];
+            $sql = $dbh->prepare(
+                "SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);"
+            );
+            $sql->execute( $id_label, $_from, $_to,
+                sprintf( "%.0f", ( $_to - $_from ) / 700 ) );
+            $series->{$label} = [];
+            while ( my ( $x, $y ) = $sql->fetchrow() ) {
+                push @{ $series->{$label} }, [ $x, $y ];
             }
             $sql->finish;
-            push @{$data}, { data => $series->{$label}, label => $label }
+            push @{$data}, { data => $series->{$label}, label => $label };
         }
         $sth->finish;
         $dbh->commit;
         $dbh->disconnect;
 
-        if (!scalar(@$data)) {
-            return $self->render('json' => { error => "Empty output" });
+        if ( !scalar(@$data) ) {
+            return $self->render( 'json' => { error => "Empty output" } );
         }
     }
 
-    return $self->render('json' => { series => $data, properties => $self->properties->to_plot($properties) });
+    return $self->render(
+        'json' => {
+            series     => $data,
+            properties => $self->properties->to_plot($properties)
+        } );
 
 }
 

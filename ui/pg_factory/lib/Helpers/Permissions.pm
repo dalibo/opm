@@ -6,27 +6,27 @@ package Helpers::Permissions;
 use Mojo::Base 'Mojolicious::Plugin';
 use Data::Dumper;
 
-
 has target => sub { };
 
 sub register {
-    my ($self, $app) = @_;
+    my ( $self, $app ) = @_;
 
-    $app->helper(perm => sub {
-		     my $ctrl = shift;
-		     $self->target($ctrl);
-		     return $self;
-		 });
+    $app->helper(
+        perm => sub {
+            my $ctrl = shift;
+            $self->target($ctrl);
+            return $self;
+        } );
 }
 
 sub update_info {
     my $self = shift;
-    my $data = ref $_[0] ? $_[0] : { @_ };
+    my $data = ref $_[0] ? $_[0] : {@_};
 
     foreach my $info (qw/username password admin/) {
-	if (exists $data->{$info}) {
-	    $self->target->session('user_'.$info => $data->{$info});
-	}
+        if ( exists $data->{$info} ) {
+            $self->target->session( 'user_' . $info => $data->{$info} );
+        }
     }
 
     return;
@@ -35,14 +35,15 @@ sub update_info {
 sub remove_info {
     my $self = shift;
 
-    map { delete $self->target->session->{$_} } qw(user_username user_password user_admin);
+    map { delete $self->target->session->{$_} }
+        qw(user_username user_password user_admin);
 }
 
 sub is_authd {
     my $self = shift;
 
-    if ($self->target->session('user_username')) {
-	return 1;
+    if ( $self->target->session('user_username') ) {
+        return 1;
     }
 
     return 0;
@@ -53,11 +54,10 @@ sub is_admin {
 
     return 0 unless defined $self->target->session('user_admin');
 
-    if ($self->target->session('user_admin')) {
-	return 1;
+    if ( $self->target->session('user_admin') ) {
+        return 1;
     }
     return 0;
 }
-
 
 1;
