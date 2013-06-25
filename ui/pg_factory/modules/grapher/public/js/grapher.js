@@ -19,7 +19,7 @@
             },
             xaxis: {
                 mode: 'time',
-                autoscale: true,
+                autoscale: false,
                 autoscaleMargin: 5
             },
             selection : {
