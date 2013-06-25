@@ -12,25 +12,82 @@
     <%= link_to graphs_add => (class => "btn") => begin %>Add<% end %>
   </div>
 
-  <div class="box-content">
+    <div class="span8">
+      <ul class="scales">
+        <li><input type="button" name="interval" value="year" /></li>
+        <li><input type="button" name="interval" value="month" /></li>
+        <li><input type="button" name="interval" value="week" /></li>
+        <li><input type="button" name="interval" value="day" /></li>
+      </ul>
+      <p class="scales">Custom interval&nbsp;
+        <label>from:&nbsp;</label><input type="text" class="date datepick" id="fromdate" name="fromdate" />
+        <label>to:&nbsp;</label><input type="text" class="date datepick" id="todate" name="todate" />
+        <input type="button" name="interval" value="custom" />
+      </p>
+    </div>
 
+  <div class="box-content">
     <div class="graph">
       <div class="pull-right">
-	<div class="btn-group">
-	  <a href="#" class="btn btn-mini save">Save</a>
-	</div>
-      </div>
-      
-      <div class="row graph_container">
-	<div class="plot span9"></div>
-	<div class="legend span3"></div>
-      </div>
+        <div class="btn-group">
+            <a href="#" class="btn btn-mini save">Save</a>
+        </div>
+    </div>
+
+    <div class="row graph_container">
+      <div class="plot span9"></div>
+      <div class="legend span3"></div>
     </div>
   </div>
 </div>
 
 <script>
 $(document).ready(function () {
-  $('.graph').grapher({ id: <%= $id %>, url: "/grapher/graphs/data" });
+  $('.scales input[type=button]').click(function () {
+    var fromDate = new Date();
+    var toDate = new Date();
+
+    switch($(this).attr('value')) {
+      case 'year':
+          fromDate.setYear(fromDate.getYear() + 1900 - 1);
+        break;
+        case 'month':
+          fromDate.setMonth(fromDate.getMonth() - 1);
+        break;
+        case 'week':
+          fromDate.setDate(fromDate.getDate() - 7);
+        break;
+        case 'day':
+          fromDate.setDate(fromDate.getDate() - 1);
+        break;
+        case 'custom':
+          if ($('#fromdate').attr('value') === '' ) {
+            alert('you must set the starting date.');
+            return false;
+          }
+
+          if ($('#todate').attr('value') === '' )
+            /* set the toDate to the current day */
+            $('#todate').attr('value', $.datepicker.formatDate('dd/mm/yy', toDate ));
+          else
+            toDate = $.datepicker.parseDate('dd/mm/yy', $('#todate').attr('value'));
+
+          fromDate = $.datepicker.parseDate('dd/mm/yy', $('#fromdate').attr('value'));
+        break;
+    }
+    $('#fromdate').attr('value',$.datepicker.formatDate('dd/mm/yy',fromDate));
+    $('#todate').attr('value',$.datepicker.formatDate('dd/mm/yy',toDate));
+    $('.graph').grapher({ id: <%= $id %>, from: Math.round(fromDate.getTime()/1000), to: Math.round(toDate.getTime()/1000), url: "/grapher/graphs/data" });
+  })
+  /* by default, show the week graph by triggering the week button */
+  $('ul.scales input[value=week]').click();
+
+
+  /* bind the datepicker to the date fields */
+  $('.datepick').datepicker({
+    autoFocusNextInput: true,
+    showOn: 'focus',
+    dateFormat: 'dd/mm/yy'
+  });
 });
 </script>

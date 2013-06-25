@@ -144,7 +144,9 @@
       $save = $this.find('.save'),
       $legend = $this.find('.legend')
       post_data = { }, grapher = this,
-      url = (this.config['url'] == null ? '/graphs/data' : this.config['url']);
+      url = (this.config['url'] == null ? '/graphs/data' : this.config['url'])
+      fromDate = this.config['from'],
+      toDate = this.config['to'];
 
       // Empty the graph to draw it from scratch
       $plot.empty();
@@ -163,10 +165,15 @@
 	}
 
 	post_data = { y1_query: y1,
-		      y2_query: y2
+		      y2_query: y2,
+          from: fromDate,
+          to: toDate
 		    };
       } else {
-	post_data = { id: this.config.id };
+	post_data = { id: this.config.id,
+          from: fromDate,
+          to: toDate
+   };
       }
 
       // Send the request for the data, everything is done inside the
@@ -250,7 +257,7 @@
       var $this = $(this)
       , data = $this.data('grapher')
       , options = $.extend({}, $.fn.grapher.defaults, typeof option == 'object' && option)
-      if (!data) $this.data('grapher', (data = new Grapher(this, options)))
+      if ( (!data) || (typeof option != 'undefined') ) $this.data('grapher', (data = new Grapher(this, options)))
       if (typeof option == 'string') data[option]()
       else if (options.draw) data.draw()
     })
@@ -261,7 +268,9 @@
     properties: null,
     id: null,
     draw: true,
-    url: null
+    url: null,
+    from: null,
+    to: null
   }
 
 })(jQuery);

@@ -249,6 +249,8 @@ sub data {
     my $y1_query = $self->param('y1_query');
     my $y2_query = $self->param('y2_query');
     my $id = $self->param('id');
+    my $from = $self->param("from");
+    my $to = $self->param("to");
     my $properties = {};
     my $config;
     my $isservice = 0;
@@ -351,14 +353,25 @@ sub data {
             }
         }
     } else{
-        $sth = $dbh->prepare(qq{SELECT id_label, label, oldest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?});
+        $sth = $dbh->prepare(qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM newest_record) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?});
         $sth->execute($id);
 
         my $series = { };
         my $sql;
-        while ( my ($id_label, $label, $oldest_record) = $sth->fetchrow()){
-            $sql = $dbh->prepare("SELECT pr_grapher.js_time(timet), value as $label FROM wh_nagios.get_sampled_label_data(?, ?, now(), 300);");
-            $sql->execute($id_label,$oldest_record);
+        while ( my ($id_label, $label, $oldest_record, $newest_record) = $sth->fetchrow()){
+            my ($_from, $_to);
+            if (defined $from){
+                $_from = $from;
+            } else{
+                $_from = $oldest_record;
+            }
+            if (defined $to){
+                $_to = $to;
+            } else{
+                $_to = $newest_record;
+            }
+            $sql = $dbh->prepare("SELECT pr_grapher.js_time(timet), value as $label FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);");
+            $sql->execute($id_label,$_from,$_to,sprintf("%.0f",($_to-$_from)/700));
             $series->{$label} = [ ];
             while (my ($x,$y) = $sql->fetchrow()){
                 push @{$series->{$label}}, [ $x, $y ];

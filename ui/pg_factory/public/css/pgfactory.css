@@ -26,7 +26,7 @@ body {
 
 .box-content {
     clear: both;
-    padding-top: 30px;
+    padding-top: 0px;
 }
 
 /* Tables for key value descriptions
@@ -120,4 +120,22 @@ body {
 
 .strong {
     font-weight: bold;
+}
+
+ul.scales {
+    margin:0;padding:0;
+      list-style: none;
+}
+
+ul.scales li {
+    display:inline;
+      padding-right:15px;
+}
+
+.date {
+  width: 80px;
+}
+
+.scales label{
+  display: inline;
 }
