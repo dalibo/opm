@@ -258,7 +258,7 @@ sub data {
 
     # Double check the input
     if (!defined $y1_query && !defined $y2_query && !defined $id) {
-        return $self->render_json({ error => "post: Bad input" });
+        return $self->render('json' => { error => "post: Bad input" });
     }
 
     my $dbh = $self->database;
@@ -294,7 +294,7 @@ sub data {
                 $sth->finish;
                 $dbh->rollback;
                 $dbh->disconnect;
-                return $self->render_json($error);
+                return $self->render('json' => $error);
             }
 
             # Use the NAME attribute of the statement handle to have the order
@@ -333,7 +333,7 @@ sub data {
                 $sth->finish;
                 $dbh->rollback;
                 $dbh->disconnect;
-                return $self->render_json($error);
+                return $self->render('json' => $error);
             }
 
             my @cols = @{$sth->{NAME}};
@@ -384,11 +384,11 @@ sub data {
         $dbh->disconnect;
 
         if (!scalar(@$data)) {
-            return $self->render_json({ error => "Empty output" });
+            return $self->render('json' => { error => "Empty output" });
         }
     }
 
-    return $self->render_json({ series => $data, properties => $self->properties->to_plot($properties) });
+    return $self->render('json' => { series => $data, properties => $self->properties->to_plot($properties) });
 
 }
 
