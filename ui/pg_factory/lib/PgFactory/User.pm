@@ -33,13 +33,15 @@ sub list{
             $self->msg->error("Empty password.");
             $e = 1;
         }
-        
+
         if (!$e){
             $sql = $dbh->prepare("SELECT public.create_user('".$form_data->{username}."','".$form_data->{password}."','{".$form_data->{accname}."}');");
             if ($sql->execute()){
                 $self->msg->info("User added");
+                $dbh->commit();
             } else{
                 $self->msg->error("Could not add user");
+                $dbh->rollback();
             }
             $sql->finish();
         }
@@ -89,8 +91,10 @@ sub edit{
             $sql = $dbh->prepare('GRANT "'.$form_data->{accname}.'" TO "'.$rolname.'"');
             if ($sql->execute()){
                 $self->msg->info("Account added to user");
+                $dbh->commit();
             } else{
                 $self->msg->error("Could not add account to user");
+                $dbh->rollback();
             }
             $sql->finish();
         }
@@ -126,8 +130,10 @@ sub delete{
     my $sql = $dbh->prepare("SELECT public.drop_user('$rolname');");
     if ($sql->execute()){
         $self->msg->info("User deleted");
+        $dbh->commit();
     } else{
         $self->msg->error("Could not delete user");
+        $dbh->rollback();
     }
     $sql->finish();
     $dbh->disconnect();
@@ -142,8 +148,10 @@ sub delacc{
     my $sql = $dbh->prepare('REVOKE "'.$accname.'" FROM "'.$rolname.'"');
     if ($sql->execute()){
         $self->msg->info("Account removed from user");
+        $dbh->commit();
     } else{
         $self->msg->error("Could not remove account from user");
+        $dbh->rollback();
     }
     $sql->finish();
     $dbh->disconnect();
