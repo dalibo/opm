@@ -141,7 +141,7 @@
             var $this       = this.element,
                 $datasource = this.datasource,
                 $plot       = $this.find('.plot'),
-                save        = $this.find('.save'),
+                $save        = $this.find('.save'),
                 $legend     = $this.find('.legend');
             post_data = { };
             grapher   = this;
