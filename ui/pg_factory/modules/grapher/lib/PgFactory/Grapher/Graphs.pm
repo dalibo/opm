@@ -414,7 +414,7 @@ sub data {
     }
     else {
         $sth = $dbh->prepare(
-            qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM newest_record) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
+            qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM COALESCE(newest_record,now())) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
         );
         $sth->execute($id);
 
@@ -424,13 +424,13 @@ sub data {
             $sth->fetchrow() )
         {
             my ( $_from, $_to );
-            if ( defined $from ) {
+            if ( $from ne "null") {
                 $_from = $from;
             }
             else {
                 $_from = $oldest_record;
             }
-            if ( defined $to ) {
+            if ( $to ne "null" ) {
                 $_to = $to;
             }
             else {
