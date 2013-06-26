@@ -34,7 +34,12 @@ sub show {
 
     # Get the graph
     my $sth = $dbh->prepare(
-        qq{SELECT graph, description FROM pr_grapher.graphs WHERE id = ?});
+        qq{SELECT CASE WHEN s2.hostname IS NOT NULL THEN s2.hostname || '::' ELSE '' END || graph AS graph,description
+        FROM pr_grapher.graphs g
+        LEFT JOIN pr_grapher.graph_services gs ON g.id = gs.id_graph
+        LEFT JOIN public.services s1 ON gs.id_service = s1.id
+        LEFT JOIN public.servers s2 ON s1.id_server = s2.id
+        WHERE g.id = ?});
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
