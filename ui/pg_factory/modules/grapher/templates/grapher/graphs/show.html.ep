@@ -1,10 +1,6 @@
 % layout config 'layout';
 % my %graph = %{stash 'graph'};
 <div class="row-fluid">
-  <h2><%= $graph{graph} %></h2>
-
-  <p><%= $graph{description} %></p>
-
   <div class="btn-group pull-right">
     <%= link_to graphs_list => (class => "btn") => begin %>Back to list<% end %>
     <%= link_to graphs_edit => { id => $id } => (class => "btn") => begin %>Edit<% end %>

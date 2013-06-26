@@ -342,7 +342,7 @@ sub data {
         $sth->finish;
     }
 
-    if ( not $isservice ) {
+    if ( not $isservice ) { # Regular graph
         if ( defined $y1_query and $y1_query !~ m!^\s*$! ) {
             my $series = {};
 
@@ -412,7 +412,20 @@ sub data {
             }
         }
     }
-    else {
+    else {# Graph is linked to a service
+        $sth = $dbh->prepare(
+            qq{SELECT s2.hostname || '::' || graph AS graph,description
+            FROM pr_grapher.graphs g
+            JOIN pr_grapher.graph_services gs ON g.id = gs.id_graph
+            JOIN public.services s1 ON gs.id_service = s1.id
+            JOIN public.servers s2 ON s1.id_server = s2.id
+            WHERE g.id = ?});
+        $sth->execute($id);
+        my ($graphtitle,$graphsubtitle) = $sth->fetchrow();
+        $sth->finish();
+        $properties->{'title'} = $graphtitle;
+        $properties->{'subtitle'} = $graphsubtitle;
+
         $sth = $dbh->prepare(
             qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM COALESCE(newest_record,now())) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
         );

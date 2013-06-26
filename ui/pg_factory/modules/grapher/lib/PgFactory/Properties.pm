@@ -133,6 +133,8 @@ sub to_plot {
 
     my $options = {
         shadowSize => 0,
+        title      => $props->{'title'},
+        subtitle   => $props->{'subtitle'},
         legend     => { position => 'ne' },
         HtmlText   => Mojo::JSON->false,
         xaxis      => { autoscaleMargin => 5 },
