@@ -2,7 +2,7 @@
 <ul class="nav">
   % if (($user_level eq "user" ) or ($user_level eq "admin")){
 
-  <li <% if ($cr =~ m!^server_!) { %>class="active"<% } %>><%= link_to server_list => begin %><%=l 'Servers' %><% end %></li>
+  <li <% if ( ($cr =~ m!^server_!) || ($cr =~ m!^site_home$!) ) { %>class="active"<% } %>><%= link_to server_list => begin %><%=l 'Servers' %><% end %></li>
   <li class="dropdown">
     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><%=l 'Graphs' %> <b class="caret"></b></a>
     <ul class="dropdown-menu">
