@@ -58,7 +58,7 @@ sub startup {
     my $r_adm  = $r_auth->bridge->to('user#check_admin');
 
     # Home page
-    $r_auth->route('/')->to('site#home')->name('site_home');
+    $r_auth->route('/')->to('server#list')->name('site_home');
     $r_auth->route('/help')->to('site#help')->name('site_help');
 
     # Lang

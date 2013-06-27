@@ -1,7 +1,5 @@
 % my $cr = current_route;
 <ul class="nav">
-  <li <% if ($cr eq "site_home") { %>class="active"<% } %>><%= link_to site_home  => begin %><%=l 'Home'%><% end %></li>
-
   % if (($user_level eq "user" ) or ($user_level eq "admin")){
 
   <li <% if ($cr =~ m!^server_!) { %>class="active"<% } %>><%= link_to server_list => begin %><%=l 'Servers' %><% end %></li>
