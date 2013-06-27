@@ -456,7 +456,7 @@ sub data {
                 sprintf( "%.0f", ( $_to - $_from ) / 700 ) );
             $series->{$label} = [];
             while ( my ( $x, $y ) = $sql->fetchrow() ) {
-                push @{ $series->{$label} }, [ $x, ($y eq "NaN" ? undef : $y ) ];
+                push @{ $series->{$label} }, [ 0 + $x, ($y eq "NaN" ? undef : 0.0 + $y ) ];
             }
             $sql->finish;
             push @{$data}, { data => $series->{$label}, label => $label };
