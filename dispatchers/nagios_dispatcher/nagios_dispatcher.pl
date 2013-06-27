@@ -48,7 +48,7 @@ my $syslog = 0;
 # They do the parsing of the PERFDATA string
 
 my $value                        = qr/[-+]?[\d\.,]+/;
-my $value_re                     = qr/$value(?:e$value)?/;
+my $value_re                     = qr/$value(?:e$value)?|NaN/;
 my $value_with_negative_infinity = qr/$value_re|~/;
 
 sub parse_perfrecord {
