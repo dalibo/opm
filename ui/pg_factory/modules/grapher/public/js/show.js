@@ -38,7 +38,16 @@ $(document).ready(function () {
     $('#fromdate').attr('value',$.datepicker.formatDate('dd/mm/yy',fromDate));
     $('#todate').attr('value',$.datepicker.formatDate('dd/mm/yy',toDate));
     $('[id-graph]').grapher({from: fromDate.getTime(), to: toDate.getTime(), url: "/grapher/graphs/data" });
-  })
+  });
+
+    $('[export-graph]').click(function (e) {
+        e.preventDefault();
+        var id = $(this).attr('export-graph'),
+            grapher = $('[id-graph='+id+']').data('grapher');
+
+        grapher.flotr.download.saveImage('png', null, null, false);
+    });
+
   /* by default, show the week graph by triggering the week button */
   $('#sel_week').click();
 

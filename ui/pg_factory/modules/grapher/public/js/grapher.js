@@ -79,7 +79,6 @@
         draw: function () {
             var $this       = this.element,
                 $plot       = $this.find('.plot'),
-                $save       = $this.find('.save'),
                 $legend     = $this.find('.legend'),
                 graph       = null,
                 container   = $plot.get(0),
@@ -108,11 +107,7 @@
             // Draw the graph
             graph = Flotr.draw(container, series, properties);
 
-            // Bind the save action
-            $save.click(function (e) {
-                e.preventDefault();
-                graph.download.saveImage('png', null, null, false);
-            });
+            grapher.flotr = graph;
         }
     };
 
