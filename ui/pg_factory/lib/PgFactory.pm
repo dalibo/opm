@@ -91,6 +91,8 @@ sub startup {
         ->name('account_delete');
     $r_adm->route('/account/delrol/:accname/:rolname')->to('account#delrol')
         ->name('account_delrol');
+    $r_adm->route('/account/revokeserver/:accname/:idserver')->to('account#revokeserver')
+        ->name('account_revokeserver');
 
     # Server management
     $r_auth->route('/server')->to('server#list')->name('server_list');

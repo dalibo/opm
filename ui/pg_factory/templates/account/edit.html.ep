@@ -1,6 +1,8 @@
 % layout config 'layout';
 % my @roles = @{stash 'roles'};
 % my @allroles = @{stash 'allroles'};
+% my @myservers = @{stash 'myservers'};
+% my @freeservers = @{stash 'freeservers'};
 % my $accname = param 'accname';
 
 <div class="row">
@@ -13,6 +15,17 @@
             <%   my %line = %{$r}; %>
             <li><%= link_to user_edit => {rolname => $line{rolname} } => begin %><%= $line{rolname} %><% end %>
             <%= link_to account_delrol => {rolname => $line{rolname}, accname => $accname} => begin %><span class="badge badge-important">X</span><% end %>
+            </li>
+          <% } %>
+        </ul>
+    </div>
+    <div class="box">
+        <b><%=l 'List of servers'  %> :</b><br />
+        <ul>
+          <% foreach my $s (@myservers) { %>
+            <%   my ($k,$v) = each %{$s}; %>
+            <li><%= $v %>
+            <%= link_to account_revokeserver => {accname => $accname, idserver => $k} => begin %><span class="badge badge-important">X</span><% end %>
             </li>
           <% } %>
         </ul>
@@ -54,6 +67,23 @@
         </div>
         <div class="btn-group pull-left">
           <%= submit_button l('Add'), name => 'add', class => 'btn btn-primary' %>
+        </div>
+      </fieldset>
+    <% end %>
+
+    <%= form_for account_edit => (method => 'POST') => begin %>
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label" for="hostname"><%=l 'Unassigned servers' %> :</label>
+            <select name="existing_hostname" id="existing_hostname" class="span3">
+            <% foreach my $s (@freeservers) { %>
+              <%   my ($k,$v) = each %{$s}; %>
+              <option value="<%= $k %>"><%= $v %></option>
+            <% } %>
+            </select>
+        </div>
+        <div class="btn-group pull-left">
+          <%= submit_button l('Assign'), name => 'add', class => 'btn btn-primary' %>
         </div>
       </fieldset>
     <% end %>

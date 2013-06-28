@@ -94,6 +94,32 @@ sub delrol {
     $self->redirect_to('account_edit');
 }
 
+sub revokeserver {
+    my $self    = shift;
+    my $dbh     = $self->database();
+    my $idserver = $self->param('idserver');
+    my $accname = $self->param('accname');
+    my $sql =
+        $dbh->prepare( "SELECT rc FROM public.revoke_server(?, ?);");
+    if ( $sql->execute($idserver, $accname) ) {
+        my $rc = $sql->fetchrow();
+        if ( $rc ){
+            $self->msg->info("Server revoked");
+            $dbh->commit() if (!$dbh->{AutoCommit});
+        } else {
+            $self->msg->info("Could not revoke server");
+            $dbh->rollback() if (!$dbh->{AutoCommit});
+        }
+    }
+    else {
+        $self->msg->error("Unknown error");
+        $dbh->rollback() if (!$dbh->{AutoCommit});
+    }
+    $sql->finish();
+    $dbh->disconnect();
+    $self->redirect_to('account_edit');
+}
+
 sub edit {
     my $self    = shift;
     my $dbh     = $self->database();
@@ -127,13 +153,9 @@ sub edit {
             }
             $sql->finish();
         }
-        else {
+        elsif ( !$form_data->{existing_username} =~ m/^\s*$/ ) {
 
             # Create new user in this account
-            if ( $form_data->{username} =~ m/^\s*$/ ) {
-                $self->msg->error("Empty username.");
-                $e = 1;
-            }
 
             if ( $form_data->{password} =~ m/^\s*$/ ) {
                 $self->msg->error("Empty password.");
@@ -155,6 +177,24 @@ sub edit {
                     $dbh->rollback() if (!$dbh->{AutoCommit});
                 }
                 $sql->finish();
+            }
+        }
+        elsif ( !$form_data->{existing_hostname} =~ m/^\s*$/ ) {
+
+            # Grant the account to the chosen server
+            $sql = $dbh->prepare("SELECT rc FROM public.grant_server(?, ?);");
+            if ( $sql->execute($form_data->{existing_hostname},$accname) ){
+                my $rc = $sql->fetchrow();
+                if ( $rc ){
+                    $self->msg->info("Server granted");
+                    $dbh->commit() if (!$dbh->{AutoCommit});
+                } else {
+                    $self->msg->info("Could not grant server");
+                    $dbh->rollback() if (!$dbh->{AutoCommit});
+                }
+            } else {
+                $self->msg->info("Unknown error");
+                $dbh->rollback() if (!$dbh->{AutoCommit});
             }
         }
     }
@@ -180,7 +220,22 @@ sub edit {
     }
     $sql->finish();
 
-    $self->stash( roles => $roles, allroles => $allroles );
+    my $myservers = [];
+    my $freeservers = [];
+    $sql = $dbh->prepare(
+        "SELECT id, hostname, rolname FROM public.list_servers() WHERE rolname = ? OR rolname IS NULL ORDER BY 2;"
+    );
+    $sql->execute($accname);
+    while ( my ($id_server, $hostname, $rolname) = $sql->fetchrow() ) {
+        if (scalar $rolname){
+            push @{$myservers}, { $id_server => $hostname }
+        } else{
+            push @{$freeservers}, { $id_server => $hostname };
+        }
+    }
+    $sql->finish();
+
+    $self->stash( roles => $roles, allroles => $allroles, myservers => $myservers, freeservers => $freeservers );
 
     $dbh->disconnect();
     $self->render();
