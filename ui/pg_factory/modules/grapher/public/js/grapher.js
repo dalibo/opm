@@ -90,7 +90,6 @@
             // Empty the graph to draw it from scratch
             $plot.empty();
             $plot.unbind();
-            $save.unbind();
             $legend.empty();
 
             // Fetch to data to plot
