@@ -24,6 +24,9 @@
                 fps : 30
             }
         };
+
+        this.element.append('<div class="plot span9">')
+            .append('<div class="legend span3"></div>');
     }
 
     Grapher.prototype = {
