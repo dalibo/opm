@@ -31,11 +31,12 @@
         <div class="btn-group">
             <a href="#" class="btn btn-mini save">Save</a>
         </div>
-    </div>
+      </div>
 
-    <div class="row graph_container">
-      <div class="plot span9"></div>
-      <div class="legend span3"></div>
+      <div class="row graph_container">
+        <div class="plot span9"></div>
+        <div class="legend span3"></div>
+      </div>
     </div>
   </div>
 </div>
