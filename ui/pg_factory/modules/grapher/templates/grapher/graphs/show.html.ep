@@ -5,23 +5,21 @@
 % my %graph = %{stash 'graph'};
 <div class="row-fluid">
   <div class="btn-group pull-right">
-    <%= link_to graphs_list => (class => "btn") => begin %>Back to list<% end %>
     <%= link_to graphs_edit => { id => $id } => (class => "btn") => begin %>Edit<% end %>
-    <%= link_to graphs_remove=> { id => $id } => (class => "btn") => begin %>Remove<% end %>
-    <%= link_to graphs_add => (class => "btn") => begin %>Add<% end %>
   </div>
 
     <div class="span8">
-      <ul class="scales">
-        <li><input type="button" name="interval" value="year" /></li>
-        <li><input type="button" name="interval" value="month" /></li>
-        <li><input type="button" name="interval" value="week" /></li>
-        <li><input type="button" name="interval" value="day" /></li>
-      </ul>
-      <p class="scales">Custom interval&nbsp;
-        <label>from:&nbsp;</label><input type="text" class="date datepick" id="fromdate" name="fromdate" />
-        <label>to:&nbsp;</label><input type="text" class="date datepick" id="todate" name="todate" />
-        <input type="button" name="interval" value="custom" />
+
+      <p class="btn-group scales">
+        <input type="button" id="sel_year"  class="btn" value="Year" />
+        <input type="button" id="sel_month" class="btn" value="Month" />
+        <input type="button" id="sel_week"  class="btn" value="Week" />
+        <input type="button" id="sel_day"   class="btn" value="Day" />
+      </p>
+      <p class="scales">
+        <label for="fromdate">From:&nbsp;</label><input type="text" class="datepick date" id="fromdate" name="fromdate" />
+        <label for="todate">To:&nbsp;</label><input type="text" class="datepick date" id="todate" name="todate" />
+        <input type="button" id="sel_custom" class="btn" style="margin-bottom:10px" value="Custom" />
       </p>
     </div>
 
