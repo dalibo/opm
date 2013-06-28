@@ -35,12 +35,8 @@ sub list {
 
         if ( !$e ) {
             $sql =
-                $dbh->prepare( "SELECT public.create_user('"
-                    . $form_data->{username} . "','"
-                    . $form_data->{password} . "','{"
-                    . $form_data->{accname}
-                    . "}');" );
-            if ( $sql->execute() ) {
+                $dbh->prepare( "SELECT public.create_user(?, ?, '{" . $form_data->{accname} . "}');");
+            if ( $sql->execute($form_data->{username}, $form_data->{password}) ) {
                 $self->msg->info("User added");
                 $dbh->commit() if (!$dbh->{AutoCommit});
             }
@@ -114,9 +110,9 @@ sub edit {
     }
 
     $sql = $dbh->prepare(
-        "SELECT accname FROM list_users() WHERE rolname = '$rolname' ORDER BY 1;"
+        "SELECT accname FROM list_users() WHERE rolname = ? ORDER BY 1;"
     );
-    $sql->execute();
+    $sql->execute($rolname);
     my $acc = [];
 
     while ( my ($v) = $sql->fetchrow() ) {
@@ -125,9 +121,9 @@ sub edit {
     $sql->finish();
 
     $sql = $dbh->prepare(
-        "SELECT accname FROM list_accounts() EXCEPT SELECT accname FROM list_users() WHERE rolname = '$rolname' ORDER BY 1;"
+        "SELECT accname FROM list_accounts() EXCEPT SELECT accname FROM list_users() WHERE rolname = ? ORDER BY 1;"
     );
-    $sql->execute();
+    $sql->execute($rolname);
     my $allacc = [];
 
     while ( my ($v) = $sql->fetchrow() ) {
@@ -144,8 +140,8 @@ sub delete {
     my $self    = shift;
     my $dbh     = $self->database();
     my $rolname = $self->param('rolname');
-    my $sql     = $dbh->prepare("SELECT public.drop_user('$rolname');");
-    if ( $sql->execute() ) {
+    my $sql     = $dbh->prepare("SELECT public.drop_user(?);");
+    if ( $sql->execute($rolname) ) {
         $self->msg->info("User deleted");
         $dbh->commit() if (!$dbh->{AutoCommit});
     }

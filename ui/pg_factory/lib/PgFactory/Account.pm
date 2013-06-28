@@ -60,8 +60,8 @@ sub delete {
     my $self    = shift;
     my $dbh     = $self->database();
     my $accname = $self->param('accname');
-    my $sql     = $dbh->prepare("SELECT public.drop_account('$accname');");
-    if ( $sql->execute() ) {
+    my $sql     = $dbh->prepare("SELECT public.drop_account(?);");
+    if ( $sql->execute($accname) ) {
         $self->msg->info("Account deleted");
         $dbh->commit() if (!$dbh->{AutoCommit});
     }
@@ -200,8 +200,8 @@ sub edit {
     }
 
     $sql = $dbh->prepare(
-        "SELECT useid,rolname FROM list_users('$accname') ORDER BY 2;");
-    $sql->execute();
+        "SELECT useid,rolname FROM list_users(?) ORDER BY 2;");
+    $sql->execute($accname);
     my $roles = [];
 
     while ( my ( $i, $n ) = $sql->fetchrow() ) {
@@ -210,9 +210,9 @@ sub edit {
     $sql->finish();
 
     $sql = $dbh->prepare(
-        "SELECT DISTINCT rolname FROM list_users() EXCEPT SELECT rolname FROM list_users('$accname') ORDER BY 1;"
+        "SELECT DISTINCT rolname FROM list_users() EXCEPT SELECT rolname FROM list_users(?) ORDER BY 1;"
     );
-    $sql->execute();
+    $sql->execute($accname);
     my $allroles = [];
 
     while ( my ($v) = $sql->fetchrow() ) {
