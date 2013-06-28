@@ -88,8 +88,6 @@
                 series;
 
             // Empty the graph to draw it from scratch
-            $plot.empty();
-            $plot.unbind();
             $legend.empty();
 
             // Fetch to data to plot
@@ -100,13 +98,100 @@
                 return;
             }
 
-            properties = this.fetched.properties;
-            series = this.fetched.series;
+            this.show();
+
+            this.drawLegend();
+        },
+
+        show: function () {
+            var $this      = this.element,
+                properties = this.fetched.properties,
+                series     = this.fetched.series,
+                graph      = null
+                container  = $this.find('.plot').get(0);
+
+            $this.find('.plot').empty();
+            $this.find('.plot').unbind();
 
             // Draw the graph
             graph = Flotr.draw(container, series, properties);
 
-            grapher.flotr = graph;
+            this.flotr = graph;
+        },
+
+        drawLegend: function() {
+
+            var $this      = this.element,
+                $legend    = $this.find('.legend'),
+                legend_opt = this.flotr.legend.options,
+                series     = this.flotr.series,
+                fragments  = [],
+                i, label, color,
+                itemCount  = $.grep(series, function (e) {
+                    return (e.label && !e.hide) }
+                ).length;
+
+            if (itemCount) {
+
+                for(i = 0; i < series.length; ++i){
+                    if(!series[i].label) continue;
+
+                    var s = series[i],
+                        boxWidth = legend_opt.labelBoxWidth,
+                        boxHeight = legend_opt.labelBoxHeight;
+
+                    label = legend_opt.labelFormatter(s.label);
+                    color = 'background-color:' + ((s.bars && s.bars.show && s.bars.fillColor && s.bars.fill) ? s.bars.fillColor : s.color) + ';';
+
+                    var $cells = $(
+                        '<td class="flotr-legend-color-box">'+
+                            '<div id="legendcolor'+i+'" style="border:1px solid '+ legend_opt.labelBoxBorderColor+ ';padding:1px">'+
+                                '<div style="width:'+ (boxWidth-1) +'px;height:'+ (boxHeight-1) +'px;border:1px solid '+ series[i].color +'">'+ // Border
+                                    '<a style="display:block;width:'+ boxWidth +'px;height:'+ boxHeight +'px;'+ color +'"></a>'+ // Background
+                                '</div>'+
+                            '</div>'+
+                        '</td>'+
+                        '<td class="flotr-legend-label">'+
+                            '<label>'+ label +'</label>'+
+                        '</td>'
+                    );
+
+                    $cells.find('a, label')
+                        .data('i', i)
+                        .data('grapher', this)
+                        .click(function () {
+                            var grapher = $(this).data('grapher'),
+                                i       = $(this).data('i'),
+                                flotr   = grapher.flotr,
+                                s       = grapher.fetched.series[i],
+                                color;
+
+                            s.hide = ! s.hide;
+                            if (s.hide)
+                                $('#legendcolor'+i).hide();
+                            else
+                                $('#legendcolor'+i).show();
+                            grapher.show();
+                        });
+
+                    fragments.push($cells);
+                }
+
+                if(fragments.length > 0){
+                    var $table = $('<table style="font-size:smaller;color:'+ this.flotr.options.grid.color +'" />');
+                    var $tr = $('<tr />');
+
+                    for(i = 0; i < fragments.length; i++) {
+                        if(i % legend_opt.noColumns === 0) {
+                            $table.append($tr);
+                            $tr = $('<tr />');
+                        }
+                        $tr.append(fragments[i]);
+                    }
+
+                    $legend.append($table);
+                }
+            }
         }
     };
 
