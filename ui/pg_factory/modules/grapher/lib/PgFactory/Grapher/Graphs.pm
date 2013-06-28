@@ -427,7 +427,7 @@ sub data {
         $properties->{'subtitle'} = $graphsubtitle;
 
         $sth = $dbh->prepare(
-            qq{SELECT id_label, label, extract(epoch FROM oldest_record) as oldest_record, extract(epoch FROM COALESCE(newest_record,now())) AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
+            qq{SELECT id_label, label, extract(epoch FROM oldest_record)*1000 as oldest_record, extract(epoch FROM COALESCE(newest_record,now()))*1000 AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
         );
         $sth->execute($id);
 
@@ -449,6 +449,8 @@ sub data {
             else {
                 $_to = $newest_record;
             }
+            $_from = substr $_from, 0, -3;
+            $_to = substr $_to, 0, -3;
             $sql = $dbh->prepare(
                 "SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);"
             );

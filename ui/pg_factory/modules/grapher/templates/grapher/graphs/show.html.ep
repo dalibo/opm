@@ -73,7 +73,7 @@ $(document).ready(function () {
     }
     $('#fromdate').attr('value',$.datepicker.formatDate('dd/mm/yy',fromDate));
     $('#todate').attr('value',$.datepicker.formatDate('dd/mm/yy',toDate));
-    $('.graph').grapher({ id: <%= $id %>, from: Math.round(fromDate.getTime()/1000), to: Math.round(toDate.getTime()/1000), url: "/grapher/graphs/data" });
+    $('.graph').grapher({ id: <%= $id %>, from: fromDate.getTime(), to: toDate.getTime(), url: "/grapher/graphs/data" });
   })
   /* by default, show the week graph by triggering the week button */
   $('ul.scales input[value=week]').click();
