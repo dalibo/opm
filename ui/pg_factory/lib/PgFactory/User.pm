@@ -42,11 +42,11 @@ sub list {
                     . "}');" );
             if ( $sql->execute() ) {
                 $self->msg->info("User added");
-                $dbh->commit();
+                $dbh->commit() if (!$dbh->{AutoCommit});
             }
             else {
                 $self->msg->error("Could not add user");
-                $dbh->rollback();
+                $dbh->rollback() if (!$dbh->{AutoCommit});
             }
             $sql->finish();
         }
@@ -103,11 +103,11 @@ sub edit {
                     . '"' );
             if ( $sql->execute() ) {
                 $self->msg->info("Account added to user");
-                $dbh->commit();
+                $dbh->commit() if (!$dbh->{AutoCommit});
             }
             else {
                 $self->msg->error("Could not add account to user");
-                $dbh->rollback();
+                $dbh->rollback() if (!$dbh->{AutoCommit});
             }
             $sql->finish();
         }
@@ -147,11 +147,11 @@ sub delete {
     my $sql     = $dbh->prepare("SELECT public.drop_user('$rolname');");
     if ( $sql->execute() ) {
         $self->msg->info("User deleted");
-        $dbh->commit();
+        $dbh->commit() if (!$dbh->{AutoCommit});
     }
     else {
         $self->msg->error("Could not delete user");
-        $dbh->rollback();
+        $dbh->rollback() if (!$dbh->{AutoCommit});
     }
     $sql->finish();
     $dbh->disconnect();
@@ -167,11 +167,11 @@ sub delacc {
         $dbh->prepare( 'REVOKE "' . $accname . '" FROM "' . $rolname . '"' );
     if ( $sql->execute() ) {
         $self->msg->info("Account removed from user");
-        $dbh->commit();
+        $dbh->commit() if (!$dbh->{AutoCommit});
     }
     else {
         $self->msg->error("Could not remove account from user");
-        $dbh->rollback();
+        $dbh->rollback() if (!$dbh->{AutoCommit});
     }
     $sql->finish();
     $dbh->disconnect();
