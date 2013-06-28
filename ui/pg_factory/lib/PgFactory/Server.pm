@@ -91,7 +91,7 @@ sub host {
     my $hostname = $sql->fetchrow();
     $sql->finish();
 
-    $self->stash( services => $services, hostname => $hostname );
+    $self->stash( services => $services, hostname => $hostname, id => $id );
 
     $dbh->disconnect();
     $self->render();

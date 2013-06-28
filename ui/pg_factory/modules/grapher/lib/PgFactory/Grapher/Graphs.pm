@@ -56,6 +56,36 @@ sub show {
 
 }
 
+sub showserver {
+    my $self = shift;
+
+    my $idserver = $self->param('idserver');
+    my $period = $self->param('period');
+
+    my $dbh = $self->database;
+
+    # Get the graphs
+    my $sth = $dbh->prepare(
+        qq{SELECT g.id, CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description
+        FROM pr_grapher.list_graph() g
+        JOIN public.list_servers() s ON g.id_server = s.id
+        WHERE s.id = ?});
+    $sth->execute($idserver);
+    my $graphs = [];
+    while ( my $graph = $sth->fetchrow_hashref() ){
+        push @{$graphs}, $graph;
+    }
+    $sth->finish;
+
+    $dbh->commit;
+    $dbh->disconnect;
+
+    $self->stash( graphs => $graphs );
+
+    $self->render;
+
+}
+
 sub add {
     my $self = shift;
 

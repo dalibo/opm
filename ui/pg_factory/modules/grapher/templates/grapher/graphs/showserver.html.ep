@@ -1,0 +1,41 @@
+% layout config 'layout';
+% content_for header => begin
+  <script type="text/javascript" src="<%= url_for '/js/show.js' %>"></script>
+% end
+% my @graphs = @{stash 'graphs'};
+
+<div class="row-fluid">
+<br />
+    <div class="span8">
+
+      <p class="btn-group scales">
+        <input type="button" id="sel_year"  class="btn" value="Year" />
+        <input type="button" id="sel_month" class="btn" value="Month" />
+        <input type="button" id="sel_week"  class="btn" value="Week" />
+        <input type="button" id="sel_day"   class="btn" value="Day" />
+      </p>
+      <p class="scales">
+        <label for="fromdate">From:&nbsp;</label><input type="text" class="datepick date" id="fromdate" name="fromdate" />
+        <label for="todate">To:&nbsp;</label><input type="text" class="datepick date" id="todate" name="todate" />
+        <input type="button" id="sel_custom" class="btn" style="margin-bottom:10px" value="Custom" />
+      </p>
+    </div>
+
+<% foreach my $graph (@graphs){ %>
+
+    <div class="box-content">
+
+      <div class="pull-right">
+        <div class="btn-group">
+            <%= link_to graphs_edit => { id => $graph->{id} } => (class => "btn btn-mini") => begin %>Edit<% end %>
+            <a href="#" export-graph="<%= $graph->{id} %>" class="btn btn-mini save">Save</a>
+        </div>
+      </div>
+
+      <div class="row graph_container">
+        <div class="graph" id-graph="<%= $graph->{id} %>" />
+      </div>
+
+    </div>
+<% } %>
+</div>

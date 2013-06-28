@@ -26,6 +26,8 @@ sub register {
         ->to('grapher-graphs#remove')->name('graphs_remove');
     $r_auth->post('/graphs/data')->to('grapher-graphs#data')
         ->name('graphs_data');
+    $r_auth->route( '/graphs/showserver/:idserver', idserver => qr/\d+/ )->to('grapher-graphs#showserver')
+        ->name('graphs_showserver');
 
     #Properties
     $r_auth->route('/properties')->to('grapher-properties#defaults')
