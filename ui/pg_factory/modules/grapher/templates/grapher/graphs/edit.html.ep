@@ -29,7 +29,7 @@
       </div>
 
       <div class="control-group"
-    <% if ( scalar (stash 'id_service')) { %>
+    <% if ( scalar (stash 'id_server')) { %>
        style="display:none;">
     <% } %>
     >
@@ -40,7 +40,7 @@
       </div>
 
       <div class="control-group"
-    <% if ( scalar (stash 'id_service')) { %>
+    <% if ( scalar (stash 'id_server')) { %>
        style="display:none;">
     <% } %>
     >
@@ -183,7 +183,7 @@
 
 <script>
 $(document).ready(function () {
-    <% if (scalar (stash 'id_service')) { %>
+    <% if (scalar (stash 'id_server')) { %>
   $('.graph').grapher({ datasource: "#datasource", properties: "#properties", id: <%= param 'id' %>, url: "/grapher/graphs/data" });
     <% } else { %>
   $('.graph').grapher({ datasource: "#datasource", properties: "#properties", url: "/grapher/graphs/data" });

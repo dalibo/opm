@@ -9,7 +9,7 @@ sub list {
     my $dbh = $self->database;
 
     my $sth = $dbh->prepare(
-        qq{SELECT g.id, g.graph, g.description, s2.hostname FROM pr_grapher.graphs g LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id LEFT JOIN public.list_services() s1 ON s1.id = gs.id_service LEFT JOIN public.list_servers() s2 ON s2.id = s1.id_server ORDER BY hostname, graph}
+        qq{SELECT g.id, g.graph, g.description, s.hostname FROM pr_grapher.list_graph() g LEFT JOIN public.list_servers() s ON s.id = g.id_server ORDER BY hostname, graph}
     );
     $sth->execute;
     my $graphs = [];
@@ -34,11 +34,9 @@ sub show {
 
     # Get the graph
     my $sth = $dbh->prepare(
-        qq{SELECT CASE WHEN s2.hostname IS NOT NULL THEN s2.hostname || '::' ELSE '' END || graph AS graph,description
-        FROM pr_grapher.graphs g
-        LEFT JOIN pr_grapher.graph_services gs ON g.id = gs.id_graph
-        LEFT JOIN public.services s1 ON gs.id_service = s1.id
-        LEFT JOIN public.servers s2 ON s1.id_server = s2.id
+        qq{SELECT CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description
+        FROM pr_grapher.list_graph() g
+        LEFT JOIN public.list_servers() s ON g.id_server = s.id
         WHERE g.id = ?});
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
@@ -167,9 +165,8 @@ sub edit {
 
     # Get the graph, and the service if a service is associated
     my $sth = $dbh->prepare(
-        qq{SELECT graph, description, y1_query, y2_query, config, id_service
-            FROM pr_grapher.graphs g
-            LEFT JOIN pr_grapher.graph_services s ON g.id = s.id_graph
+        qq{SELECT graph, description, y1_query, y2_query, config, id_server
+            FROM pr_grapher.list_graph()
             WHERE id = ?} );
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
@@ -181,7 +178,7 @@ sub edit {
     if ( !defined $graph ) {
         return $self->render_not_found;
     }
-    my $id_service = $graph->{id_service};
+    my $id_server = $graph->{id_server};
 
     # Save the form
     my $method = $self->req->method;
@@ -202,7 +199,7 @@ sub edit {
             }
             if (   $form->{y1_query} =~ m!^\s*$!
                 && $form->{y2_query} =~ m!^\s*$!
-                && ( !scalar $id_service ) )
+                && ( !scalar $id_server ) )
             {
                 $self->msg->error("Missing query");
                 $e = 1;
@@ -287,7 +284,7 @@ sub edit {
         }
 
         # Is the graph associated with a service ?
-        $self->stash( id_service => $id_service );
+        $self->stash( id_server => $id_server );
     }
 
     $self->render;
@@ -414,11 +411,9 @@ sub data {
     }
     else {# Graph is linked to a service
         $sth = $dbh->prepare(
-            qq{SELECT s2.hostname || '::' || graph AS graph,description
-            FROM pr_grapher.graphs g
-            JOIN pr_grapher.graph_services gs ON g.id = gs.id_graph
-            JOIN public.services s1 ON gs.id_service = s1.id
-            JOIN public.servers s2 ON s1.id_server = s2.id
+            qq{SELECT s.hostname || '::' || graph AS graph,description
+            FROM pr_grapher.list_graph() g
+            JOIN public.list_servers() s ON s.id = g.id_server
             WHERE g.id = ?});
         $sth->execute($id);
         my ($graphtitle,$graphsubtitle) = $sth->fetchrow();
@@ -427,35 +422,27 @@ sub data {
         $properties->{'subtitle'} = $graphsubtitle;
 
         $sth = $dbh->prepare(
-            qq{SELECT id_label, label, extract(epoch FROM oldest_record)*1000 as oldest_record, extract(epoch FROM COALESCE(newest_record,now()))*1000 AS newest_record FROM pr_grapher.graph_services gs JOIN wh_nagios.services_labels sl ON gs.id_service = sl.id WHERE gs.id_graph = ?}
+            qq{SELECT id_label, label
+            FROM (
+                SELECT (wh_nagios.list_label(g.id_service)).*
+                FROM pr_grapher.list_graph() g
+                WHERE g.id = ?
+            ) lab}
         );
         $sth->execute($id);
 
         my $series = {};
         my $sql;
-        while ( my ( $id_label, $label, $oldest_record, $newest_record ) =
+        $from = substr $from, 0, -3;
+        $to = substr $to, 0, -3;
+        while ( my ( $id_label, $label ) =
             $sth->fetchrow() )
         {
-            my ( $_from, $_to );
-            if ( $from ne "null") {
-                $_from = $from;
-            }
-            else {
-                $_from = $oldest_record;
-            }
-            if ( $to ne "null" ) {
-                $_to = $to;
-            }
-            else {
-                $_to = $newest_record;
-            }
-            $_from = substr $_from, 0, -3;
-            $_to = substr $_to, 0, -3;
             $sql = $dbh->prepare(
                 "SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);"
             );
-            $sql->execute( $id_label, $_from, $_to,
-                sprintf( "%.0f", ( $_to - $_from ) / 700 ) );
+            $sql->execute( $id_label, $from, $to,
+                sprintf( "%.0f", ( $to - $from ) / 700 ) );
             $series->{$label} = [];
             while ( my ( $x, $y ) = $sql->fetchrow() ) {
                 push @{ $series->{$label} }, [ 0 + $x, ($y eq "NaN" ? undef : 0.0 + $y ) ];

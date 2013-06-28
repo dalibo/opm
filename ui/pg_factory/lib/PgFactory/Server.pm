@@ -63,7 +63,7 @@ sub host {
     $dbh = $self->database();
 
     $sql = $dbh->prepare(
-        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.graph_services gs ON gs.id_service = s.id JOIN pr_grapher.graphs g ON g.id = gs.id_graph WHERE s.id_server = ?;"
+        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ?;"
     );
     $sql->execute($id);
     my $services = [];
