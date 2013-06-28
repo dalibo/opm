@@ -142,8 +142,8 @@
                 Flotr.EventAdapter.observe($this.find('.plot').get(0), 'flotr:select', function (sel, g) {
 
                     grapher.config = $.extend(grapher.config, {
-                        from: Math.round(sel.x1/1000),
-                        to: Math.round(sel.x2/1000)
+                        from: Math.round(sel.x1),
+                        to: Math.round(sel.x2)
                     });
 
                     grapher.draw();
