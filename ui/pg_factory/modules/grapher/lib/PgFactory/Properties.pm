@@ -142,8 +142,7 @@ sub to_plot {
 
     foreach my $p ( keys %$props ) {
         if ( $p eq "show_legend" ) {
-            $options->{legend}->{container} =
-                ( $props->{$p} ) ? undef : $props->{$p};
+            $options->{legend}->{show} = $props->{$p};
             next;
         }
         if ( $p =~ m!^(xaxis|yaxis|y2axis|bars|lines|points|pie)_(\w+)$! ) {

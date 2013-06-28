@@ -105,11 +105,6 @@
             properties = this.fetched.properties;
             series = this.fetched.series;
 
-            // Set the legend container, it cannot be done on the
-            // server side.
-            if (properties.legend['container'] !== null)
-                properties.legend['container'] = $legend.get(0);
-
             // Draw the graph
             graph = Flotr.draw(container, series, properties);
 
