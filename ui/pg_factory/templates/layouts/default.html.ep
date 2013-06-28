@@ -30,6 +30,8 @@
     <script type="text/javascript" src="<%= url_for '/js/flotr2.min.js' %>"></script>
     <script type="text/javascript" src="<%= url_for '/js/grapher.js' %>"></script>
 
+    <%= content_for 'header' %>
+
   </head>
 
   <body>

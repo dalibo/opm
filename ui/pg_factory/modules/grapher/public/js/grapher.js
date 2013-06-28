@@ -137,6 +137,10 @@
                     typeof option == 'object' && option
                 );
 
+                options.id = $this.attr('id-graph');
+
+                if (options.id === undefined) return;
+
                 $this.data('grapher', (grapher = new Grapher(this, options)));
 
                 Flotr.EventAdapter.observe($this.find('.plot').get(0), 'flotr:select', function (sel, g) {
