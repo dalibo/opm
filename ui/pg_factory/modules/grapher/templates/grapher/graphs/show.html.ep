@@ -6,16 +6,28 @@
 <div class="row-fluid">
 
     <div class="span8">
-
-      <p class="btn-group scales">
+    <p class="btn-group scales">
         <input type="button" id="sel_year"  class="btn" value="Year" />
         <input type="button" id="sel_month" class="btn" value="Month" />
         <input type="button" id="sel_week"  class="btn" value="Week" />
         <input type="button" id="sel_day"   class="btn" value="Day" />
-      </p>
-      <p class="scales">
-        <label for="fromdate">From:&nbsp;</label><input type="text" class="datepick date" id="fromdate" name="fromdate" />
-        <label for="todate">To:&nbsp;</label><input type="text" class="datepick date" id="todate" name="todate" />
+    </p>
+    <p class="scales">
+        <span class="input-append date datepick" id="fromdatepick">
+            <label for="fromdate">From:&nbsp;</label>
+            <input id="fromdate" type="text" class="dateinput"></input>
+            <span class="add-on">
+                <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+            </span>
+        </span>
+
+        <span class="input-append date datepick" id="todatepick">
+            <label for="todate">&nbsp;to:&nbsp;</label>
+            <input id="todate" type="text" class="dateinput"></input>
+            <span class="add-on">
+                <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+            </span>
+        </span>&nbsp;
         <input type="button" id="sel_custom" class="btn" style="margin-bottom:10px" value="Custom" />
       </p>
     </div>

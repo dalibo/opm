@@ -2,11 +2,17 @@
  * Javascript for page show.html.ep
  **/
 $(document).ready(function () {
+  /* bind the datetimepicker to the date fields */
+  $('.datepick').datetimepicker({
+    format: 'dd/MM/yyyy hh:mm:ss'
+  });
+
   $('.scales .btn').click(function (e) {
     var fromDate = new Date();
     var toDate = new Date();
+    var frompick = $('#fromdatepick').data('datetimepicker');
+    var topick = $('#todatepick').data('datetimepicker');
 
-    //switch($(this).attr('value')) {
     switch($(this).attr('id')) {
       case 'sel_year':
           fromDate.setYear(fromDate.getYear() + 1900 - 1);
@@ -21,22 +27,21 @@ $(document).ready(function () {
           fromDate.setDate(fromDate.getDate() - 1);
         break;
         case 'sel_custom':
-          if ($('#fromdate').attr('value') === '' ) {
+          if (frompick.getDate() === null ) {
             alert('you must set the starting date.');
             return false;
           }
-
-          if ($('#todate').attr('value') === '' )
+          if (topick.getDate() === null)
             /* set the toDate to the current day */
-            $('#todate').attr('value', $.datepicker.formatDate('dd/mm/yy', toDate ));
+            topick.setDate(toDate.getDate());
           else
-            toDate = $.datepicker.parseDate('dd/mm/yy', $('#todate').attr('value'));
+            toDate = topick.getDate();
 
-          fromDate = $.datepicker.parseDate('dd/mm/yy', $('#fromdate').attr('value'));
+          fromDate = frompick.getDate();
         break;
     }
-    $('#fromdate').attr('value',$.datepicker.formatDate('dd/mm/yy',fromDate));
-    $('#todate').attr('value',$.datepicker.formatDate('dd/mm/yy',toDate));
+    frompick.setDate(fromDate);
+    topick.setDate(toDate);
     $('[id-graph]').grapher({from: fromDate.getTime(), to: toDate.getTime(), url: "/grapher/graphs/data" });
   });
 
@@ -50,12 +55,4 @@ $(document).ready(function () {
 
   /* by default, show the week graph by triggering the week button */
   $('#sel_week').click();
-
-
-  /* bind the datepicker to the date fields */
-  $('.datepick').datepicker({
-    autoFocusNextInput: true,
-    showOn: 'focus',
-    dateFormat: 'dd/mm/yy'
-  });
 });
