@@ -159,4 +159,39 @@ ALTER FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc b
 REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) TO pgf_admins;
 
-COMMENT ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.'
+COMMENT ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.';
+
+/* pr_grapher.list_graph()
+Return every pr_grapher.graphs%ROWTYPE a user can see
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_graph() RETURNS TABLE (id bigint, graph text, description text,
+  y1_query text, y2_query text, config json, id_server bigint)
+AS $$
+DECLARE
+BEGIN
+    IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
+        RETURN QUERY SELECT g.*, s2.id
+            FROM pr_grapher.graphs g
+            LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id
+            LEFT JOIN public.services s1 ON s1.id = gs.id_service
+            LEFT JOIN public.servers s2 ON s2.id = s1.id_server;
+    ELSE
+        RETURN QUERY SELECT g.*, s.id_server
+            FROM list_services() s
+            JOIN pr_grapher.graph_services gs ON gs.id_service = s.id
+            JOIN pr_grapher.graphs g ON g.id = gs.id_graph
+        ;
+        END IF;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_graph() OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_graph() FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_graph() TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_graph()
+    IS 'List all graphs';
