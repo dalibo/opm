@@ -98,6 +98,8 @@ sub startup {
     $r_auth->route('/server')->to('server#list')->name('server_list');
     $r_auth->route('/server/:id')->to('server#host')->name('server_host');
 
+    # Search bar
+    $r_auth->route('/search/server')->to('search#server')->name('search_server');
 }
 
 1;

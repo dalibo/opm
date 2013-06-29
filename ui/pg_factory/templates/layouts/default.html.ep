@@ -26,8 +26,10 @@
     <script type="text/javascript" src="<%= url_for '/js/jquery.min.js' %>"></script>
     <script type="text/javascript" src="<%= url_for '/js/bootstrap.min.js' %>"></script>
     <script type="text/javascript" src="<%= url_for '/js/bootstrap-datetimepicker.min.js' %>"></script>
+    <script type="text/javascript" src="<%= url_for '/js/bootstrap-typeahead.js' %>"></script>
     <script type="text/javascript" src="<%= url_for '/js/flotr2.min.js' %>"></script>
     <script type="text/javascript" src="<%= url_for '/js/grapher.js' %>"></script>
+    <script type="text/javascript" src="<%= url_for '/js/pgfactory.js' %>"></script>
 
     <%= content_for 'header' %>
 
@@ -37,16 +39,18 @@
 
     <div class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
-	<div class="container">
-	  <!-- user menu -->
-	  <%= user_menu %>
+    <div class="container">
+      <!-- user menu -->
+      <%= user_menu %>
 
-	  <!-- Title -->
-	  <span class="brand">PgFactory</span>
+      <!-- Title -->
+      <span class="brand">PgFactory</span>
 
-	  <!-- Main menu -->
-	  <%= top_menu %>
-
+      <!-- Main menu -->
+      <%= top_menu %>
+      <form class="navbar-search pull-left">
+        <input type="text" class="search-query" placeholder="Search" id="search" autocomplete="off">
+      </form>
         </div>
       </div>
     </div>
