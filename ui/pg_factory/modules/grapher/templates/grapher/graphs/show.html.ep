@@ -3,8 +3,11 @@
   <script type="text/javascript" src="<%= url_for '/js/show.js' %>"></script>
 % end
 % my %graph = %{stash 'graph'};
+<% if (scalar $graph->{id_server}) { %>
+<%= link_to server_host => { id => $graph->{id_server} } => begin %> « Back to server <% end %>
+<% } %>
 <div class="row-fluid">
-
+<br />
     <div class="span8">
     <p class="btn-group scales">
         <input type="button" id="sel_year"  class="btn" value="Year" />

@@ -4,6 +4,7 @@
 % end
 % my @graphs = @{stash 'graphs'};
 
+<%= link_to server_host => { id => $idserver } => begin %> « Back to server <% end %>
 <div class="row-fluid">
 <br />
     <div class="span8">
