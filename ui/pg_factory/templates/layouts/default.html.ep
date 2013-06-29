@@ -48,9 +48,6 @@
 
       <!-- Main menu -->
       <%= top_menu %>
-      <form class="navbar-search pull-left">
-        <input type="text" class="search-query" placeholder="Search" id="search" autocomplete="off">
-      </form>
         </div>
       </div>
     </div>
