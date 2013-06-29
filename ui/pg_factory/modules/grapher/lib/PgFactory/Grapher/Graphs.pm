@@ -291,7 +291,7 @@ sub edit {
                 $self->msg->info("Graph saved");
                 $dbh->commit;
                 $dbh->disconnect;
-                return $self->redirect_to('graphs_list');
+                return $self->redirect_to('graphs_show', id => $id);
             }
         }
     }
