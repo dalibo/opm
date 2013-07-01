@@ -52,23 +52,6 @@
 
     </fieldset>
 
-    <fieldset>
-      <legend>Preview</legend>
-
-      <div class="graph">
-	<div class="pull-right">
-	  <div class="btn-group">
-	    <a href="#" class="btn btn-mini save">Save</a>
-	  </div>
-	</div>
-
-	<div class="row graph_container">
-	  <div class="plot span9"></div>
-	  <div class="legend span3"></div>
-	</div>
-      </div>
-    </fieldset>
-
     <fieldset id="properties">
 	
       <legend>Graph properties</legend>
@@ -172,7 +155,6 @@
     </fieldset>
 
     <div class="form-actions">
-      <button type="button" name="preview" class="btn">Preview</button>
       <%= submit_button 'Save', name => 'save', class => 'btn btn-primary' %>
       <%= submit_button 'Cancel', name => 'cancel', class => 'btn' %>
     </div>
@@ -180,19 +162,3 @@
     <% end %>
   </div>
 </div>
-
-<script>
-$(document).ready(function () {
-    <% if (scalar (stash 'id_server')) { %>
-  $('.graph').grapher({ datasource: "#datasource", properties: "#properties", id: <%= param 'id' %>, url: "/grapher/graphs/data" });
-    <% } else { %>
-  $('.graph').grapher({ datasource: "#datasource", properties: "#properties", url: "/grapher/graphs/data" });
-    <% } %>
-
-  // Draw when the preview button is clicked
-  $('button[name=preview]').click(function (e) {
-    e.preventDefault();
-    $('.graph').grapher('draw');
-  });
-});
-</script>
