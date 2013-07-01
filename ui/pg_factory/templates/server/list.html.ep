@@ -20,7 +20,7 @@
                 <% } %>
                 <li>
                 <% if ($line{rolname} eq '') { %>
-                  <i>Unassigned</i>
+                  <i><%=l 'Unassigned' %></i>
                 <% } else{ %>
                   <%= $line{rolname} %></li>
                 <% } %>

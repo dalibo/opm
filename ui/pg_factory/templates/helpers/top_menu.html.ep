@@ -6,14 +6,14 @@
   <li class="dropdown">
     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><%=l 'Graphs' %> <b class="caret"></b></a>
     <ul class="dropdown-menu">
-      <li><%= link_to graphs_list => begin %>Graphs<% end %></li>
-      <li><%= link_to categories_list => begin %>Categories<% end %></li>
-      <li><%= link_to properties_defaults => begin %>Properties<% end %></li>
+      <li><%= link_to graphs_list => begin %><%=l 'Graphs' %><% end %></li>
+      <li><%= link_to categories_list => begin %><%=l 'Categories' %><% end %></li>
+      <li><%= link_to properties_defaults => begin %><%=l 'Properties' %><% end %></li>
     </ul>
   </li>
 
   <form class="navbar-search pull-left">
-    <input type="text" class="search-query" placeholder="Search" id="search" autocomplete="off">
+    <input type="text" class="search-query" placeholder="<%=l 'Search' %>" id="search" autocomplete="off">
   </form>
 
   % if ($user_level eq "admin") {

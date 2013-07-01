@@ -1,28 +1,28 @@
 % layout config 'layout';
 
 <div class="row-fluid">
-  <h2>Update a graph</h2>
+  <h2><%=l 'Update a graph' %></h2>
 
   <div class="btn-group pull-right">
-    <%= link_to graphs_list => (class => "btn") => begin %>Back to list<% end %>
-    <%= link_to graphs_remove => { id => $id } => (class => "btn") => begin %>Remove<% end %>
-    <%= link_to graphs_add => (class => "btn") => begin %>Add<% end %>
+    <%= link_to graphs_list => (class => "btn") => begin %><%=l 'Back to list' %><% end %>
+    <%= link_to graphs_remove => { id => $id } => (class => "btn") => begin %><%=l 'Remove' %><% end %>
+    <%= link_to graphs_add => (class => "btn") => begin %><%=l 'Add' %><% end %>
   </div>
 
   <div id="form" class="box-content">
     <%= form_for graphs_edit => (method => 'POST', class => 'form-horizontal') => begin %>
     <fieldset id="datasource">
-      <legend>Graph details</legend>
+      <legend><%=l 'Graph details' %></legend>
 
       <div class="control-group">
-	<label class="control-label" for="name"><strong>Graph name:</strong></label>
+	<label class="control-label" for="name"><strong><%=l 'Graph name' %>:</strong></label>
 	<div class="controls">
 	  <%= text_field 'graph', type => 'text', class => 'span6', id => 'name' %>
 	</div>
       </div>
 
       <div class="control-group">
-	<label class="control-label" for="desc">Description:</label>
+	<label class="control-label" for="desc"><%=l 'Description' %>:</label>
 	<div class="controls">
 	  <%= text_area description => (rows => 3, id => 'desc', class => 'span6') => begin %><% end %>
 	</div>
@@ -54,16 +54,16 @@
 
     <fieldset id="properties">
 	
-      <legend>Graph properties</legend>
+      <legend><%=l 'Graph properties' %></legend>
 
       <div class="row-fluid">
 	<div class="control-group span4">
 	  <label class="control-label"><strong>Type:</strong></label>
 	  <div class="controls">
-	    <label class="radio"><%= radio_button type => 'bars' %> Bars</label>
-	    <label class="radio"><%= radio_button type => 'lines' %> Lines</label>
-	    <label class="radio"><%= radio_button type => 'points' %> Points</label>
-	    <label class="radio"><%= radio_button type => 'pie' %> Pie</label>
+	    <label class="radio"><%= radio_button type => 'bars' %> <%=l 'Bars' %></label>
+	    <label class="radio"><%= radio_button type => 'lines' %> <%=l 'Lines' %></label>
+	    <label class="radio"><%= radio_button type => 'points' %> <%=l 'Points' %></label>
+	    <label class="radio"><%= radio_button type => 'pie' %> <%=l 'Pie' %></label>
 	  </div>
 	</div>
 
@@ -112,7 +112,7 @@
 	</div>
 
 	<div class="control-group span4">
-	  <label class="control-label"><strong>Bars:</strong></label>
+	  <label class="control-label"><strong><%=l 'Bars' %>:</strong></label>
 	  <div class="controls">
 	    <label>Line width: <%= text_field 'bars_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label>Bar width: <%= text_field 'bars_barWidth', type => 'text', class => 'span3' %></label>
@@ -125,7 +125,7 @@
 
       <div class="row-fluid">
 	<div class="control-group span4">
-	  <label class="control-label"><strong>Lines:</strong></label>
+	  <label class="control-label"><strong><%=l 'Lines' %>:</strong></label>
 	  <div class="controls">
 	    <label>Line width: <%= text_field 'lines_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box lines_stacked => 1 %> Stacked</label>
@@ -134,7 +134,7 @@
 	</div>
 
 	<div class="control-group span4">
-	  <label class="control-label"><strong>Points:</strong></label>
+	  <label class="control-label"><strong><%=l 'Points' %>:</strong></label>
 	  <div class="controls">
 	    <label>Line width: <%= text_field 'points_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label>Radius: <%= text_field 'points_radius', type => 'text', class => 'span3' %></label>
@@ -143,7 +143,7 @@
 	</div>
 
 	<div class="control-group span4">
-	  <label class="control-label"><strong>Pie:</strong></label>
+	  <label class="control-label"><strong><%=l 'Pie' %>:</strong></label>
 	  <div class="controls">
 	    <label>Line width: <%= text_field 'pie_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box pie_filled => 1 %> Filled</label>
