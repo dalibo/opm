@@ -14,11 +14,11 @@ sub list {
     my $sql;
 
     $sql = $dbh->prepare(
-        "SELECT id, hostname FROM public.list_servers() ORDER BY 1;");
+        "SELECT id, hostname, COALESCE(rolname,'') FROM public.list_servers() ORDER BY rolname;");
     $sql->execute();
     my $servers = [];
-    while ( my ( $id, $hostname ) = $sql->fetchrow() ) {
-        push @{$servers}, { id => $id, hostname => $hostname };
+    while ( my ( $id, $hostname, $rolname ) = $sql->fetchrow() ) {
+        push @{$servers}, { id => $id, hostname => $hostname, rolname => $rolname };
     }
     $sql->finish();
 
