@@ -168,9 +168,9 @@
 
                             s.hide = ! s.hide;
                             if (s.hide)
-                                $('#legendcolor'+i).hide();
+                                $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).hide();
                             else
-                                $('#legendcolor'+i).show();
+                                $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).show();
                             grapher.show();
                         });
 
