@@ -182,13 +182,13 @@
                     var $tr = $('<tr />');
 
                     for(i = 0; i < fragments.length; i++) {
-                        if(i % legend_opt.noColumns === 0) {
+                        if((i !== 0) && (i % legend_opt.noColumns === 0)) {
                             $table.append($tr);
                             $tr = $('<tr />');
                         }
                         $tr.append(fragments[i]);
                     }
-
+                    $table.append($tr);
                     $legend.append($table);
                 }
             }
