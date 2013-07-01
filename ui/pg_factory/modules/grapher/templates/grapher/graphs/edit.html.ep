@@ -71,9 +71,9 @@
 	  <label class="control-label"><strong>X axis:</strong></label>
 	  <div class="controls">
 	    <label class="checkbox"><%= check_box 'xaxis_showLabels' => 1 %> Show labels</label>
-	    <label>Labels angle: <%= text_field 'xaxis_labelsAngle', type => 'text', class => 'span2' %></label>
+	    <label>Labels angle: <%= text_field 'xaxis_labelsAngle', type => 'text', class => 'span3' %></label>
 	    <label>Title: <%= text_field 'xaxis_title', type => 'text' %></label>
-	    <label>Title angle: <%= text_field 'xaxis_titleAngle', type => 'text', class => 'span2' %></label>
+	    <label>Title angle: <%= text_field 'xaxis_titleAngle', type => 'text', class => 'span3' %></label>
 	    <label>Time format: <%= text_field 'xaxis_timeFormat', type => 'text' %></label>
 	    Mode: <%= select_field xaxis_mode => ['time', 'normal'] %>
 	  </div>
@@ -83,9 +83,9 @@
 	  <label class="control-label"><strong>Y axis:</strong></label>
 	  <div class="controls">
 	    <label class="checkbox"><%= check_box 'yaxis_showLabels' => 1 %> Show labels</label>
-	    <label>Labels angle: <%= text_field 'yaxis_labelsAngle', type => 'text', class => 'span2' %></label>
+	    <label>Labels angle: <%= text_field 'yaxis_labelsAngle', type => 'text', class => 'span3' %></label>
 	    <label>Title: <%= text_field 'yaxis_title', type => 'text' %></label>
-	    <label>Title angle: <%= text_field 'yaxis_titleAngle', type => 'text', class => 'span2' %></label>
+	    <label>Title angle: <%= text_field 'yaxis_titleAngle', type => 'text', class => 'span3' %></label>
 	  </div>
 	</div>
 
@@ -96,9 +96,9 @@
 	  <label class="control-label"><strong>Second Y axis:</strong></label>
 	  <div class="controls">
 	    <label class="checkbox"><%= check_box 'y2axis_showLabels' => 1 %> Show labels</label>
-	    <label>Labels angle: <%= text_field 'y2axis_labelsAngle', type => 'text', class => 'span2' %></label>
+	    <label>Labels angle: <%= text_field 'y2axis_labelsAngle', type => 'text', class => 'span3' %></label>
 	    <label>Title: <%= text_field 'y2axis_title', type => 'text' %></label>
-	    <label>Title angle: <%= text_field 'y2axis_titleAngle', type => 'text', class => 'span2' %></label>
+	    <label>Title angle: <%= text_field 'y2axis_titleAngle', type => 'text', class => 'span3' %></label>
 	  </div>
 	</div>
 
@@ -114,8 +114,8 @@
 	<div class="control-group span4">
 	  <label class="control-label"><strong>Bars:</strong></label>
 	  <div class="controls">
-	    <label>Line width: <%= text_field 'bars_lineWidth', type => 'text', class => 'span2' %></label>
-	    <label>Bar width: <%= text_field 'bars_barWidth', type => 'text', class => 'span2' %></label>
+	    <label>Line width: <%= text_field 'bars_lineWidth', type => 'text', class => 'span3' %></label>
+	    <label>Bar width: <%= text_field 'bars_barWidth', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box bars_stacked => 1 %> Stacked</label>
 	    <label class="checkbox"><%= check_box bars_filled => 1 %> Filled</label>
 	    <label class="checkbox"><%= check_box bars_grouped => 1 %> Grouped</label>
@@ -127,7 +127,7 @@
 	<div class="control-group span4">
 	  <label class="control-label"><strong>Lines:</strong></label>
 	  <div class="controls">
-	    <label>Line width: <%= text_field 'lines_lineWidth', type => 'text', class => 'span2' %></label>
+	    <label>Line width: <%= text_field 'lines_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box lines_stacked => 1 %> Stacked</label>
 	    <label class="checkbox"><%= check_box lines_filled => 1 %> Filled</label>
 	  </div>
@@ -136,8 +136,8 @@
 	<div class="control-group span4">
 	  <label class="control-label"><strong>Points:</strong></label>
 	  <div class="controls">
-	    <label>Line width: <%= text_field 'points_lineWidth', type => 'text', class => 'span2' %></label>
-	    <label>Radius: <%= text_field 'points_radius', type => 'text', class => 'span2' %></label>
+	    <label>Line width: <%= text_field 'points_lineWidth', type => 'text', class => 'span3' %></label>
+	    <label>Radius: <%= text_field 'points_radius', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box points_filled => 1 %> Filled</label>
 	  </div>
 	</div>
@@ -145,7 +145,7 @@
 	<div class="control-group span4">
 	  <label class="control-label"><strong>Pie:</strong></label>
 	  <div class="controls">
-	    <label>Line width: <%= text_field 'pie_lineWidth', type => 'text', class => 'span2' %></label>
+	    <label>Line width: <%= text_field 'pie_lineWidth', type => 'text', class => 'span3' %></label>
 	    <label class="checkbox"><%= check_box pie_filled => 1 %> Filled</label>
 	  </div>
 	</div>
