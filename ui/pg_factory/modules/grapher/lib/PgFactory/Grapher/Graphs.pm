@@ -346,7 +346,7 @@ sub data {
     # When a graph id is received, retrieve the queries and the properties from the DB
     if ( defined $id ) {
         $sth = $dbh->prepare(
-            qq{SELECT y1_query, y2_query, config FROM pr_grapher.graphs WHERE id = ?}
+            qq{SELECT y1_query, y2_query, config FROM pr_grapher.list_graph() WHERE id = ?}
         );
         $sth->execute($id);
 
@@ -361,11 +361,10 @@ sub data {
 
         #Is the graph linked to a service ?
         $sth = $dbh->prepare(
-            "SELECT COUNT(*) FROM pr_grapher.graph_services WHERE id_graph = ?"
+            "SELECT id_service IS NOT NULL FROM pr_grapher.list_graph() WHERE id = ?"
         );
         $sth->execute($id);
-        my $result = $sth->fetchrow;
-        $isservice = 1 if ( $result == 1 );
+        $isservice = $sth->fetchrow;
         $sth->finish;
     }
 
