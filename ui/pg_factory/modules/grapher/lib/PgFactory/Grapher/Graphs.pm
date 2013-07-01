@@ -219,7 +219,7 @@ sub edit {
 
         # Action depends on the name of the button pressed
         if ( exists $form->{cancel} ) {
-            return $self->redirect_to('graphs_list');
+            return $self->redirect_to('graphs_show', id => $id);
         }
 
         if ( exists $form->{save} ) {
