@@ -42,7 +42,7 @@ $(document).ready(function () {
     }
     frompick.setLocalDate(fromDate);
     topick.setLocalDate(toDate);
-    $('[id-graph]').grapher({from: fromDate.getTime(), to: toDate.getTime(), url: "/grapher/graphs/data" });
+    $('[id-graph]').grapher({from: frompick.getLocalDate().getTime(), to: topick.getLocalDate().getTime(), url: "/grapher/graphs/data" });
   });
 
     $('[export-graph]').click(function (e) {
