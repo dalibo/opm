@@ -189,6 +189,11 @@
                         $tr.append(fragments[i]);
                     }
                     $table.append($tr);
+                    $('<input type="button" class="btn btn-mini" value="Invert sel." />')
+                        .click(function() {
+                            $(this).parent().find('a').click();
+                        })
+                        .appendTo($legend);
                     $legend.append($table);
                 }
             }
