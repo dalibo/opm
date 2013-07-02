@@ -33,15 +33,15 @@ $(document).ready(function () {
           }
           if (topick.getDate() === null)
             /* set the toDate to the current day */
-            topick.setDate(toDate.getDate());
+            topick.setLocalDate(toDate.getDate());
           else
-            toDate = topick.getDate();
+            toDate = topick.getLocalDate();
 
-          fromDate = frompick.getDate();
+          fromDate = frompick.getLocalDate();
         break;
     }
-    frompick.setDate(fromDate);
-    topick.setDate(toDate);
+    frompick.setLocalDate(fromDate);
+    topick.setLocalDate(toDate);
     $('[id-graph]').grapher({from: fromDate.getTime(), to: toDate.getTime(), url: "/grapher/graphs/data" });
   });
 
