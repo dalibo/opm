@@ -5,9 +5,9 @@
 <div class="row">
   <div class="span6">
     <div class="box">
-        <b><%=l 'List of services for server ' %><u><%= stash 'hostname' %></u> :
+        <b><%=l 'List of services for server' %> <u><%= stash 'hostname' %></u> :
         [
-        <%= link_to graphs_showserver => { idserver => $id } => begin %> view all<% end %>
+        <%= link_to graphs_showserver => { idserver => $id } => begin %> <%=l 'view all' %><% end %>
         ]
         </b><br />
         <% if (scalar(@services)) { %>

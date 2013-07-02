@@ -7,6 +7,7 @@ use utf8;
 
 our %Lexicon = (
     "Welcome to PgFactory"        => "Bienvenue à PgFactory",
+    "Search"                      => "Recherche",
     "Login"                       => "Connexion",
     "Username"                    => "Utilisateur",
     "Admin"                       => "Admin",
@@ -24,6 +25,8 @@ our %Lexicon = (
     "Home"                        => "Accueil",
     "Servers"                     => "Serveurs",
     "List of servers"             => "Liste des serveurs",
+    "List of services for server" => "Liste des services pour le serveur",
+    "view all"                    => "tout voir",
     "Unassigned servers"          => "Serveurs non assignés",
     "Unassigned"                  => "Non assigné",
     "Members of"                  => "Membres de",
@@ -82,7 +85,25 @@ our %Lexicon = (
     "Bars"                      => "Barres",
     "Lines"                     => "Lignes",
     "Points"                    => "Points",
-    "Pie"                       => "Camembert"
+    "Pie"                       => "Camembert",
+    "X axis"                    => "Axe X",
+    "Y axis"                    => "Axe Y",
+    "Second Y axis"             => "Deuxième axe Y",
+    "Show labels"               => "Montrer les labels",
+    "Labels angle"              => "Angle des labels",
+    "Title"                     => "Titre",
+    "Title angle"               => "Angle du titre",
+    "Time format"               => "Formatage du titre",
+    "Mode"                      => "Mode",
+    "Series"                    => "Séries",
+    "Colors"                    => "Couleurs",
+    "Show legend in graph"      => "Montrer les légendes dans les graphs",
+    "Line width"                => "Largeur des lignes",
+    "Bar width"                 => "Largeur des barres",
+    "Stacked"                   => "Empilé(e)s",
+    "Filled"                    => "Rempli(e)s",
+    "Grouped"                   => "Groupé(e)s",
+    "Radius"                    => "Rayon"
     );
 
 1;

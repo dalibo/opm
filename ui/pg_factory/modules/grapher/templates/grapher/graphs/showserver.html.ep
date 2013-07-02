@@ -4,20 +4,20 @@
 % end
 % my @graphs = @{stash 'graphs'};
 
-<%= link_to server_host => { id => $idserver } => begin %> « Back to server <% end %>
+<%= link_to server_host => { id => $idserver } => begin %> « <%=l 'Back to server' %> <% end %>
 <div class="row-fluid">
 <br />
     <div class="span8">
 
       <p class="btn-group scales">
-        <input type="button" id="sel_year"  class="btn" value="Year" />
-        <input type="button" id="sel_month" class="btn" value="Month" />
-        <input type="button" id="sel_week"  class="btn" value="Week" />
-        <input type="button" id="sel_day"   class="btn" value="Day" />
+        <input type="button" id="sel_year"  class="btn" value="<%=l 'Year' %>" />
+        <input type="button" id="sel_month" class="btn" value="<%=l 'Month' %>" />
+        <input type="button" id="sel_week"  class="btn" value="<%=l 'Week' %>" />
+        <input type="button" id="sel_day"   class="btn" value="<%=l 'Day' %>" />
       </p>
       <p class="scales">
         <span class="input-append date datepick" id="fromdatepick">
-            <label for="fromdate">From:&nbsp;</label>
+            <label for="fromdate"><%=l 'From' %>:&nbsp;</label>
             <input id="fromdate" type="text" class="dateinput"></input>
             <span class="add-on">
                 <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
@@ -25,13 +25,13 @@
         </span>
 
         <span class="input-append date datepick" id="todatepick">
-            <label for="todate">&nbsp;to:&nbsp;</label>
+            <label for="todate">&nbsp;<%=l 'to' %>:&nbsp;</label>
             <input id="todate" type="text" class="dateinput"></input>
             <span class="add-on">
                 <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
             </span>
         </span>&nbsp;
-        <input type="button" id="sel_custom" class="btn" style="margin-bottom:10px" value="Custom" />
+        <input type="button" id="sel_custom" class="btn" style="margin-bottom:10px" value="<%=l 'Custom' %>" />
       </p>
     </div>
 
@@ -41,8 +41,8 @@
 
       <div class="pull-right">
         <div class="btn-group">
-            <%= link_to graphs_edit => { id => $graph->{id} } => (class => "btn btn-mini") => begin %>Edit<% end %>
-            <a href="#" export-graph="<%= $graph->{id} %>" class="btn btn-mini save">Save</a>
+            <%= link_to graphs_edit => { id => $graph->{id} } => (class => "btn btn-mini") => begin %><%=l 'Edit' %><% end %>
+            <a href="#" export-graph="<%= $graph->{id} %>" class="btn btn-mini save"><%=l 'Save' %></a>
         </div>
       </div>
 
