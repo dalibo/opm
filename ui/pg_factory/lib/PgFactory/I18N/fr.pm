@@ -81,6 +81,7 @@ our %Lexicon = (
     "Graph details"             => "Détails du graph",
     "Graph name"                => "Nom du graph",
     "Graph properties"          => "Propriétés du graph",
+    "Default graph properties"  => "Propriétés des graphs par défaut",
     "Type"                      => "Type",
     "Bars"                      => "Barres",
     "Lines"                     => "Lignes",
