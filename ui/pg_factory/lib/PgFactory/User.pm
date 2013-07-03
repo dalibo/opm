@@ -214,13 +214,19 @@ sub login {
                 password => $form_data->{password},
                 admin    => $admin );
 
-            return $self->redirect_to('site_home');
+            if ( (defined $self->flash('saved_route')) && (defined $self->flash('stack')) ){
+                return $self->redirect_to($self->flash('saved_route'), $self->flash('stack'));
+            } else {
+                return $self->redirect_to('site_home');
+            }
         }
         else {
             $self->msg->error("Wrong username or password.");
             return $self->render();
         }
     }
+    $self->flash('saved_route'=> $self->flash('saved_route'));
+    $self->flash('stack'=> $self->flash('stack'));
     $self->render();
 }
 
@@ -257,7 +263,8 @@ sub check_auth {
     if ( $self->perm->is_authd ) {
         return 1;
     }
-
+    $self->flash('saved_route' => $self->current_route);
+    $self->flash('stack' => $self->match->stack->[1]);
     $self->redirect_to('user_login');
     return 0;
 }
