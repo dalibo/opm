@@ -3,8 +3,30 @@
   <script type="text/javascript" src="<%= url_for '/js/show.js' %>"></script>
 % end
 % my %graph = %{stash 'graph'};
+% my @server_list = @{stash 'server_list'};
+% my @graph_list = @{stash 'graph_list'};
+
 <% if (scalar $graph->{id_server}) { %>
 <%= link_to server_host => { id => $graph->{id_server} } => begin %> « <%=l 'Back to server' %> <%= stash 'hostname' %><% end %>
+  <br />
+  <% if (@server_list > 0){ %>
+    <select id="server_list">
+      <option><%=l 'Change server' %></option>
+    <% foreach my $s (@server_list) { %>
+      <% my %line = %{$s}; %>
+      <option value="<%= $line{'id'} %>"><%= $line{'hostname'} %></option>
+    <% } %>
+    </select>
+  <% } %>
+  <% if (@graph_list > 0){ %>
+    <select id="graph_list">
+      <option><%=l 'Change graph' %></option>
+    <% foreach my $s (@graph_list) { %>
+      <% my %line = %{$s}; %>
+      <option value="<%= $line{'id'} %>"><%= $line{'graphname'} %></option>
+    <% } %>
+    </select>
+  <% } %>
 <% } %>
 <div class="row-fluid">
 <br />

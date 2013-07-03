@@ -42,16 +42,50 @@ sub show {
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
 
-    my $hostname = $graph->{'hostname'};
     $dbh->commit;
-    $dbh->disconnect;
 
     # Check if it exists (this can be reach by url)
     if ( !defined $graph ) {
+        $dbh->disconnect;
         return $self->render_not_found;
     }
 
-    $self->stash( graph => $graph, hostname => $hostname );
+    my $hostname = $graph->{'hostname'};
+
+    my $server_list = [];
+    my $graph_list = [];
+    if (scalar $hostname){
+        $sth = $dbh->prepare(
+            qq{SELECT min(g.id), s.hostname
+                FROM public.list_servers() s
+                JOIN pr_grapher.list_graph() g ON s.id = g.id_server
+                WHERE s.hostname <> ?
+                GROUP BY 2
+                ORDER BY 2}
+        );
+        $sth->execute($hostname);
+        while(my ($k,$v) = $sth->fetchrow){
+            push @{$server_list}, { id => $k, hostname => $v };
+        }
+        $sth->finish;
+        $sth = $dbh->prepare(
+            qq{SELECT g.id,g.graph
+            FROM public.list_servers() s
+            JOIN pr_grapher.list_graph() g ON s.id = g.id_server
+            WHERE s.hostname = ? AND g.id <> ?
+            ORDER BY 2}
+        );
+        $sth->execute($hostname, $id);
+        while(my ($k,$v) = $sth->fetchrow){
+            push @{$graph_list}, { id => $k, graphname => $v };
+        }
+        $sth->finish;
+    }
+
+    $dbh->disconnect;
+
+    $self->stash( graph => $graph, hostname => $hostname,
+        server_list => $server_list, graph_list => $graph_list );
 
     $self->render;
 

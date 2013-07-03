@@ -55,4 +55,12 @@ $(document).ready(function () {
 
   /* by default, show the week graph by triggering the week button */
   $('#sel_week').click();
+
+  /* Handle graph & server selector */
+  $('#graph_list').change(function (e) {
+    window.location = '/grapher/graphs/'+$('#graph_list option:selected').val();
+  });
+  $('#server_list').change(function (e) {
+    window.location = '/grapher/graphs/'+$('#server_list option:selected').val();
+  });
 });

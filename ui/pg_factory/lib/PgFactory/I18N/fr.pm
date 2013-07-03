@@ -104,7 +104,9 @@ our %Lexicon = (
     "Stacked"                   => "Empilé(e)s",
     "Filled"                    => "Rempli(e)s",
     "Grouped"                   => "Groupé(e)s",
-    "Radius"                    => "Rayon"
+    "Radius"                    => "Rayon",
+    "Change graph"              => "Changer de graph",
+    "Changer server"            => "Changer de serveur"
     );
 
 1;
