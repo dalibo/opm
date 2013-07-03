@@ -34,7 +34,7 @@ sub show {
 
     # Get the graph
     my $sth = $dbh->prepare(
-        qq{SELECT CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description, s.id AS id_server
+        qq{SELECT CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description, s.id AS id_server, s.hostname
         FROM pr_grapher.list_graph() g
         LEFT JOIN public.list_servers() s ON g.id_server = s.id
         WHERE g.id = ?});
@@ -42,6 +42,7 @@ sub show {
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
 
+    my $hostname = $graph->{'hostname'};
     $dbh->commit;
     $dbh->disconnect;
 
@@ -50,7 +51,7 @@ sub show {
         return $self->render_not_found;
     }
 
-    $self->stash( graph => $graph );
+    $self->stash( graph => $graph, hostname => $hostname );
 
     $self->render;
 
@@ -66,13 +67,15 @@ sub showserver {
 
     # Get the graphs
     my $sth = $dbh->prepare(
-        qq{SELECT g.id, CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description
+        qq{SELECT g.id, CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description,s.hostname
         FROM pr_grapher.list_graph() g
         JOIN public.list_servers() s ON g.id_server = s.id
         WHERE s.id = ?});
     $sth->execute($idserver);
     my $graphs = [];
+    my $hostname;
     while ( my $graph = $sth->fetchrow_hashref() ){
+        $hostname = $graph->{'hostname'} if (! defined $hostname);
         push @{$graphs}, $graph;
     }
     $sth->finish;
@@ -80,7 +83,7 @@ sub showserver {
     $dbh->commit;
     $dbh->disconnect;
 
-    $self->stash( graphs => $graphs );
+    $self->stash( graphs => $graphs, hostname => $hostname );
 
     $self->render;
 

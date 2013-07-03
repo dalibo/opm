@@ -4,7 +4,7 @@
 % end
 % my %graph = %{stash 'graph'};
 <% if (scalar $graph->{id_server}) { %>
-<%= link_to server_host => { id => $graph->{id_server} } => begin %> « <%=l 'Back to server' %> <% end %>
+<%= link_to server_host => { id => $graph->{id_server} } => begin %> « <%=l 'Back to server' %> <%= stash 'hostname' %><% end %>
 <% } %>
 <div class="row-fluid">
 <br />
