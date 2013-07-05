@@ -31,6 +31,7 @@ our %Lexicon = (
     "Servers"                     => "Serveurs",
     "List of servers"             => "Liste des serveurs",
     "List of services for server" => "Liste des services pour le serveur",
+    "No service found"            => "Pas de service trouvé",
     "view all"                    => "tout voir",
     "Unassigned servers"          => "Serveurs non assignés",
     "Unassigned"                  => "Non assigné",
@@ -81,6 +82,7 @@ our %Lexicon = (
     "Custom"                    => "Personnaliser",
     "Edit"                      => "Éditer",
     "Save"                      => "Sauvegarder",
+    "Cancel"                    => "Annuler",
     "Back to list"              => "Revenir à la liste",
     "Update a graph"            => "Éditer un graph",
     "Graph details"             => "Détails du graph",
@@ -111,7 +113,11 @@ our %Lexicon = (
     "Grouped"                   => "Groupé(e)s",
     "Radius"                    => "Rayon",
     "Change graph"              => "Changer de graph",
-    "Changer server"            => "Changer de serveur"
+    "Change server"             => "Changer de serveur",
+    "Change password"           => "Changer de mot de passe",
+    "Current password"          => "Mot de passe actuel",
+    "New password"              => "Nouveau mot de passe",
+    "Repeat password"           => "Répéter le mot de passe"
     );
 
 1;

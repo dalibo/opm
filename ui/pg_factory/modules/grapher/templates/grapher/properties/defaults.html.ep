@@ -105,8 +105,8 @@
     </fieldset>
 
     <div class="form-actions">
-      <%= submit_button 'Save', name => 'save', class => 'btn btn-primary' %>
-      <%= submit_button 'Cancel', name => 'cancel', class => 'btn' %>
+      <%= submit_button l('Save'), name => 'save', class => 'btn btn-primary' %>
+      <%= submit_button l('Cancel'), name => 'cancel', class => 'btn' %>
     </div>
 
     <% end %>

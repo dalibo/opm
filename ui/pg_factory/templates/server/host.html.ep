@@ -19,7 +19,7 @@
             <% } %>
           </ul>
         <% } else { %>
-        <p>No service found.</p>
+        <p><%=l 'No service found' %>.</p>
         <% } %>
     </div>
   </div>

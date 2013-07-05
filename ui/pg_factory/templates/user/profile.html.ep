@@ -18,7 +18,7 @@
       <div class="box">
         <%= form_for user_profile => (method => 'POST') => begin %>
           <fieldset>
-            <b><%=l 'Change pasword' %> :</b><br />
+            <b><%=l 'Change password' %> :</b><br />
             <div class="control-group" align="right">
               <label class="control-label" for="current_password"><%=l 'Current password' %>:
                 <%= password_field 'current_password', type => 'password', class => 'span2', id => 'currrent_password' %><br/>
@@ -26,7 +26,7 @@
               <label class="control-label" for="new_password"><%=l 'New password' %>:
                 <%= password_field 'new_password', type => 'password', class => 'span2', id => 'new_password' %><br/>
               </label>
-              <label class="control-label" for="repeat_password"><%=l 'Repeat new password' %>:
+              <label class="control-label" for="repeat_password"><%=l 'Repeat password' %>:
                 <%= password_field 'repeat_password', type => 'password', class => 'span2', id => 'repeat_password' %><br/>
               </label>
             </div>
