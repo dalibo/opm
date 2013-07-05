@@ -233,7 +233,57 @@ sub login {
 sub profile {
     my $self = shift;
     my $dbh  = $self->database();
-    my $sql  = $dbh->prepare(
+    my $sql;
+
+    my $method = $self->req->method;
+    if ( $method =~ m/^POST$/i ) {
+        # process the input data
+        my $form_data = $self->req->params->to_hash;
+
+        if ( !$form_data->{change_password} =~ m/^\s*$/ ){
+            # Change password
+            my $e = 0;
+            if (
+                ( $form_data->{current_password} =~ m/^\s*$/ )
+                || ( $form_data->{new_password} =~ m/^\s*$/ )
+                || ( $form_data->{repeat_password} =~ m/^\s*$/ ) )
+            {
+                $self->msg->error("Empty password.");
+                $e = 1;
+            } elsif ( $form_data->{new_password} ne $form_data->{repeat_password} ){
+                $self->msg->error("The two passwords does not match");
+                $e = 1;
+            } elsif ( $form_data->{current_password} ne $self->session->{user_password} ){
+                $self->msg->error("Wrong password supplied");
+                $e = 1;
+            } elsif ( length($form_data->{current_password}) < 6 ){
+                $self->msg->error("Password must be longer than 5 characters");
+                $e = 1;
+            }
+            if ( !$e ) {
+                my $new_password = $form_data->{new_password};
+                $new_password =~ s/'/''/g;
+                $sql =
+                    $dbh->prepare( 'ALTER ROLE "'
+                        . $self->session->{user_username}
+                        . '" WITH ENCRYPTED PASSWORD \''
+                        . $new_password
+                        . '\'' );
+                if ( $sql->execute() ) {
+                    $self->msg->info("Password changed");
+                    $self->session->{user_password} = $form_data->{new_password};
+                    $dbh->commit() if (!$dbh->{AutoCommit});
+                }
+                else {
+                    $self->msg->error("Could not change password");
+                    $dbh->rollback() if (!$dbh->{AutoCommit});
+                }
+                $sql->finish();
+            }
+        }
+    }
+
+    $sql  = $dbh->prepare(
         'SELECT accname FROM list_users() WHERE rolname = current_user;');
     $sql->execute();
     my $acc = [];

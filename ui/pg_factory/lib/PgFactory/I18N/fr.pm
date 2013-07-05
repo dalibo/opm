@@ -17,6 +17,11 @@ our %Lexicon = (
     "Empty username."             => "Nom d'utilisateur vide.",
     "Empty password."             => "Mot de passe vide.",
     "Wrong username or password." => "Utilisateur ou mot de passe erroné.",
+    "The two passwords does not math" =>
+        "Les deux mots de passe ne correspondent pas",
+    "Wrong password supplied"     => "Mauvais mot de passe",
+    "Password must be longer than 5 characters" =>
+        "Le mot de passe doit faire plus de 5 caractères",
     "Profile"                     => "Profil",
     "Help"                        => "Aide",
     "Sign Out"                    => "Déconnexion",
