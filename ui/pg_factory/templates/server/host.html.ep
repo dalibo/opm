@@ -14,7 +14,8 @@
           <ul>
             <% foreach my $s (@services) { %>
               <%   my %line = %{$s}; %>
-              <li><%= link_to graphs_show => { id => $line{id_graph} } => begin %><%= $line{graphname} %><% end %> </li>
+              <% #FIXME: handle wh_nagios state dependancy %>
+              <li><%= link_to graphs_show => { id => $line{id_graph} } => ( class => $line{state} ) => begin %><%= $line{graphname} %><% end %></li>
             <% } %>
           </ul>
         <% } else { %>

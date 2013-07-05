@@ -55,6 +55,7 @@ sub host {
     my $id   = $self->param('id');
     my $sql;
 
+    # FIXME: handle pr_grapher dependancy
     $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(?)");
     $sql->execute($id);
     $sql->finish();
@@ -62,14 +63,15 @@ sub host {
 
     $dbh = $self->database();
 
+    # FIXME: handle pr_grapher and wh_nagios dependancy
     $sql = $dbh->prepare(
-        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,s.servalid, g.id, g.graph FROM public.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ?;"
+        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph FROM wh_nagios.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ?;"
     );
     $sql->execute($id);
     my $services = [];
     while (
         my ($id,          $warehouse, $service,  $last_mod,
-            $creation_ts, $servalid,  $id_graph, $graphname )
+            $creation_ts, $state,  $id_graph, $graphname )
         = $sql->fetchrow() )
     {
         push @{$services},
@@ -79,7 +81,7 @@ sub host {
             servicename => $service,
             lst_mod     => $last_mod,
             creation_ts => $creation_ts,
-            servalid    => $servalid,
+            state       => $state,
             id_graph    => $id_graph,
             graphname   => $graphname };
     }

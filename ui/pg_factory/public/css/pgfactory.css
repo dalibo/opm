@@ -139,3 +139,11 @@ ul.scales li {
 .scales label{
   display: inline;
 }
+
+a.warning {
+  color: darkorange;
+}
+
+a.critical{
+  color: darkred;
+}
