@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(59);
+SELECT plan(81);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -48,6 +48,18 @@ SELECT has_view('wh_nagios', 'services_labels',
 
 SELECT has_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "wh_nagios.grant_service" exists.');
 SELECT has_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "wh_nagios.revoke_service" exists.');
+SELECT has_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" exists.');
+SELECT has_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" exists.');
+SELECT has_function('wh_nagios', 'cleanup_service', '{bigint, timestamp with time zone}', 'Function "wh_nagios.cleanup_service" exists.');
+SELECT has_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" exists.');
+SELECT has_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" exists.');
+SELECT has_function('wh_nagios', 'dispatch_record', '{boolean}', 'Function "wh_nagios.dispatch_record" exists.');
+SELECT has_function('wh_nagios', 'get_sampled_label_data', '{bigint, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (label) exists.');
+SELECT has_function('wh_nagios', 'get_sampled_label_data', '{text, text, text, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (hostname, service, label) exists.');
+SELECT has_function('wh_nagios', 'create_partition_on_insert_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" exists.');
+SELECT has_function('wh_nagios', 'drop_partition_on_delete_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" exists.');
+
+
 
 SELECT diag(E'\n==== Test wh_nagios functions ====\n');
 
@@ -540,6 +552,19 @@ SELECT hasnt_table('wh_nagios', 'labels',
 SELECT hasnt_table('wh_nagios', 'services_labels',
     'Table "services_labels" of schema "wh_nagios" should not exists anymore.'
 );
+
+SELECT hasnt_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "wh_nagios.grant_service" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "wh_nagios.revoke_service" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint, timestamp with time zone}', 'Function "wh_nagios.cleanup_service" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'dispatch_record', '{boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{bigint, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (label) should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{text, text, text, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (hostname, service, label) should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'create_partition_on_insert_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'drop_partition_on_delete_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" should not exists anymore.');
 
 -- Finish the tests and clean up.
 SELECT * FROM finish();
