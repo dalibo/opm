@@ -157,7 +157,7 @@ SECURITY DEFINER;
 
 ALTER FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) OWNER TO pgfactory;
 REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) TO pgf_admins;
+GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) TO public;
 
 COMMENT ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.';
 
