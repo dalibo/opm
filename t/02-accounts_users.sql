@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(84);
+SELECT plan(96);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -338,6 +338,57 @@ SELECT results_ne(
     $$VALUES ('admin1'::name, 'admin1'::name)$$,
     'Reset session authorization.'
 );
+
+SELECT diag(E'\n==== functions list_servers, and grant_server and revoke_server ====\n');
+
+SELECT set_eq(
+    $$SELECT COUNT(*) FROM public.list_servers()$$,
+    $$VALUES (0)$$,
+    'Should not have any server present.'
+);
+
+SELECT lives_ok($$INSERT INTO public.servers (hostname) VALUES
+    ('hostname1'),('hostname2')
+    $$,
+    'Insert two servers'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM public.list_servers()$$,
+    $$VALUES (1,'hostname1',NULL),
+    (2,'hostname2',NULL)$$,
+    'Admin can see all servers.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM public.grant_server(1,'u1')$$,
+    $$VALUES (true)$$,
+    'Grant server "hostname1" to "u1".'
+);
+
+--Need to allow u1 to create temp tables for pgtap
+SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u1',current_database()),'Grant TEMPORARY on current db to u1');
+
+SELECT lives_ok('SET SESSION AUTHORIZATION u1','Set session authorization u1');
+SELECT lives_ok('SET ROLE u1','Set role u1');
+
+SELECT set_eq(
+    $$SELECT * FROM public.list_servers()$$,
+    $$VALUES (1,'hostname1','u1')$$,
+    '"u1" should only see server "hostname1".'
+);
+
+SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+SELECT lives_ok('RESET ROLE','Reset role');
+
+SELECT set_eq(
+    $$SELECT * FROM public.revoke_server(1,'u1')$$,
+    $$VALUES (true)$$,
+    'Revoke server "hostname1" from "u1".'
+);
+
+--Revoke from u1 create temp tables
+SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),'Revoke TEMPORARY on current db from u1');
 
 SELECT diag(E'\n==== Drop admin and user ====\n');
 
