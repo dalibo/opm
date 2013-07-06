@@ -281,34 +281,37 @@ SELECT set_eq(
 
 -- check table public.services
 SELECT set_eq(
-    $$SELECT id, hostname, warehouse, service, last_modified, creation_ts,
-            last_cleanup, servalid, seracl
-        FROM public.services$$,
+    $$SELECT s1.id, s2.hostname, s1.warehouse, s1.service, s1.last_modified, s1.creation_ts,
+            s1.last_cleanup, s1.servalid, s2.id_role
+        FROM public.services s1 JOIN public.servers s2 ON s1.id_server = s2.id$$,
     $$VALUES
         (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
-            NULL::interval, '{}'::aclitem[]),
-        (2, 'gouda.dalibo.net', 'wh_nagios', 'pgactivity Database size',
-            current_date, now(), now(), NULL, '{}')$$,
+            NULL::interval, NULL::bigint),
+        (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
+            'pgactivity Database size', current_date, now(), now(),
+            NULL::interval, NULL::bigint)$$,
     'Table "public.services" should have services defined by records 9, 10 (and 11).'
 );
 
 -- check table wh_nagios.services
 SELECT set_eq(
-    $$SELECT id, hostname, warehouse, service, last_modified, creation_ts,
-            last_cleanup, servalid, seracl, unit, state, min::numeric,
-            max::numeric, critical::numeric, warning::numeric,
-            extract(epoch FROM oldest_record) AS oldest_record,
-            extract(epoch FROM newest_record) AS newest_record
-        FROM wh_nagios.services$$,
+    $$SELECT s1.id, s2.hostname, s1.warehouse, s1.service, s1.last_modified, s1.creation_ts,
+            s1.last_cleanup, s1.servalid, s2.id_role, s1.unit, s1.state, s1.min::numeric,
+            s1.max::numeric, s1.critical::numeric, s1.warning::numeric,
+            extract(epoch FROM s1.oldest_record) AS oldest_record,
+            extract(epoch FROM s1.newest_record) AS newest_record
+        FROM wh_nagios.services s1
+        JOIN public.servers s2 ON s1.id_server = s2.id$$,
     $$VALUES
         (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
-            NULL::interval, '{}'::aclitem[], '', 'OK', 0, 0, 524288000,
+            NULL::interval, NULL::bigint, '', 'OK', 0, 0, 524288000,
             209715200, 1357038000::double precision, NULL::double precision),
-        (2, 'gouda.dalibo.net', 'wh_nagios', 'pgactivity Database size',
-            current_date, now(), now(), NULL, '{}', 'B', 'OK', 0, 0, 524288000,
-            209715200, 1357038000, NULL)$$,
+        (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
+            'pgactivity Database size', current_date, now(), now(),
+            NULL::interval, NULL::bigint, 'B', 'OK', 0, 0, 524288000,
+            209715200, 1357038000::double precision, NULL::double precision)$$,
     'Table "wh_nagios.services" should have services defined by records 9, 10 (and 11).'
 );
 
@@ -456,18 +459,18 @@ SELECT set_eq(
 
 SELECT set_eq(
     $$WITH u AS (UPDATE wh_nagios.services
-            SET last_cleanup = last_cleanup - INTERVAL '1 month'
+            SET last_cleanup = oldest_record - INTERVAL '1 month'
             RETURNING last_cleanup
         )
         SELECT * FROM u$$,
-    $$VALUES (now() - INTERVAL '1 month')$$,
+    $$VALUES (to_timestamp(1357038000) - INTERVAL '1 month')$$,
     'Set a fake last_cleanup timestamp.'
 );
 
 SELECT set_eq(
-    $$SELECT wh_nagios.cleanup_partition(1, now())$$,
+    $$SELECT wh_nagios.cleanup_service(1, now())$$,
     $$VALUES (true)$$,
-    'Run cleanup_partition on service 1.'
+    'Run cleanup_service on service 1.'
 );
 
 SELECT set_eq(
