@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(71);
+SELECT plan(81);
 
 SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
@@ -39,6 +39,11 @@ SELECT has_function('public', 'pr_exists', '{name}', 'Function "pr_exists" exist
 SELECT has_function('public', 'grant_dispatcher', '{name,name}', 'Function "grant_dispatcher" exists.');
 SELECT has_function('public', 'revoke_dispatcher', '{name,name}', 'Function "revoke_dispatcher" exists.');
 SELECT has_function('public', 'list_services', '{}', 'Function "list_services" exists.');
+SELECT has_function('public', 'grant_server', '{bigint,name}', 'Function "grant_server" exists.');
+SELECT has_function('public', 'revoke_server', '{bigint,name}', 'Function "revoke_server" exists.');
+SELECT has_function('public', 'list_servers', '{}', 'Function "list_servers" exists.');
+SELECT has_function('public', 'grant_account', '{name,name}', 'Function "grant_account" exists.');
+SELECT has_function('public', 'revoke_account', '{name,name}', 'Function "revoke_account" exists.');
 
 -- Does "pgf_admins" is in table roles ?
 SELECT set_eq(
@@ -166,6 +171,11 @@ SELECT hasnt_function('public', 'revoke_dispatcher', '{name,name}', 'Function "r
 SELECT hasnt_function('public', 'grant_service', '{bigint,name}', 'Function "grant_service" does not exist.');
 SELECT hasnt_function('public', 'revoke_service', '{bigint,name}', 'Function "revoke_service" does not exist.');
 SELECT hasnt_function('public', 'list_services', '{}', 'Function "list_services" does not exist.');
+SELECT hasnt_function('public', 'grant_server', '{bigint,name}', 'Function "grant_server" exists.');
+SELECT hasnt_function('public', 'revoke_server', '{bigint,name}', 'Function "revoke_server" exists.');
+SELECT hasnt_function('public', 'list_servers', '{}', 'Function "list_servers" exists.');
+SELECT hasnt_function('public', 'grant_account', '{name,name}', 'Function "grant_account" exists.');
+SELECT hasnt_function('public', 'revoke_account', '{name,name}', 'Function "revoke_account" exists.');
 
 -- Finish the tests and clean up.
 SELECT * FROM finish();
