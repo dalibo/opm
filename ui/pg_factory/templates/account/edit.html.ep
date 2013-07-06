@@ -38,7 +38,7 @@
         <div class="control-group">
           <label class="control-label" for="username"><%=l 'Username' %>:</label>
           <div class="controls">
-            <%= text_field 'username', type => 'text', class => 'span3', id => 'username' %>
+            <%= text_field 'new_username', type => 'text', class => 'span3', id => 'new_username' %>
           </div>
         </div>
 

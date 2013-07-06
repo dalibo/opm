@@ -153,7 +153,7 @@ sub edit {
             }
             $sql->finish();
         }
-        elsif ( !$form_data->{existing_username} =~ m/^\s*$/ ) {
+        elsif ( !$form_data->{new_username} =~ m/^\s*$/ ) {
 
             # Create new user in this account
 
@@ -164,7 +164,7 @@ sub edit {
             if ( !$e ) {
                 $sql =
                     $dbh->prepare( "SELECT public.create_user('"
-                        . $form_data->{username} . "','"
+                        . $form_data->{new_username} . "','"
                         . $form_data->{password} . "','{"
                         . $accname
                         . "}');" );
