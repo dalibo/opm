@@ -504,6 +504,7 @@ sub data {
         while ( my ( $id_label, $label ) =
             $sth->fetchrow() )
         {
+            #FIXME: handle wh_nagios as a module
             $sql = $dbh->prepare(
                 "SELECT pr_grapher.js_time(timet), value FROM wh_nagios.get_sampled_label_data(?, to_timestamp(?), to_timestamp(?), ?);"
             );
@@ -517,6 +518,17 @@ sub data {
             push @{$data}, { data => $series->{$label}, label => $label };
         }
         $sth->finish;
+
+        #FIXME: handle wh_nagios as a module
+        my $sth = $dbh->prepare(qq{SELECT unit
+            FROM pr_grapher.list_graph() g
+            JOIN wh_nagios.list_services() s ON g.id_service = s.id
+            WHERE g.id = ?}
+        );
+        $sth->execute($id);
+        $properties->{'yaxis_unit'} = $sth->fetchrow();
+        $sth->finish;
+
         $dbh->commit;
         $dbh->disconnect;
 

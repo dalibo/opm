@@ -113,6 +113,25 @@
             $this.find('.plot').empty();
             $this.find('.plot').unbind();
 
+            properties.yaxis.tickFormatter = function (val){
+              switch ( properties.yaxis.unit ){
+                case 'B':
+                  if (val > 1000000000000)
+                    return Math.round(val / 1000000000000) + " TB";
+                  if (val > 1000000000)
+                    return Math.round(val / 1000000000) + " GB";
+                  if (val > 1000000)
+                    return Math.round(val / 1000000) + " MB";
+                  else if (val > 1000)
+                    return Math.round(val / 1000) + " kB";
+                  else
+                    return Math.round(val) + " B";
+                break;
+                default: return val;
+                break;
+              }
+            };
+
             // Draw the graph
             graph = Flotr.draw(container, series, properties);
 
