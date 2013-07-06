@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(57);
+SELECT plan(59);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -45,6 +45,9 @@ SELECT has_table('wh_nagios', 'labels',
 SELECT has_view('wh_nagios', 'services_labels',
     'View "services_labels" of schema "wh_nagios" should exists.'
 );
+
+SELECT has_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "wh_nagios.grant_service" exists.');
+SELECT has_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "wh_nagios.revoke_service" exists.');
 
 SELECT diag(E'\n==== Test wh_nagios functions ====\n');
 

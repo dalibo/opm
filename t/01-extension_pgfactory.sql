@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(73);
+SELECT plan(71);
 
 SELECT diag(E'\n==== Install pgfactory-core ====\n');
 
@@ -38,8 +38,6 @@ SELECT has_function('public', 'list_processes', '{}', 'Function "list_processes"
 SELECT has_function('public', 'pr_exists', '{name}', 'Function "pr_exists" exists.');
 SELECT has_function('public', 'grant_dispatcher', '{name,name}', 'Function "grant_dispatcher" exists.');
 SELECT has_function('public', 'revoke_dispatcher', '{name,name}', 'Function "revoke_dispatcher" exists.');
-SELECT has_function('public', 'grant_service', '{bigint,name}', 'Function "grant_service" exists.');
-SELECT has_function('public', 'revoke_service', '{bigint,name}', 'Function "revoke_service" exists.');
 SELECT has_function('public', 'list_services', '{}', 'Function "list_services" exists.');
 
 -- Does "pgf_admins" is in table roles ?
