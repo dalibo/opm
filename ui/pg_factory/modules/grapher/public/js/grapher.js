@@ -114,20 +114,23 @@
             $this.find('.plot').unbind();
 
             properties.yaxis.tickFormatter = function (val){
-              switch ( properties.yaxis.unit ){
+              var unit = properties.yaxis.unit;
+              switch ( unit ){
                 case 'B':
-                  if (val > 1000000000000)
-                    return Math.round(val / 1000000000000) + " TB";
-                  if (val > 1000000000)
-                    return Math.round(val / 1000000000) + " GB";
-                  if (val > 1000000)
-                    return Math.round(val / 1000000) + " MB";
-                  else if (val > 1000)
-                    return Math.round(val / 1000) + " kB";
+                  if (val > (1024*1024*1024*1024*1024))
+                    return (val / (1024*1024*1024*1024*1024)).toFixed(2) + " Pi" + unit;
+                  if (val > (1024*1024*1024*1024))
+                    return (val / (1024*1024*1024*1024)).toFixed(2) + " Ti" + unit;
+                  if (val > (1024*1024*1024))
+                    return (val / (1024*1024*1024)).toFixed(2) + " Gi" + unit;
+                  if (val > (1024*1024))
+                    return (val / (1024*1024)).toFixed(2) + " Mi" + unit;
+                  else if (val > 1024)
+                    return (val / 1024).toFixed(2) + " ki" + unit;
                   else
-                    return Math.round(val) + " B";
+                    return val + " " + unit;
                 break;
-                default: return val;
+                default: return val + " " + unit;
                 break;
               }
             };
