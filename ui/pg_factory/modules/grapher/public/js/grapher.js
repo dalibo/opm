@@ -115,6 +115,8 @@
 
             properties.yaxis.tickFormatter = function (val){
               var unit = properties.yaxis.unit;
+              if (unit == null)
+                  unit = '';
               switch ( unit ){
                 case 'B':
                   if (val > (1024*1024*1024*1024*1024))
