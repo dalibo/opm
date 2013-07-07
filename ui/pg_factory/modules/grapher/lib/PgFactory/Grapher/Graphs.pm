@@ -114,10 +114,24 @@ sub showserver {
     }
     $sth->finish;
 
+    my $server_list = [];
+    $sth = $dbh->prepare(
+        qq{SELECT id, hostname
+            FROM public.list_servers() s
+            WHERE hostname <> ?
+            ORDER BY 2}
+    );
+    $sth->execute($hostname);
+    while(my ($k,$v) = $sth->fetchrow){
+        push @{$server_list}, { id => $k, hostname => $v };
+    }
+    $sth->finish;
+
     $dbh->commit;
     $dbh->disconnect;
 
-    $self->stash( graphs => $graphs, hostname => $hostname );
+    $self->stash( graphs => $graphs, hostname => $hostname,
+        server_list => $server_list );
 
     $self->render;
 

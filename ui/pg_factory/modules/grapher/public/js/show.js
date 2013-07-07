@@ -58,9 +58,15 @@ $(document).ready(function () {
 
   /* Handle graph & server selector */
   $('#graph_list').change(function (e) {
-    window.location = '/grapher/graphs/'+$('#graph_list option:selected').val();
+    if ( $('#graph_list option:selected').val() != '')
+      window.location = '/grapher/graphs/'+$('#graph_list option:selected').val();
   });
   $('#server_list').change(function (e) {
-    window.location = '/grapher/graphs/'+$('#server_list option:selected').val();
+    if ( $('#server_list option:selected').val() != '')
+      window.location = '/grapher/graphs/'+$('#server_list option:selected').val();
+  });
+  $('#serverall_list').change(function (e) {
+    if ( $('#serverall_list option:selected').val() != '')
+      window.location = '/grapher/graphs/showserver/'+$('#serverall_list option:selected').val();
   });
 });
