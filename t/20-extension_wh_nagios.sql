@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(81);
+SELECT plan(84);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -194,7 +194,7 @@ SELECT lives_ok($$
             'LABEL','postgres',
             'HOSTNAME','gouda.dalibo.net',
             'MAX','0',
-            'UOM','',
+            'UOM','B',
             'SERVICESTATE','OK',
             'TIMET','1357038000',
             'SERVICEDESC','pgactivity Database size'
@@ -387,6 +387,41 @@ SELECT results_ne(
     $$SELECT current_user$$,
     $$VALUES ('u1'::name)$$,
     'Reset role.'
+);
+
+SELECT lives_ok($$
+    INSERT INTO wh_nagios.hub VALUES
+        (1, ARRAY[ -- unit is now "b"
+            'MIN','0',
+            'WARNING','209715200',
+            'VALUE','6284356',
+            'CRITICAL','524288000',
+            'LABEL','template0',
+            'HOSTNAME','gouda.dalibo.net',
+            'MAX','0',
+            'UOM','b',
+            'SERVICESTATE','OK',
+            'TIMET','1357638000',
+            'SERVICEDESC','pgactivity Database size'
+        ])$$,
+    'Insert some datas in "wh_nagios.hub" and change unit.'
+);
+
+SELECT results_eq(
+    $$SELECT * FROM wh_nagios.dispatch_record(true)$$,
+    $$VALUES (1::bigint,0::bigint)$$,
+    'Dispatching the record.'
+);
+
+-- check table wh_nagios.services
+SELECT set_eq(
+    $$SELECT s1.unit
+        FROM wh_nagios.services s1
+        JOIN public.servers s2 ON s1.id_server = s2.id
+        WHERE s2.hostname = 'gouda.dalibo.net'
+        AND service = 'pgactivity Database size'$$,
+    $$VALUES ('b')$$,
+    'Field "unit" of Table "wh_nagios.services" should be "b" instead of "B".'
 );
 
 SELECT diag(E'\n==== Partition cleanup ====\n');
