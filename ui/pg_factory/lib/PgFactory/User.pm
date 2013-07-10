@@ -92,14 +92,16 @@ sub edit {
         }
         if ( !$e ) {
             $sql =
-                $dbh->prepare( 'GRANT "'
-                    . $form_data->{accname}
-                    . '" TO "'
-                    . $rolname
-                    . '"' );
-            if ( $sql->execute() ) {
-                $self->msg->info("Account added to user");
-                $dbh->commit() if (!$dbh->{AutoCommit});
+                $dbh->prepare( 'SELECT * FROM public.grant_account(?, ?)' );
+            if ( $sql->execute( $rolname, $form_data->{accname} ) ) {
+                my $rc = $sql->fetchrow();
+                if ( $rc) {
+                    $self->msg->info("Account added to user");
+                    $dbh->commit() if (!$dbh->{AutoCommit});
+                } else {
+                    $self->msg->error("Could not add account to user");
+                    $dbh->rollback() if (!$dbh->{AutoCommit});
+                }
             }
             else {
                 $self->msg->error("Could not add account to user");
@@ -160,10 +162,17 @@ sub delacc {
     my $rolname = $self->param('rolname');
     my $accname = $self->param('accname');
     my $sql =
-        $dbh->prepare( 'REVOKE "' . $accname . '" FROM "' . $rolname . '"' );
-    if ( $sql->execute() ) {
-        $self->msg->info("Account removed from user");
-        $dbh->commit() if (!$dbh->{AutoCommit});
+        $dbh->prepare( 'SELECT * FROM public.revoke_account(?, ?)' );
+    if ( $sql->execute($rolname, $accname) ) {
+        my $rc = $sql->fetchrow();
+        if ( $rc ){
+            $self->msg->info("Account removed from user");
+            $dbh->commit() if (!$dbh->{AutoCommit});
+        }
+        else {
+            $self->msg->error("Could not remove account from user");
+            $dbh->rollback() if (!$dbh->{AutoCommit});
+        }
     }
     else {
         $self->msg->error("Could not remove account from user");
