@@ -132,6 +132,37 @@
                   else
                     return val + " " + unit;
                 break;
+                case 's':
+                  var minute = 60;
+                  var hour = 60 * minute;
+                  var day = 24 * hour;
+                  var year = 365 * day;
+                  function formatyear(t){
+                    if (t < year)
+                      return formatday(t);
+                    else
+                      return Math.floor(t/year)+'y '+formatday(t-(Math.floor(t/year)*year));
+                  }
+                  function formatday(t){
+                    if (t < day)
+                      return formathour(t);
+                    else
+                      return Math.floor(t/day)+'d '+formathour(t-(Math.floor(t/day)*day));
+                  }
+                  function formathour(t){
+                    if (t < day)
+                      return formatminute(t);
+                    else
+                      return Math.floor(t/hour)+'h '+formatminute(t-(Math.floor(t/hour)*hour));
+                  }
+                  function formatminute(t){
+                    if (t < minute)
+                      return t+'s';
+                    else
+                      return Math.floor(t/minute)+'m '+(t-(Math.floor(t/minute)*minute))+'s';
+                  }
+                  return formatyear(val);
+                break;
                 default: return val + " " + unit;
                 break;
               }
