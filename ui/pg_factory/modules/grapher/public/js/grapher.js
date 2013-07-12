@@ -150,7 +150,7 @@
                       return Math.floor(t/day)+'d '+formathour(t-(Math.floor(t/day)*day));
                   }
                   function formathour(t){
-                    if (t < day)
+                    if (t < hour)
                       return formatminute(t);
                     else
                       return Math.floor(t/hour)+'h '+formatminute(t-(Math.floor(t/hour)*hour));
