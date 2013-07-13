@@ -141,25 +141,25 @@
                     if (t < year)
                       return formatday(t);
                     else
-                      return Math.floor(t/year)+'y '+formatday(t-(Math.floor(t/year)*year));
+                      return Math.floor(t/year)+'y '+formatday(t%year);
                   }
                   function formatday(t){
                     if (t < day)
                       return formathour(t);
                     else
-                      return Math.floor(t/day)+'d '+formathour(t-(Math.floor(t/day)*day));
+                      return Math.floor(t/day)+'d '+formathour(t%day);
                   }
                   function formathour(t){
                     if (t < hour)
                       return formatminute(t);
                     else
-                      return Math.floor(t/hour)+'h '+formatminute(t-(Math.floor(t/hour)*hour));
+                      return Math.floor(t/hour)+'h '+formatminute(t%hour);
                   }
                   function formatminute(t){
                     if (t < minute)
                       return t+'s';
                     else
-                      return Math.floor(t/minute)+'m '+(t-(Math.floor(t/minute)*minute))+'s';
+                      return Math.floor(t/minute)+'m '+(t%minute)+'s';
                   }
                   return formatyear(val);
                 break;
