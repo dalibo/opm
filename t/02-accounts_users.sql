@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(96);
+SELECT plan(100);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -201,6 +201,30 @@ SELECT set_eq(
     $$SELECT * FROM grant_account('not_a_user','acc2')$$,
     $$VALUES (NULL::boolean)$$,
     'Function grant_account should notice "not_a_user" does not exist.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM grant_account('u2','pgf_admins')$$,
+    $$VALUES (TRUE)$$,
+    '"u2" should be added to "pgf_admins".'
+);
+
+SELECT set_eq(
+    $$SELECT pg_has_role('u2','pgf_admins','MEMBER WITH ADMIN OPTION')$$,
+    $$VALUES (TRUE)$$,
+    '"u2" should be able to add new admins.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM revoke_account('u2','pgf_admins')$$,
+    $$VALUES (TRUE)$$,
+    '"u2" should be removed from "pgf_admins".'
+);
+
+SELECT set_eq(
+    $$SELECT pg_has_role('u2','pgf_admins','MEMBER')$$,
+    $$VALUES (FALSE)$$,
+    '"u2" should not be admin anymore.'
 );
 
 SELECT diag(E'\n==== functions list_users and list_accounts ====\n');
