@@ -10,7 +10,7 @@
           <%   my %line = %{$a}; %>
           <li><%= link_to account_edit => { accname => $line{accname} } => begin %><%= $line{accname} %><% end %> 
           <% if ($line{accname} ne 'pgf_admins'){ %>
-            <%= link_to account_delete => {accname => $line{accname}} => begin %><span class="badge badge-important">X</span><% end %></li>
+            <%= link_to account_delete => {accname => $line{accname}} => ( onclick => "return confirmDel('account','$line{accname}');" ) => begin %><span class="badge badge-important">X</span><% end %></li>
           <% } %>
         <% } %>
       </ul>

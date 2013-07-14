@@ -11,7 +11,7 @@
             <%   my %line = %{$r}; %>
             <li><%= link_to user_edit => { rolname => $line{rolname} } => begin %><%= $line{rolname} %><% end %> 
             <% if ($line{rolname} ne (session 'user_username')) {
-              <%= link_to user_delete => {rolname => $line{rolname}} => begin %><span class="badge badge-important">X</span><% end %>
+              <%= link_to user_delete => {rolname => $line{rolname}} => ( onclick => "return confirmDel('user','$line{rolname}');" ) => begin %><span class="badge badge-important">X</span><% end %>
               </li>
             <% } %>
           <% } %>

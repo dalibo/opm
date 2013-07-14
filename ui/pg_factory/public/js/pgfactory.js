@@ -1,7 +1,11 @@
 function displayResult(item, val, text) {
       console.log(item);
-          //alert('You selected <strong>' + val + '</strong>: <strong>' + text + '</strong>');
           window.location = '/server/' + val;
+}
+
+function confirmDel(kind, name){
+  var ret = confirm('Do you really want to delete the ' + kind + ' "' + name + '" ?');
+  return ret;
 }
 
 $(document).ready(function (){
