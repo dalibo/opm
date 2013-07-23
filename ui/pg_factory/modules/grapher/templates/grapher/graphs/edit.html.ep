@@ -6,11 +6,6 @@
 <div class="row-fluid">
   <h2><%=l 'Update a graph' %></h2>
 
-  <div class="btn-group pull-right">
-    <%= link_to graphs_list => (class => "btn") => begin %><%=l 'Back to list' %><% end %>
-    <%= link_to graphs_remove => { id => $id } => (class => "btn") => begin %><%=l 'Remove' %><% end %>
-  </div>
-
   <div id="form" class="box-content">
     <%= form_for graphs_edit => (method => 'POST', class => 'form-horizontal') => begin %>
     <fieldset id="datasource">
