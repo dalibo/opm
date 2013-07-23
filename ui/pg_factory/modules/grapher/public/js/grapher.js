@@ -1,9 +1,8 @@
 (function($) {
 
     var Grapher = function (element, options) {
-        var g = this;
         this.config = options;
-        this.element = $(element);
+        this.$element = $(element);
 
         this.default_props = {
             shadowSize: 0,
@@ -12,7 +11,63 @@
             HtmlText: false,
             yaxis: {
                 autoscale: true,
-                autoscaleMargin: 5
+                autoscaleMargin: 5,
+                tickFormatter: function (val, axis) {
+                    var unit = this.unit;
+
+                    if (unit == null) unit = '';
+                    switch ( unit ) {
+                        case 'B':
+                            if (val > (1024*1024*1024*1024*1024))
+                                return (val / (1024*1024*1024*1024*1024)).toFixed(2) + " Pi" + unit;
+                            if (val > (1024*1024*1024*1024))
+                                return (val / (1024*1024*1024*1024)).toFixed(2) + " Ti" + unit;
+                            if (val > (1024*1024*1024))
+                                return (val / (1024*1024*1024)).toFixed(2) + " Gi" + unit;
+                            if (val > (1024*1024))
+                                return (val / (1024*1024)).toFixed(2) + " Mi" + unit;
+                            if (val > 1024)
+                                return (val / 1024).toFixed(2) + " ki" + unit;
+                            return val + " " + unit;
+                        break;
+
+                        case 's':
+                            var minute = 60;
+                            var hour = 60 * minute;
+                            var day = 24 * hour;
+                            var year = 365 * day;
+                            function formatyear(t){
+                                if (t < year)
+                                    return formatday(t);
+                                else
+                                    return Math.floor(t/year)+'y '+formatday(t%year);
+                            }
+                            function formatday(t){
+                                if (t < day)
+                                    return formathour(t);
+                                else
+                                    return Math.floor(t/day)+'d '+formathour(t%day);
+                            }
+                            function formathour(t){
+                                if (t < hour)
+                                    return formatminute(t);
+                                else
+                                    return Math.floor(t/hour)+'h '+formatminute(t%hour);
+                            }
+                            function formatminute(t){
+                                if (t < minute)
+                                    return t+'s';
+                                else
+                                    return Math.floor(t/minute)+'m '+(t%minute)+'s';
+                            }
+                            return formatyear(val);
+                        break;
+
+                        default:
+                            return val + " " + unit;
+                        break;
+                    }
+                }
             },
             xaxis: {
                 mode: 'time',
@@ -25,7 +80,7 @@
             }
         };
 
-        this.element.append('<div class="plot span9">')
+        this.$element.append('<div class="plot span9">')
             .append('<div class="legend span3"></div>');
     }
 
@@ -44,19 +99,20 @@
 
         fetch_data: function (url, fromDate, toDate) {
 
-            var grapher = this, post_data;
+            var grapher = this,
+                post_data;
 
             if (fromDate == null)
-                fromDate = grapher.config.from;
+                fromDate = this.config.from;
 
             if (toDate == null)
-                toDate = grapher.config.to;
+                toDate = this.config.to;
 
             post_data = {
-                    id: this.config.id,
-                    from: fromDate,
-                    to: toDate
-                };
+                id: this.config.id,
+                from: fromDate,
+                to: toDate
+            };
 
             var a = $.ajax(url, {
                 async: false,
@@ -67,7 +123,7 @@
                 data: post_data,
                 success: function (r) {
                     grapher.fetched = r;
-                    if (r.error === null)
+                    if (! r.error)
                         grapher.fetched.properties = $.extend(true,
                             grapher.default_props,
                             grapher.fetched.properties || {}
@@ -77,118 +133,50 @@
         },
 
         draw: function () {
-            var $this       = this.element,
-                $plot       = $this.find('.plot'),
-                $legend     = $this.find('.legend'),
-                graph       = null,
-                container   = $plot.get(0),
-                grapher     = this,
-                url         = this.config['url'],
-                properties,
-                series;
+            var $plot       = this.$element.find('.plot'),
+                $legend     = this.$element.find('.legend');
 
             // Empty the graph to draw it from scratch
             $legend.empty();
 
             // Fetch to data to plot
-            this.fetch_data(url);
+            this.fetch_data(this.config['url']);
+            //console.log(this.fetched.properties.yaxis);
 
             if (this.fetched.error != null) {
-                $plot.append(grapher.html_error(this.fetched.error));
+                $plot.append(this.html_error(this.fetched.error));
                 return;
             }
 
-            this.show();
+            this.refresh();
 
             this.drawLegend();
         },
 
-        show: function () {
-            var $this      = this.element,
-                properties = this.fetched.properties,
+        refresh: function () {
+            var properties = this.fetched.properties,
                 series     = this.fetched.series,
-                graph      = null
-                container  = $this.find('.plot').get(0);
+                container  = this.$element.find('.plot').get(0);
 
-            $this.find('.plot').empty();
-            $this.find('.plot').unbind();
-
-            properties.yaxis.tickFormatter = function (val){
-              var unit = properties.yaxis.unit;
-              if (unit == null)
-                  unit = '';
-              switch ( unit ){
-                case 'B':
-                  if (val > (1024*1024*1024*1024*1024))
-                    return (val / (1024*1024*1024*1024*1024)).toFixed(2) + " Pi" + unit;
-                  if (val > (1024*1024*1024*1024))
-                    return (val / (1024*1024*1024*1024)).toFixed(2) + " Ti" + unit;
-                  if (val > (1024*1024*1024))
-                    return (val / (1024*1024*1024)).toFixed(2) + " Gi" + unit;
-                  if (val > (1024*1024))
-                    return (val / (1024*1024)).toFixed(2) + " Mi" + unit;
-                  else if (val > 1024)
-                    return (val / 1024).toFixed(2) + " ki" + unit;
-                  else
-                    return val + " " + unit;
-                break;
-                case 's':
-                  var minute = 60;
-                  var hour = 60 * minute;
-                  var day = 24 * hour;
-                  var year = 365 * day;
-                  function formatyear(t){
-                    if (t < year)
-                      return formatday(t);
-                    else
-                      return Math.floor(t/year)+'y '+formatday(t%year);
-                  }
-                  function formatday(t){
-                    if (t < day)
-                      return formathour(t);
-                    else
-                      return Math.floor(t/day)+'d '+formathour(t%day);
-                  }
-                  function formathour(t){
-                    if (t < hour)
-                      return formatminute(t);
-                    else
-                      return Math.floor(t/hour)+'h '+formatminute(t%hour);
-                  }
-                  function formatminute(t){
-                    if (t < minute)
-                      return t+'s';
-                    else
-                      return Math.floor(t/minute)+'m '+(t%minute)+'s';
-                  }
-                  return formatyear(val);
-                break;
-                default: return val + " " + unit;
-                break;
-              }
-            };
+            this.$element.find('.plot').unbind().empty();
 
             // Draw the graph
-            graph = Flotr.draw(container, series, properties);
-
-            this.flotr = graph;
+            this.flotr = Flotr.draw(container, series, properties);
         },
 
         drawLegend: function() {
 
-            var $this      = this.element,
-                $legend    = $this.find('.legend'),
+            var $legend    = this.$element.find('.legend'),
                 legend_opt = this.flotr.legend.options,
                 series     = this.flotr.series,
                 fragments  = [],
                 i, label, color,
                 itemCount  = $.grep(series, function (e) {
-                    return (e.label && !e.hide) }
-                ).length;
+                        return (e.label && !e.hide) }
+                    ).length;
 
             if (itemCount) {
-
-                for(i = 0; i < series.length; ++i){
+                for(i = 0; i < series.length; ++i) {
                     if(!series[i].label) continue;
 
                     var s = series[i],
@@ -213,26 +201,24 @@
 
                     $cells.find('a, label')
                         .data('i', i)
-                        .data('grapher', this)
                         .click(function () {
-                            var grapher = $(this).data('grapher'),
+                            var grapher = $(this).parents('[id-graph]').data('grapher'),
                                 i       = $(this).data('i'),
-                                flotr   = grapher.flotr,
-                                s       = grapher.fetched.series[i],
-                                color;
+                                s       = grapher.fetched.series[i];
 
                             s.hide = ! s.hide;
                             if (s.hide)
                                 $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).hide();
                             else
                                 $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).show();
-                            grapher.show();
+
+                            grapher.refresh();
                         });
 
                     fragments.push($cells);
                 }
 
-                if(fragments.length > 0){
+                if(fragments.length > 0) {
                     var $table = $('<table style="font-size:smaller;color:'+ this.flotr.options.grid.color +'" />');
                     var $tr = $('<tr />');
 
@@ -244,15 +230,10 @@
                         $tr.append(fragments[i]);
                     }
                     $table.append($tr);
-                    $('<input type="button" class="btn btn-mini" value="Invert sel." />')
-                        .click(function() {
-                            $(this).parent().find('a').click();
-                        })
-                        .appendTo($legend);
                     $legend.append($table);
                 }
             }
-        }
+        },
     };
 
     // Plugin definition
@@ -262,6 +243,7 @@
             var $this = $(this),
                 grapher = $this.data('grapher');
 
+            // if no grapher object is already registred on this tag, add it
             if (!grapher) {
                 var options = $.extend({}, {
                         properties: null,
@@ -306,9 +288,8 @@
 
             if (typeof option == 'object') {
                 grapher.config = $.extend(grapher.config, option);
+                $this.data('orig_win', [option.from, option.to]);
             }
-
-            $this.data('orig_win', [option.from, option.to]);
 
             if (grapher.config.draw) grapher.draw();
 
