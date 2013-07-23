@@ -75,7 +75,7 @@
 
     <div class="row graph_container">
       <div class="graph" id-graph="<%= $id %>" />
-      </div>
-
     </div>
+
   </div>
+</div>
