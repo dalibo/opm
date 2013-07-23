@@ -234,6 +234,48 @@
                 }
             }
         },
+
+        activateSeries: function () {
+            var series     = this.fetched.series,
+                i;
+
+            for(i = 0; i < series.length; ++i)
+                series[i].hide = false;
+
+            this.$element.find('.legend .flotr-legend-color-box > div').show();
+
+            this.refresh();
+        },
+
+        deactivateSeries: function () {
+            var series     = this.fetched.series,
+                i;
+
+            for(i = 0; i < series.length; ++i)
+                series[i].hide = true;
+
+            this.$element.find('.legend .flotr-legend-color-box > div').hide();
+
+            this.refresh();
+        },
+
+        invertActivatedSeries: function () {
+            var series      = this.fetched.series,
+                legendItems = this.$element
+                    .find('.legend .flotr-legend-color-box > div'),
+                i;
+
+            for(i = 0; i < series.length; ++i) {
+                series[i].hide = ! series[i].hide;
+
+                if (series[i].hide)
+                    $(legendItems[i]).hide();
+                else
+                    $(legendItems[i]).show();
+            }
+
+            this.refresh();
+        }
     };
 
     // Plugin definition

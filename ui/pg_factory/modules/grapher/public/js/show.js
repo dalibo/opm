@@ -53,6 +53,28 @@ $(document).ready(function () {
         grapher.flotr.download.saveImage('png', null, null, false);
     });
 
+    $('[invert-series]').click(function (e) {
+        e.preventDefault();
+        var id = $(this).attr('invert-series'),
+            grapher = $('[id-graph='+id+']').data('grapher');
+
+        grapher.invertActivatedSeries();
+    });
+
+    $('[offon-series]').data('is_on', true).click(function (e) {
+        e.preventDefault();
+        var id = $(this).attr('offon-series'),
+            grapher = $('[id-graph='+id+']').data('grapher'),
+            is_on = ! $(this).data('is_on');
+
+        if (is_on)
+            grapher.activateSeries();
+        else
+            grapher.deactivateSeries();
+
+        $(this).data('is_on', is_on);
+    });
+
   /* by default, show the week graph by triggering the week button */
   $('#sel_week').click();
 
