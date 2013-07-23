@@ -115,9 +115,9 @@
       <div class="row-fluid">
         <div class="tabbable tabs-left">
           <ul class="nav nav-tabs">
-            <li><a href="#xaxis" data-toggle="tab"><li><a href="#xaxis" data-toggle="tab"><%=l 'X axis' %></a></li></a></li>
-            <li><a href="#yaxis" data-toggle="tab"><li><a href="#yaxis" data-toggle="tab"><%=l 'Y axis' %></a></li></a></li>
-            <li><a href="#yaxis2" data-toggle="tab"><li><a href="#yaxis2" data-toggle="tab"><%=l 'Second Y axis' %></a></li></a></li>
+            <li class="active"><a href="#xaxis" data-toggle="tab"><%=l 'X axis' %></a></li>
+            <li><a href="#yaxis" data-toggle="tab"><%=l 'Y axis' %></a></li>
+            <li><a href="#yaxis2" data-toggle="tab"><%=l 'Second Y axis' %></a></li>
           </ul>
           <div class="tab-content">
             <div class="tab-pane active" id="xaxis">
