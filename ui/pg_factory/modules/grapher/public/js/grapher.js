@@ -235,6 +235,19 @@
             }
         },
 
+        export: function() {
+            var legend_shown = this.fetched.properties.legend.show;
+            if (!legend_shown) {
+                this.fetched.properties.legend.show = true;
+                this.refresh();
+            }
+            this.flotr.download.saveImage('png', null, null, false);
+            if (!legend_shown) {
+                this.fetched.properties.legend.show = legend_shown;
+                this.refresh();
+            }
+        },
+
         activateSeries: function () {
             var series     = this.fetched.series,
                 i;

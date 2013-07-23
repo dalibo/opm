@@ -50,7 +50,7 @@ $(document).ready(function () {
         var id = $(this).attr('export-graph'),
             grapher = $('[id-graph='+id+']').data('grapher');
 
-        grapher.flotr.download.saveImage('png', null, null, false);
+        grapher.export();
     });
 
     $('[invert-series]').click(function (e) {
