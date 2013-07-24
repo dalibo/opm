@@ -71,7 +71,7 @@
         <a href="#" offon-series="<%= $id %>" class="btn btn-mini"><%=l 'Show/Hide series' %></a>
         <a href="#" invert-series="<%= $id %>" class="btn btn-mini"><%=l 'Invert Sel.' %></a>
         <%= link_to graphs_edit => { id => $id } => (class => "btn btn-mini") => begin %><%=l 'Edit' %><% end %>
-        <a href="#" export-graph="<%= $id %>" class="btn btn-mini save"><%=l 'Save' %></a>
+        <a href="#" export-graph="<%= $id %>" class="btn btn-mini save"><%=l 'Export' %></a>
       </div>
     </div>
 
