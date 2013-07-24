@@ -141,7 +141,6 @@
 
             // Fetch to data to plot
             this.fetch_data(this.config['url']);
-            //console.log(this.fetched.properties.yaxis);
 
             if (this.fetched.error != null) {
                 $plot.append(this.html_error(this.fetched.error));
@@ -149,7 +148,6 @@
             }
 
             this.refresh();
-
             this.drawLegend();
         },
 
@@ -203,7 +201,7 @@
                         .data('i', i)
                         .click(function () {
                             var $this   = $(this),
-                                grapher = $this.parents('[id-graph]').data('grapher'),
+                                grapher = $this.parents('[id-graph]').grapher(),
                                 s       = grapher.fetched.series[$this.data('i')];
 
                             s.hide = ! s.hide;
@@ -237,6 +235,19 @@
                     $legend.append($table);
                 }
             }
+        },
+
+        zoom: function (tsfrom, tsto) {
+            if (!tsfrom || !tsto) return false;
+
+            $.extend(this.config, {
+                from: tsfrom,
+                to: tsto
+            });
+
+            this.draw();
+
+            return true;
         },
 
         export: function() {
@@ -296,23 +307,24 @@
     };
 
     // Plugin definition
-    $.fn.grapher = function (option) {
-        return this.each(function () {
+    $.fn.grapher = function (param) {
+        if (typeof param == 'object') {
+            return this.each(function () {
 
-            var $this = $(this),
-                grapher = $this.data('grapher');
+                var $this = $(this),
+                    grapher = $this.data('grapher');
 
-            // if no grapher object is already registred on this tag, add it
-            if (!grapher) {
+                // if no grapher object is already registred on this tag, add it
+                if (grapher) return;
+
                 var options = $.extend({}, {
                         properties: null,
                         id:         null,
                         to:         null,
                         from:       null,
-                        draw:       true,
                         url:        null
                     },
-                    typeof option == 'object' && option
+                    param
                 );
 
                 options.id = $this.attr('id-graph');
@@ -320,39 +332,28 @@
                 if (options.id === undefined) return;
 
                 $this.data('grapher', (grapher = new Grapher(this, options)));
+                $this.data('zooms', new Array());
 
                 Flotr.EventAdapter.observe($this.find('.plot').get(0), 'flotr:select', function (sel, g) {
+                    $this.data('zooms').push([
+                        grapher.config.from,
+                        grapher.config.to
+                    ]);
 
-                    grapher.config = $.extend(grapher.config, {
-                        from: Math.round(sel.x1),
-                        to: Math.round(sel.x2)
-                    });
-
-                    grapher.draw();
+                    grapher.zoom(Math.round(sel.x1), Math.round(sel.x2));
 
                 });
 
                 Flotr.EventAdapter.observe($this.find('.plot').get(0), 'flotr:click', function () {
-
-                    var zo = $this.data('orig_win');
-
-                    grapher.config = $.extend(grapher.config, {
-                        from: zo[0],
-                        to: zo[1]
-                    });
-
-                    grapher.draw();
+                    var zo = $this.data('zooms').pop();
+                    if (zo)
+                        grapher.zoom(zo[0], zo[1]);
                 });
-            }
-
-            if (typeof option == 'object') {
-                grapher.config = $.extend(grapher.config, option);
-                $this.data('orig_win', [option.from, option.to]);
-            }
-
-            if (grapher.config.draw) grapher.draw();
-
-        })
+            });
+        }
+        else if (! param ) {
+            return $(this).data('grapher');
+        }
     }
 
 })(jQuery);

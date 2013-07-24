@@ -7,6 +7,8 @@ $(document).ready(function () {
     format: 'dd/MM/yyyy hh:mm:ss'
   });
 
+  $('[id-graph]').grapher({url: "/grapher/graphs/data"});
+
   $('.scales .btn').click(function (e) {
     var fromDate = new Date();
     var toDate = new Date();
@@ -42,13 +44,18 @@ $(document).ready(function () {
     }
     frompick.setLocalDate(fromDate);
     topick.setLocalDate(toDate);
-    $('[id-graph]').grapher({from: frompick.getLocalDate().getTime(), to: topick.getLocalDate().getTime(), url: "/grapher/graphs/data" });
+    $('[id-graph]').each(function (i, e) {
+        $(e).grapher().zoom(
+            frompick.getLocalDate().getTime(),
+            topick.getLocalDate().getTime()
+        );
+    });
   });
 
     $('[export-graph]').click(function (e) {
         e.preventDefault();
         var id = $(this).attr('export-graph'),
-            grapher = $('[id-graph='+id+']').data('grapher');
+            grapher = $('[id-graph='+id+']').grapher();
 
         grapher.export();
     });
@@ -56,7 +63,7 @@ $(document).ready(function () {
     $('[invert-series]').click(function (e) {
         e.preventDefault();
         var id = $(this).attr('invert-series'),
-            grapher = $('[id-graph='+id+']').data('grapher');
+            grapher = $('[id-graph='+id+']').grapher();
 
         grapher.invertActivatedSeries();
     });
@@ -64,7 +71,7 @@ $(document).ready(function () {
     $('[offon-series]').data('is_on', true).click(function (e) {
         e.preventDefault();
         var id = $(this).attr('offon-series'),
-            grapher = $('[id-graph='+id+']').data('grapher'),
+            grapher = $('[id-graph='+id+']').grapher(),
             is_on = ! $(this).data('is_on');
 
         if (is_on)
