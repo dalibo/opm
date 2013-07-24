@@ -133,11 +133,20 @@
         },
 
         draw: function () {
-            var $plot       = this.$element.find('.plot'),
-                $legend     = this.$element.find('.legend');
+            var $plot   = this.$element.find('.plot'),
+                $legend = this.$element.find('.legend')
+                inactiveSeries = null;
 
             // Empty the graph to draw it from scratch
             $legend.empty();
+
+            // Remember active series if we already have some
+            if (this.fetched && this.fetched.series.length) {
+                inactiveSeries = new Array();
+                $.map(this.fetched.series, function (s) {
+                    if (s.hide) inactiveSeries.push(s.label);
+                });
+            }
 
             // Fetch to data to plot
             this.fetch_data(this.config['url']);
@@ -145,6 +154,13 @@
             if (this.fetched.error != null) {
                 $plot.append(this.html_error(this.fetched.error));
                 return;
+            }
+
+            if (inactiveSeries !== null) {
+                $.map(this.fetched.series, function (s) {
+                    if (inactiveSeries.indexOf(s.label) !== -1)
+                        s.hide = true;
+                });
             }
 
             this.refresh();
@@ -220,24 +236,28 @@
                     fragments.push($cells);
                 }
 
-                if(fragments.length > 0) {
-                    var $table = $('<table style="font-size:smaller;color:'+ this.flotr.options.grid.color +'" />');
-                    var $tr = $('<tr />');
+                var $table = $('<table style="font-size:smaller;color:'+ this.flotr.options.grid.color +'" />');
+                var $tr = $('<tr />');
 
-                    for(i = 0; i < fragments.length; i++) {
-                        if((i !== 0) && (i % legend_opt.noColumns === 0)) {
-                            $table.append($tr);
-                            $tr = $('<tr />');
-                        }
-                        $tr.append(fragments[i]);
+                for(i = 0; i < fragments.length; i++) {
+                    if((i !== 0) && (i % legend_opt.noColumns === 0)) {
+                        $table.append($tr);
+                        $tr = $('<tr />');
                     }
-                    $table.append($tr);
-                    $legend.append($table);
+                    $tr.append(fragments[i]);
                 }
+                $table.append($tr);
+                $legend.append($table);
+
+                series.map(function(s, i) {
+                    if (s.hide) $legend.find('#legendcolor'+i).hide()
+                });
             }
         },
 
         zoom: function (tsfrom, tsto) {
+            var i;
+
             if (!tsfrom || !tsto) return false;
 
             $.extend(this.config, {
