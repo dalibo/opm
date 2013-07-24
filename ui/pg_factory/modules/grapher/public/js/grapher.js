@@ -202,15 +202,19 @@
                     $cells.find('a, label')
                         .data('i', i)
                         .click(function () {
-                            var grapher = $(this).parents('[id-graph]').data('grapher'),
-                                i       = $(this).data('i'),
-                                s       = grapher.fetched.series[i];
+                            var $this   = $(this),
+                                grapher = $this.parents('[id-graph]').data('grapher'),
+                                s       = grapher.fetched.series[$this.data('i')];
 
                             s.hide = ! s.hide;
                             if (s.hide)
-                                $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).hide();
+                                $this.parents('tr')
+                                    .find('td.flotr-legend-color-box > div')
+                                    .hide();
                             else
-                                $('[id-graph='+grapher.config.id+']').find('#legendcolor'+i).show();
+                                $this.parents('tr')
+                                    .find('td.flotr-legend-color-box > div')
+                                    .show();
 
                             grapher.refresh();
                         });
