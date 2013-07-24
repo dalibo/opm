@@ -126,6 +126,16 @@ sub edit {
     my $accname = $self->param('accname');
     my $sql;
 
+    $sql = $dbh->prepare(
+        "SELECT COUNT(*) FROM public.list_accounts() WHERE accname = ?");
+    $sql->execute($accname);
+    my $found = ( $sql->fetchrow() == 1);
+    $sql->finish();
+    if ( !$found ){
+        $dbh->disconnect();
+        return $self->render_not_found;
+    }
+
     my $method = $self->req->method;
     if ( $method =~ m/^POST$/i ) {
 

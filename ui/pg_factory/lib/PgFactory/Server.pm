@@ -55,6 +55,16 @@ sub host {
     my $id   = $self->param('id');
     my $sql;
 
+    $sql = $dbh->prepare("SELECT COUNT(*) FROM public.list_servers() WHERE id = ?");
+    $sql->execute($id);
+    my $found = ( $sql->fetchrow() == 1 );
+    $sql->finish();
+
+    if (! $found){
+        $dbh->disconnect();
+        return $self->render_not_found;
+    }
+
     # FIXME: handle pr_grapher dependancy
     $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(?)");
     $sql->execute($id);
