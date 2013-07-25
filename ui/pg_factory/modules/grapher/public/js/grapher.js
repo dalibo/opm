@@ -74,9 +74,17 @@
                 autoscale: false,
                 autoscaleMargin: 5
             },
-            selection : {
+            selection: {
                 mode : 'x',
                 fps : 30
+            },
+            mouse: {
+                 track: true,
+                 sensibility: 5,
+                 trackFormatter: function (o) {
+                     d = new Date(new Number(o.x));
+                     return d.toUTCString() +"<br />"+ o.series.label +' = '+ o.y;
+                 }
             }
         };
 
