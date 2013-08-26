@@ -64,11 +64,11 @@ REVOKE ALL ON TABLE pr_grapher.series FROM public;
 -- A graph can display one or more services
 CREATE TABLE pr_grapher.graph_services (
   id_graph bigint not null references pr_grapher.graphs (id),
-  id_service bigint not null
+  id_label bigint not null references wh_nagios.labels (id)
 );
 --TODO: add constraint trigger to enforce FK pr_grapher.graph_services and public.services
 
-ALTER TABLE pr_grapher.graph_services ADD PRIMARY KEY (id_graph, id_service);
+ALTER TABLE pr_grapher.graph_services ADD PRIMARY KEY (id_graph, id_label);
 ALTER TABLE pr_grapher.graph_services OWNER TO pgfactory;
 REVOKE ALL ON TABLE pr_grapher.graph_services FROM public;
 
@@ -100,7 +100,7 @@ DECLARE
   v_detail  TEXT;
   v_hint    TEXT;
   v_context TEXT;
-  servicesrow public.services%rowtype;
+  labelsrow record;
   v_nb bigint;
 BEGIN
   --Does the server exists ?
@@ -119,19 +119,23 @@ BEGIN
     RETURN;
   END IF;
 
-  FOR servicesrow IN (SELECT s.* FROM public.services s
-    LEFT JOIN pr_grapher.graph_services gs ON gs.id_service = s.id
+  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, l.unit FROM wh_nagios.services s
+    JOIN wh_nagios.labels l ON s.id = l.id_service
+    LEFT JOIN pr_grapher.graph_services gs ON gs.id_label = l.id
     WHERE s.id_server = p_server_id
-    AND gs.id_service IS NULL)
+    AND gs.id_label IS NULL)
   LOOP
     WITH new_graphs (id_graph) AS (
       INSERT INTO pr_grapher.graphs (graph, config)
-        VALUES (servicesrow.service, '{"type": "lines"}')
+        VALUES (labelsrow.service || ' (' || CASE WHEN COALESCE(labelsrow.unit,'') = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
         RETURNING graphs.id
     )
-    INSERT INTO pr_grapher.graph_services (id_graph, id_service)
-      SELECT new_graphs.id_graph, servicesrow.id
-      FROM new_graphs;
+    INSERT INTO pr_grapher.graph_services (id_graph, id_label)
+      SELECT new_graphs.id_graph, l.id
+      FROM new_graphs
+      CROSS JOIN wh_nagios.labels l
+      WHERE l.id_service = labelsrow.id_service
+      AND l.unit = labelsrow.unit;
   END LOOP;
   rc := true;
 EXCEPTION
@@ -171,17 +175,26 @@ AS $$
 DECLARE
 BEGIN
     IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
-        RETURN QUERY SELECT g.*, s2.id, s1.id
-            FROM pr_grapher.graphs g
-            LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id
-            LEFT JOIN public.services s1 ON s1.id = gs.id_service
+        RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
+            FROM ( SELECT DISTINCT g.id, l.id_service
+                FROM pr_grapher.graphs g
+                LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id
+                LEFT JOIN wh_nagios.labels l ON gs.id_label = l.id
+            ) g1
+            JOIN pr_grapher.graphs g2 ON g1.id = g2.id
+            LEFT JOIN public.services s1 ON s1.id = g1.id_service
             LEFT JOIN public.servers s2 ON s2.id = s1.id_server;
     ELSE
-        RETURN QUERY SELECT g.*, s.id_server, gs.id_service
-            FROM list_services() s
-            JOIN pr_grapher.graph_services gs ON gs.id_service = s.id
-            JOIN pr_grapher.graphs g ON g.id = gs.id_graph
-        ;
+        RETURN QUERY SELECT g.id, g.graph, g.description, g.y1_query, g.y2_query, g.config, s2.id_server, s2.id_service
+            FROM (
+                SELECT DISTINCT gs.id_graph, s1.id_server, s1.id_service
+                FROM (
+                    SELECT (wh_nagios.list_label(ls.id)).id_label, ls.id_server, ls.id as id_service
+                    FROM public.list_services() ls
+                ) s1
+                JOIN pr_grapher.graph_services gs ON gs.id_label = s1.id_label
+            ) s2
+            JOIN pr_grapher.graphs g ON g.id = s2.id_graph;
         END IF;
 END;
 $$

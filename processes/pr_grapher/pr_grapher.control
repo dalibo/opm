@@ -2,7 +2,7 @@
 comment = 'Grapher process for pgFactory'
 default_version = '1.0'
 module_pathname = '$libdir/pr_grapher'
-requires = 'pgfactory_core'
+requires = 'pgfactory_core, wh_nagios'
 superuser = false
 relocatable = false
 schema = 'pr_grapher'
