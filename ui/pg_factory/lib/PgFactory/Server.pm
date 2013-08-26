@@ -75,7 +75,7 @@ sub host {
 
     # FIXME: handle pr_grapher and wh_nagios dependancy
     $sql = $dbh->prepare(
-        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph FROM wh_nagios.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ?;"
+        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph FROM wh_nagios.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ? ORDER BY service, graph;"
     );
     $sql->execute($id);
     my $services = [];
