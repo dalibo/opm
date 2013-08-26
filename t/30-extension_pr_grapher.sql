@@ -33,8 +33,8 @@ SELECT has_table('pr_grapher', 'nested_categories',
 SELECT has_table('pr_grapher', 'graph_categories',
     'Table "graph_categories" of schema "pr_grapher" should exists.'
 );
-SELECT has_table('pr_grapher', 'graph_services',
-    'Table "graph_services" of schema "pr_grapher" should exists.'
+SELECT has_table('pr_grapher', 'graph_labels',
+    'Table "graph_labels" of schema "pr_grapher" should exists.'
 );
 SELECT has_table('pr_grapher', 'series',
     'Table "series" of schema "pr_grapher" should exists.'
@@ -157,8 +157,8 @@ SELECT hasnt_table('pr_grapher', 'nested_categories',
 SELECT hasnt_table('pr_grapher', 'graph_categories',
     'Table "graph_categories" of schema "pr_grapher" should not exists anymore.'
 );
-SELECT hasnt_table('pr_grapher', 'graph_services',
-    'Table "graph_services" of schema "pr_grapher" should not exists anymore.'
+SELECT hasnt_table('pr_grapher', 'graph_labels',
+    'Table "graph_labels" of schema "pr_grapher" should not exists anymore.'
 );
 SELECT hasnt_table('pr_grapher', 'series',
     'Table "series" of schema "pr_grapher" should not exists anymore.'
