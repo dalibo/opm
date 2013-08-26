@@ -119,7 +119,7 @@ BEGIN
     RETURN;
   END IF;
 
-  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, l.unit FROM wh_nagios.services s
+  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit FROM wh_nagios.services s
     JOIN wh_nagios.labels l ON s.id = l.id_service
     LEFT JOIN pr_grapher.graph_services gs ON gs.id_label = l.id
     WHERE s.id_server = p_server_id
@@ -127,7 +127,7 @@ BEGIN
   LOOP
     WITH new_graphs (id_graph) AS (
       INSERT INTO pr_grapher.graphs (graph, config)
-        VALUES (labelsrow.service || ' (' || CASE WHEN COALESCE(labelsrow.unit,'') = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
+        VALUES (labelsrow.service || ' (' || CASE WHEN labelsrow.unit = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
         RETURNING graphs.id
     )
     INSERT INTO pr_grapher.graph_services (id_graph, id_label)
@@ -135,7 +135,7 @@ BEGIN
       FROM new_graphs
       CROSS JOIN wh_nagios.labels l
       WHERE l.id_service = labelsrow.id_service
-      AND l.unit = labelsrow.unit;
+      AND COALESCE(l.unit,'') = labelsrow.unit;
   END LOOP;
   rc := true;
 EXCEPTION
