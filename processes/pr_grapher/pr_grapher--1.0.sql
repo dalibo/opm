@@ -62,15 +62,15 @@ ALTER TABLE pr_grapher.series OWNER TO pgfactory;
 REVOKE ALL ON TABLE pr_grapher.series FROM public;
 
 -- A graph can display one or more services
-CREATE TABLE pr_grapher.graph_services (
+CREATE TABLE pr_grapher.graph_labels (
   id_graph bigint not null references pr_grapher.graphs (id),
   id_label bigint not null references wh_nagios.labels (id)
 );
---TODO: add constraint trigger to enforce FK pr_grapher.graph_services and public.services
+--FIXME: handle better module management than wh_nagios requirement in pr_grapher
 
-ALTER TABLE pr_grapher.graph_services ADD PRIMARY KEY (id_graph, id_label);
-ALTER TABLE pr_grapher.graph_services OWNER TO pgfactory;
-REVOKE ALL ON TABLE pr_grapher.graph_services FROM public;
+ALTER TABLE pr_grapher.graph_labels ADD PRIMARY KEY (id_graph, id_label);
+ALTER TABLE pr_grapher.graph_labels OWNER TO pgfactory;
+REVOKE ALL ON TABLE pr_grapher.graph_labels FROM public;
 
 -- jstime: Convert the input date to ms from the Epoch in UTC, suitable for javascript
 CREATE OR REPLACE FUNCTION pr_grapher.js_time(timestamptz) RETURNS bigint LANGUAGE 'sql' IMMUTABLE SECURITY DEFINER
@@ -121,7 +121,7 @@ BEGIN
 
   FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit FROM wh_nagios.services s
     JOIN wh_nagios.labels l ON s.id = l.id_service
-    LEFT JOIN pr_grapher.graph_services gs ON gs.id_label = l.id
+    LEFT JOIN pr_grapher.graph_labels gs ON gs.id_label = l.id
     WHERE s.id_server = p_server_id
     AND gs.id_label IS NULL)
   LOOP
@@ -130,7 +130,7 @@ BEGIN
         VALUES (labelsrow.service || ' (' || CASE WHEN labelsrow.unit = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
         RETURNING graphs.id
     )
-    INSERT INTO pr_grapher.graph_services (id_graph, id_label)
+    INSERT INTO pr_grapher.graph_labels (id_graph, id_label)
       SELECT new_graphs.id_graph, l.id
       FROM new_graphs
       CROSS JOIN wh_nagios.labels l
@@ -178,7 +178,7 @@ BEGIN
         RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
             FROM ( SELECT DISTINCT g.id, l.id_service
                 FROM pr_grapher.graphs g
-                LEFT JOIN pr_grapher.graph_services gs ON gs.id_graph = g.id
+                LEFT JOIN pr_grapher.graph_labels gs ON gs.id_graph = g.id
                 LEFT JOIN wh_nagios.labels l ON gs.id_label = l.id
             ) g1
             JOIN pr_grapher.graphs g2 ON g1.id = g2.id
@@ -192,7 +192,7 @@ BEGIN
                     SELECT (wh_nagios.list_label(ls.id)).id_label, ls.id_server, ls.id as id_service
                     FROM public.list_services() ls
                 ) s1
-                JOIN pr_grapher.graph_services gs ON gs.id_label = s1.id_label
+                JOIN pr_grapher.graph_labels gs ON gs.id_label = s1.id_label
             ) s2
             JOIN pr_grapher.graphs g ON g.id = s2.id_graph;
         END IF;
