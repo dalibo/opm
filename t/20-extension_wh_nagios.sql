@@ -250,7 +250,7 @@ SELECT has_table('wh_nagios', 'counters_detail_1',
 
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.list_label(1)$$,
-    $$VALUES (1::bigint,'template0')$$,
+    $$VALUES (1::bigint, 'template0', '')$$,
     'list_label should see label template0.'
 );
 
@@ -309,7 +309,7 @@ SELECT set_eq(
 -- check table wh_nagios.services
 SELECT set_eq(
     $$SELECT s1.id, s2.hostname, s1.warehouse, s1.service, s1.last_modified, s1.creation_ts,
-            s1.last_cleanup, s1.servalid, s2.id_role, s1.unit, s1.state, s1.min::numeric,
+            s1.last_cleanup, s1.servalid, s2.id_role, s1.state, s1.min::numeric,
             s1.max::numeric, s1.critical::numeric, s1.warning::numeric,
             extract(epoch FROM s1.oldest_record) AS oldest_record,
             extract(epoch FROM s1.newest_record) AS newest_record
@@ -318,11 +318,11 @@ SELECT set_eq(
     $$VALUES
         (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
-            NULL::interval, NULL::bigint, '', 'OK', 0, 0, 524288000,
+            NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
             209715200, 1357038000::double precision, NULL::double precision),
         (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
-            NULL::interval, NULL::bigint, 'B', 'OK', 0, 0, 524288000,
+            NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
             209715200, 1357038000::double precision, NULL::double precision)$$,
     'Table "wh_nagios.services" should have services defined by records 9, 10 (and 11).'
 );
@@ -330,9 +330,9 @@ SELECT set_eq(
 -- check table public.labels
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.labels$$,
-    $$VALUES (1,1,'template0'),
-        (2,2,'template0'),
-        (3,2,'postgres')$$,
+    $$VALUES (1,1,'template0', ''),
+        (2,2,'template0', 'B'),
+        (3,2,'postgres', 'B')$$,
     'Table "wh_nagios.labels" should contains labels of records 9, 10 and 11.'
 );
 
@@ -415,13 +415,15 @@ SELECT results_eq(
 
 -- check table wh_nagios.services
 SELECT set_eq(
-    $$SELECT s1.unit
-        FROM wh_nagios.services s1
+    $$SELECT l.unit
+        FROM wh_nagios.labels l
+        JOIN wh_nagios.services s1 ON l.id_service = s1.id
         JOIN public.servers s2 ON s1.id_server = s2.id
         WHERE s2.hostname = 'gouda.dalibo.net'
-        AND service = 'pgactivity Database size'$$,
+            AND service = 'pgactivity Database size'
+            AND label = 'template0'$$,
     $$VALUES ('b')$$,
-    'Field "unit" of Table "wh_nagios.services" should be "b" instead of "B".'
+    'Field "unit" in "wh_nagios.labels" should be "b" instead of "B".'
 );
 
 SELECT diag(E'\n==== Partition cleanup ====\n');
@@ -554,7 +556,7 @@ SELECT lives_ok(
 -- check table public.labels do not have label from service 2 anymore
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.labels$$,
-    $$VALUES (1,1,'template0')$$,
+    $$VALUES (1,1,'template0', '')$$,
     'Table "wh_nagios.labels" should not contains labels of service id 2 anymore.'
 );
 
