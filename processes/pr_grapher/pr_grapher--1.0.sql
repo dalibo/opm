@@ -61,17 +61,6 @@ CREATE TABLE pr_grapher.series (
 ALTER TABLE pr_grapher.series OWNER TO pgfactory;
 REVOKE ALL ON TABLE pr_grapher.series FROM public;
 
--- A graph can display one or more services
-CREATE TABLE pr_grapher.graph_labels (
-  id_graph bigint not null references pr_grapher.graphs (id),
-  id_label bigint not null references wh_nagios.labels (id)
-);
---FIXME: handle better module management than wh_nagios requirement in pr_grapher
-
-ALTER TABLE pr_grapher.graph_labels ADD PRIMARY KEY (id_graph, id_label);
-ALTER TABLE pr_grapher.graph_labels OWNER TO pgfactory;
-REVOKE ALL ON TABLE pr_grapher.graph_labels FROM public;
-
 -- jstime: Convert the input date to ms from the Epoch in UTC, suitable for javascript
 CREATE OR REPLACE FUNCTION pr_grapher.js_time(timestamptz) RETURNS bigint LANGUAGE 'sql' IMMUTABLE SECURITY DEFINER
 AS $$
@@ -92,109 +81,18 @@ WITH RECURSIVE tc(id, category, description, distance, path, cycle) AS (
 ) SELECT id, category, description, distance, path FROM tc WHERE NOT cycle ORDER BY path;
 $$;
 
-CREATE OR REPLACE FUNCTION pr_grapher.create_graph_for_services(IN p_server_id bigint, OUT rc boolean)
-AS $$
-DECLARE
-  v_state   TEXT;
-  v_msg     TEXT;
-  v_detail  TEXT;
-  v_hint    TEXT;
-  v_context TEXT;
-  labelsrow record;
-  v_nb bigint;
-BEGIN
-  --Does the server exists ?
-  SELECT COUNT(*) INTO v_nb FROM public.servers WHERE id = p_server_id;
-  IF (v_nb <> 1) THEN
-    RAISE WARNING 'Server % does not exists.', p_server_id;
-    rc := false;
-    RETURN;
-  END IF;
-
-  --Is the user allowed to create graphs ?
-  SELECT COUNT(*) INTO v_nb FROM public.list_servers() WHERE id = p_server_id;
-  IF (v_nb <> 1) THEN
-    RAISE WARNING 'User not allowed for server %.', p_server_id;
-    rc := false;
-    RETURN;
-  END IF;
-
-  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit FROM wh_nagios.services s
-    JOIN wh_nagios.labels l ON s.id = l.id_service
-    LEFT JOIN pr_grapher.graph_labels gs ON gs.id_label = l.id
-    WHERE s.id_server = p_server_id
-    AND gs.id_label IS NULL)
-  LOOP
-    WITH new_graphs (id_graph) AS (
-      INSERT INTO pr_grapher.graphs (graph, config)
-        VALUES (labelsrow.service || ' (' || CASE WHEN labelsrow.unit = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
-        RETURNING graphs.id
-    )
-    INSERT INTO pr_grapher.graph_labels (id_graph, id_label)
-      SELECT new_graphs.id_graph, l.id
-      FROM new_graphs
-      CROSS JOIN wh_nagios.labels l
-      WHERE l.id_service = labelsrow.id_service
-      AND COALESCE(l.unit,'') = labelsrow.unit;
-  END LOOP;
-  rc := true;
-EXCEPTION
-  WHEN OTHERS THEN
-    GET STACKED DIAGNOSTICS
-      v_state   = RETURNED_SQLSTATE,
-      v_msg     = MESSAGE_TEXT,
-      v_detail  = PG_EXCEPTION_DETAIL,
-      v_hint    = PG_EXCEPTION_HINT,
-      v_context = PG_EXCEPTION_CONTEXT;
-    raise notice E'Unhandled error on pr_grapher.create_graph_for_services:
-      state  : %
-      message: %
-      detail : %
-      hint   : %
-      context: %', v_state, v_msg, v_detail, v_hint, v_context;
-    rc := false;
-END;
-$$
-LANGUAGE plpgsql
-LEAKPROOF
-SECURITY DEFINER;
-
-ALTER FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) OWNER TO pgfactory;
-REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) TO public;
-
-COMMENT ON FUNCTION pr_grapher.create_graph_for_services(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.';
-
 /* pr_grapher.list_graph()
 Return every pr_grapher.graphs%ROWTYPE a user can see
 
 */
 CREATE OR REPLACE FUNCTION pr_grapher.list_graph() RETURNS TABLE (id bigint, graph text, description text,
-  y1_query text, y2_query text, config json, id_server bigint, id_service bigint)
+  y1_query text, y2_query text, config json)
 AS $$
 DECLARE
 BEGIN
     IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
-        RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
-            FROM ( SELECT DISTINCT g.id, l.id_service
-                FROM pr_grapher.graphs g
-                LEFT JOIN pr_grapher.graph_labels gs ON gs.id_graph = g.id
-                LEFT JOIN wh_nagios.labels l ON gs.id_label = l.id
-            ) g1
-            JOIN pr_grapher.graphs g2 ON g1.id = g2.id
-            LEFT JOIN public.services s1 ON s1.id = g1.id_service
-            LEFT JOIN public.servers s2 ON s2.id = s1.id_server;
-    ELSE
-        RETURN QUERY SELECT g.id, g.graph, g.description, g.y1_query, g.y2_query, g.config, s2.id_server, s2.id_service
-            FROM (
-                SELECT DISTINCT gs.id_graph, s1.id_server, s1.id_service
-                FROM (
-                    SELECT (wh_nagios.list_label(ls.id)).id_label, ls.id_server, ls.id as id_service
-                    FROM public.list_services() ls
-                ) s1
-                JOIN pr_grapher.graph_labels gs ON gs.id_label = s1.id_label
-            ) s2
-            JOIN pr_grapher.graphs g ON g.id = s2.id_graph;
+        RETURN QUERY SELECT  g.id, g.graph, g.description, g.y1_query, g.y2_query, g.config
+            FROM pr_grapher.graphs g;
         END IF;
 END;
 $$
@@ -209,49 +107,3 @@ GRANT EXECUTE ON FUNCTION pr_grapher.list_graph() TO pgf_roles;
 COMMENT ON FUNCTION pr_grapher.list_graph()
     IS 'List all graphs';
 
-/* pr_grapher.list_graph_labels()
-Return every labels used in all graphs that current user is granted.
-
-*/
-CREATE OR REPLACE FUNCTION pr_grapher.list_graph_labels() RETURNS TABLE (id_graph bigint, id_label bigint)
-AS $$
-BEGIN
-    RETURN QUERY SELECT lg.id, gl.id_label
-        FROM pr_grapher.list_graph() lg
-        JOIN pr_grapher.graph_labels gl ON lg.id = gl.id_graph;
-END;
-$$
-LANGUAGE plpgsql
-VOLATILE
-LEAKPROOF
-SECURITY DEFINER;
-ALTER FUNCTION pr_grapher.list_graph_labels() OWNER TO pgfactory;
-REVOKE ALL ON FUNCTION pr_grapher.list_graph_labels() FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.list_graph_labels() TO pgf_roles;
-
-COMMENT ON FUNCTION pr_grapher.list_graph_labels()
-    IS 'List all labels used in all graphs thant current user is granted.';
-
-/* pr_grapher.list_graph_labels()
-Return every labels used in a specific graph.
-
-*/
-CREATE OR REPLACE FUNCTION pr_grapher.list_graph_labels(p_id_graph bigint) RETURNS TABLE (id_label bigint)
-AS $$
-BEGIN
-    RETURN QUERY SELECT gl.id_label
-        FROM pr_grapher.list_graph() lg
-        JOIN pr_grapher.graph_labels gl ON lg.id = gl.id_graph
-        WHERE lg.id = p_id_graph;
-END;
-$$
-LANGUAGE plpgsql
-VOLATILE
-LEAKPROOF
-SECURITY DEFINER;
-ALTER FUNCTION pr_grapher.list_graph_labels(bigint) OWNER TO pgfactory;
-REVOKE ALL ON FUNCTION pr_grapher.list_graph_labels(bigint) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.list_graph_labels(bigint) TO pgf_roles;
-
-COMMENT ON FUNCTION pr_grapher.list_graph_labels(bigint)
-    IS 'List all labels used in a specific graph.';

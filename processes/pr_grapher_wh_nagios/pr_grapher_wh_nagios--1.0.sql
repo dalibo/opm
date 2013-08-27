@@ -1,0 +1,191 @@
+-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION pr_grapher_wh_nagios" to load this file. \quit
+
+SET statement_timeout TO 0;
+
+-- Schema should already be created and granted for pgFactory, with pr_grapher extension.
+-- We only have to create a few objects.
+
+-- A graph can display one or more services
+CREATE TABLE pr_grapher.graph_wh_nagios (
+  id_graph bigint not null references pr_grapher.graphs (id),
+  id_label bigint not null references wh_nagios.labels (id)
+);
+
+ALTER TABLE pr_grapher.graph_wh_nagios ADD PRIMARY KEY (id_graph, id_label);
+ALTER TABLE pr_grapher.graph_wh_nagios OWNER TO pgfactory;
+REVOKE ALL ON TABLE pr_grapher.graph_wh_nagios FROM public;
+
+/*
+Function pr_grapher.create_graph_for_wh_nagios(p_id_server bigint) returns boolean
+@return rc: status
+
+This function automatically generates for wh_nagios all graphs for a specified
+server. If this function is called multiple times, it will only generate
+"missing" graphs. A graph will is considered as missing if a label is not
+present in any graph. Therefore, it's currently impossible not to graph a label.
+FIXME: fix this limitation.
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.create_graph_for_wh_nagios(IN p_server_id bigint, OUT rc boolean)
+AS $$
+DECLARE
+  v_state   TEXT;
+  v_msg     TEXT;
+  v_detail  TEXT;
+  v_hint    TEXT;
+  v_context TEXT;
+  labelsrow record;
+  v_nb bigint;
+BEGIN
+  --Does the server exists ?
+  SELECT COUNT(*) INTO v_nb FROM public.servers WHERE id = p_server_id;
+  IF (v_nb <> 1) THEN
+    RAISE WARNING 'Server % does not exists.', p_server_id;
+    rc := false;
+    RETURN;
+  END IF;
+
+  --Is the user allowed to create graphs ?
+  SELECT COUNT(*) INTO v_nb FROM public.list_servers() WHERE id = p_server_id;
+  IF (v_nb <> 1) THEN
+    RAISE WARNING 'User not allowed for server %.', p_server_id;
+    rc := false;
+    RETURN;
+  END IF;
+
+  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit FROM wh_nagios.services s
+    JOIN wh_nagios.labels l ON s.id = l.id_service
+    LEFT JOIN pr_grapher.graph_wh_nagios gs ON gs.id_label = l.id
+    WHERE s.id_server = p_server_id
+    AND gs.id_label IS NULL)
+  LOOP
+    WITH new_graphs (id_graph) AS (
+      INSERT INTO pr_grapher.graphs (graph, config)
+        VALUES (labelsrow.service || ' (' || CASE WHEN labelsrow.unit = '' THEN 'no unit' ELSE 'in ' || labelsrow.unit END || ')', '{"type": "lines"}')
+        RETURNING graphs.id
+    )
+    INSERT INTO pr_grapher.graph_wh_nagios (id_graph, id_label)
+      SELECT new_graphs.id_graph, l.id
+      FROM new_graphs
+      CROSS JOIN wh_nagios.labels l
+      WHERE l.id_service = labelsrow.id_service
+      AND COALESCE(l.unit,'') = labelsrow.unit;
+  END LOOP;
+  rc := true;
+EXCEPTION
+  WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS
+      v_state   = RETURNED_SQLSTATE,
+      v_msg     = MESSAGE_TEXT,
+      v_detail  = PG_EXCEPTION_DETAIL,
+      v_hint    = PG_EXCEPTION_HINT,
+      v_context = PG_EXCEPTION_CONTEXT;
+    raise notice E'Unhandled error on pr_grapher.create_graph_for_wh_nagios:
+      state  : %
+      message: %
+      detail : %
+      hint   : %
+      context: %', v_state, v_msg, v_detail, v_hint, v_context;
+    rc := false;
+END;
+$$
+LANGUAGE plpgsql
+LEAKPROOF
+SECURITY DEFINER;
+
+ALTER FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) TO public;
+
+COMMENT ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.';
+
+/* pr_grapher.list_wh_nagios_graphs()
+Return every pr_grapher.graphs%ROWTYPE a user can see
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_graphs() RETURNS TABLE (id bigint, graph text, description text,
+  y1_query text, y2_query text, config json, id_server bigint, id_service bigint)
+AS $$
+DECLARE
+BEGIN
+    IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
+        RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
+            FROM ( SELECT DISTINCT g.id, l.id_service
+                FROM pr_grapher.graphs g
+                JOIN pr_grapher.graph_wh_nagios gs ON gs.id_graph = g.id
+                JOIN wh_nagios.labels l ON gs.id_label = l.id
+            ) g1
+            JOIN pr_grapher.graphs g2 ON g1.id = g2.id
+            JOIN public.services s1 ON s1.id = g1.id_service
+            JOIN public.servers s2 ON s2.id = s1.id_server;
+    ELSE
+        RETURN QUERY SELECT g.id, g.graph, g.description, g.y1_query, g.y2_query, g.config, s2.id_server, s2.id_service
+            FROM (
+                SELECT DISTINCT gs.id_graph, s1.id_server, s1.id_service
+                FROM (
+                    SELECT (wh_nagios.list_label(ls.id)).id_label, ls.id_server, ls.id as id_service
+                    FROM public.list_services() ls
+                ) s1
+                JOIN pr_grapher.graph_wh_nagios gs ON gs.id_label = s1.id_label
+            ) s2
+            JOIN pr_grapher.graphs g ON g.id = s2.id_graph;
+        END IF;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_wh_nagios_graphs() OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_graphs() FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_graphs() TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
+    IS 'List all graphs related to warehouse wh_nagios';
+
+/* pr_grapher.list_wh_nagios_labels()
+Return every wh_nagios's labels used in all graphs that current user is granted.
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels() RETURNS TABLE (id_graph bigint, id_label bigint)
+AS $$
+BEGIN
+    RETURN QUERY SELECT lg.id, gl.id_label
+        FROM pr_grapher.list_wh_nagios_graphs() lg
+        JOIN pr_grapher.graph_wh_nagios gl ON lg.id = gl.id_graph;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_wh_nagios_labels() OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_labels() FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels() TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_wh_nagios_labels()
+    IS 'List all wh_nagios''s labels used in all graphs that current user is granted.';
+
+/* pr_grapher.list_wh_nagios_labels()
+Return every wh_nagios's labels used in a specific graph.
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint) RETURNS TABLE (id_label bigint)
+AS $$
+BEGIN
+    RETURN QUERY SELECT l.id_label
+        FROM pr_grapher.list_wh_nagios_graphs() g
+        JOIN pr_grapher.list_wh_nagios_labels() l ON g.id = l.id_graph
+        WHERE g.id = p_id_graph;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_wh_nagios_labels(bigint) OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint)
+    IS 'List all wh_nagios''s labels used in a specific graph.';
