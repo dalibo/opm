@@ -1,4 +1,4 @@
-# wh_nagios extension
+# pr_grapher extension
 comment = 'Grapher process for pgFactory'
 default_version = '1.0'
 module_pathname = '$libdir/pr_grapher'
