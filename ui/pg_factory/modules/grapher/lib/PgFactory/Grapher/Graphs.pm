@@ -38,6 +38,7 @@ sub show {
         FROM pr_grapher.list_graph() g
         LEFT JOIN public.list_servers() s ON g.id_server = s.id
         WHERE g.id = ?});
+
     $sth->execute($id);
     my $graph = $sth->fetchrow_hashref;
     $sth->finish;
@@ -259,6 +260,7 @@ sub edit {
     if ( !defined $graph ) {
         return $self->render_not_found;
     }
+
     my $id_server = $graph->{id_server};
 
     # Save the form
@@ -274,14 +276,18 @@ sub edit {
         }
 
         if ( exists $form->{save} ) {
+            $form->{y1_query} = '' unless defined $form->{y1_query};
+            $form->{y2_query} = '' unless defined $form->{y2_query};
+
             if ( $form->{graph} =~ m!^\s*$! ) {
                 $self->msg->error("Missing graph name");
                 $e = 1;
             }
-            if (   $form->{y1_query} =~ m!^\s*$!
-                && $form->{y2_query} =~ m!^\s*$!
-                && ( !scalar $id_server ) )
-            {
+
+            if (   ( !scalar $id_server )
+                and $form->{y1_query} =~ m!^\s*$!
+                and $form->{y2_query} =~ m!^\s*$!
+            ) {
                 $self->msg->error("Missing query");
                 $e = 1;
             }

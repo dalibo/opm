@@ -71,6 +71,10 @@ sub validate {
 
     my %d = %$input;
 
+    $d{'y2axis_title'}       = '' unless defined $d{'y2axis_title'};
+    $d{'y2axis_titleAngle'}  = '270' unless defined $d{'y2axis_titleAngle'};
+    $d{'y2axis_labelsAngle'} = '0' unless defined $d{'y2axis_labelsAngle'};
+
     # Process checkboxes: unchecked ones are in the hashref,
     # checked values are 1 and we want true or false.
     foreach my $c (
