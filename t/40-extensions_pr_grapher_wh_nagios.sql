@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(38);
+SELECT plan(47);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -142,3 +142,26 @@ SELECT set_eq($$SELECT * FROM pr_grapher.list_wh_nagios_labels(1)$$,
     $$VALUES (1::bigint)$$,
     'Should see one labels for graph 1'
 );
+SELECT diag(E'\n==== Drop pr_grapher_wh_nagios ====\n');
+
+SELECT lives_ok(
+    $$DROP EXTENSION pr_grapher_wh_nagios CASCADE;$$,
+    'Drop extension "pr_grapher_wh_nagios"');
+
+SELECT hasnt_extension('pr_grapher_wh_nagios','Extensions "pr_grapher_wh_nagios" should not exists anymore.');
+SELECT has_extension('pr_grapher','Extensions "pr_grapher" should still anymore.');
+SELECT has_extension('wh_nagios','Extensions "wh_nagios" should still anymore.');
+
+SELECT hasnt_table('pr_grapher', 'graph_labels',
+    'Table "graph_labels" of schema "pr_grapher" should not exists anymore.'
+);
+
+SELECT hasnt_function('pr_grapher', 'create_graph_for_wh_nagios', '{bigint}', 'Function "pr_grapher.create_graph_for_wh_nagios(bigint)" should not exists anymore.');
+SELECT hasnt_function('pr_grapher', 'list_wh_nagios_graphs', '{}', 'Function "pr_grapher.list_wh_nagios_graphs" should not exists anymore.');
+SELECT hasnt_function('pr_grapher', 'list_wh_nagios_labels', '{}', 'Function "pr_grapher.list_wh_nagios_labels" should not exists anymore.');
+SELECT hasnt_function('pr_grapher', 'list_wh_nagios_labels', '{bigint}', 'Function "pr_grapher.list_wh_nagios_labels(bigint)" should not exists anymore.');
+
+-- Finish the tests and clean up.
+SELECT * FROM finish();
+
+ROLLBACK;

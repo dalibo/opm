@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(24);
+SELECT plan(25);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -53,6 +53,8 @@ SELECT diag(E'\n==== Drop pr_grapher ====\n');
 SELECT lives_ok(
 	$$DROP EXTENSION pr_grapher CASCADE;$$,
 	'Drop extension "pr_grapher"');
+
+SELECT hasnt_extension('pr_grapher','Extensions "pr_grapher" should not exists anymore.');
 
 SELECT hasnt_table('pr_grapher', 'graphs',
     'Table "graphs" of schema "pr_grapher" should not exists anymore.'
