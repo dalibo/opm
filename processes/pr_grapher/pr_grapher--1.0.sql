@@ -208,3 +208,50 @@ GRANT EXECUTE ON FUNCTION pr_grapher.list_graph() TO pgf_roles;
 
 COMMENT ON FUNCTION pr_grapher.list_graph()
     IS 'List all graphs';
+
+/* pr_grapher.list_graph_labels()
+Return every labels used in all graphs that current user is granted.
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_graph_labels() RETURNS TABLE (id_graph bigint, id_label bigint)
+AS $$
+BEGIN
+    RETURN QUERY SELECT lg.id, gl.id_label
+        FROM pr_grapher.list_graph() lg
+        JOIN pr_grapher.graph_labels gl ON lg.id = gl.id_graph;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_graph_labels() OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_graph_labels() FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_graph_labels() TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_graph_labels()
+    IS 'List all labels used in all graphs thant current user is granted.';
+
+/* pr_grapher.list_graph_labels()
+Return every labels used in a specific graph.
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.list_graph_labels(p_id_graph bigint) RETURNS TABLE (id_label bigint)
+AS $$
+BEGIN
+    RETURN QUERY SELECT gl.id_label
+        FROM pr_grapher.list_graph() lg
+        JOIN pr_grapher.graph_labels gl ON lg.id = gl.id_graph
+        WHERE lg.id = p_id_graph;
+END;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+ALTER FUNCTION pr_grapher.list_graph_labels(bigint) OWNER TO pgfactory;
+REVOKE ALL ON FUNCTION pr_grapher.list_graph_labels(bigint) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_graph_labels(bigint) TO pgf_roles;
+
+COMMENT ON FUNCTION pr_grapher.list_graph_labels(bigint)
+    IS 'List all labels used in a specific graph.';
