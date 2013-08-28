@@ -13,6 +13,8 @@
       <li><%= link_to properties_defaults => begin %><%=l 'Properties' %><% end %></li>
     </ul>
   </li>
+  % }
+  % if (($user_level eq "user" ) or ($user_level eq "admin")){
   <form class="navbar-search pull-left">
     <input type="text" class="search-query" placeholder="<%=l 'Search' %>" id="search" autocomplete="off">
   </form>
