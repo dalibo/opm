@@ -418,7 +418,8 @@ sub edit {
         my $row;
 
         while ( defined($row = $sth->fetchrow_hashref) ) {
-            push @{$labels}, [ $row->{'id_label'}, $row->{'label'} ];
+            $row->{'unit'} = 'no unit' if $row->{'unit'} eq '';
+            push @{$labels}, [ $row->{'id_label'}, $row->{'label'}, $row->{'unit'} ];
             $self->req->params->append( "labels", $row->{'id_label'}) if $row->{'checked'};
         }
         $sth->finish;
