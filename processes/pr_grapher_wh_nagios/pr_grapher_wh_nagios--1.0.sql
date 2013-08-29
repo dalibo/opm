@@ -129,7 +129,7 @@ BEGIN
                 JOIN pr_grapher.graph_wh_nagios gs ON gs.id_label = s1.id_label
             ) s2
             JOIN pr_grapher.graphs g ON g.id = s2.id_graph;
-        END IF;
+    END IF;
 END;
 $$
 LANGUAGE plpgsql
@@ -147,36 +147,45 @@ COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
 Return every wh_nagios's labels used in all graphs that current user is granted.
 
 */
-CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels() RETURNS TABLE (id_graph bigint, id_label bigint)
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint) RETURNS TABLE (id_graph bigint, id_label bigint, label text, unit text, id_service bigint, available boolean )
 AS $$
 BEGIN
-    RETURN QUERY SELECT lg.id, gl.id_label
-        FROM pr_grapher.list_wh_nagios_graphs() lg
-        JOIN pr_grapher.graph_wh_nagios gl ON lg.id = gl.id_graph;
-END;
-$$
-LANGUAGE plpgsql
-VOLATILE
-LEAKPROOF
-SECURITY DEFINER;
-ALTER FUNCTION pr_grapher.list_wh_nagios_labels() OWNER TO pgfactory;
-REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_labels() FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels() TO pgf_roles;
 
-COMMENT ON FUNCTION pr_grapher.list_wh_nagios_labels()
-    IS 'List all wh_nagios''s labels used in all graphs that current user is granted.';
-
-/* pr_grapher.list_wh_nagios_labels()
-Return every wh_nagios's labels used in a specific graph.
-
-*/
-CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint) RETURNS TABLE (id_label bigint)
-AS $$
-BEGIN
-    RETURN QUERY SELECT l.id_label
-        FROM pr_grapher.list_wh_nagios_graphs() g
-        JOIN pr_grapher.list_wh_nagios_labels() l ON g.id = l.id_graph
-        WHERE g.id = p_id_graph;
+    IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
+        RETURN QUERY
+            SELECT ds.id_graph, l.id AS id_label, l.label, l.unit,
+                l.id_service, gs.id_graph IS NOT NULL AS available
+            FROM wh_nagios.labels AS l
+            JOIN (
+                    SELECT DISTINCT l.id_service, gs.id_graph
+                    FROM wh_nagios.labels AS l
+                    JOIN pr_grapher.graph_wh_nagios AS gs
+                            ON l.id = gs.id_label
+                    WHERE gs.id_graph=p_id_graph
+            ) AS ds
+                    ON ds.id_service = l.id_service
+            LEFT JOIN pr_grapher.graph_wh_nagios gs
+                    ON (gs.id_label, gs.id_graph)=(l.id, ds.id_graph) ;
+    ELSE
+        RETURN QUERY
+            SELECT ds.id_graph, l.id AS id_label, l.label, l.unit,
+                l.id_service, gs.id_graph IS NOT NULL AS available
+            FROM wh_nagios.labels AS l
+            JOIN (
+                    SELECT DISTINCT l.id_service, gs.id_graph
+                    FROM wh_nagios.labels AS l
+                    JOIN pr_grapher.graph_wh_nagios AS gs
+                            ON l.id = gs.id_label
+                    WHERE gs.id_graph=p_id_graph
+                        AND EXISTS (SELECT 1
+                            FROM public.list_services() ls
+                            WHERE l.id_service=ls.id
+                        )
+            ) AS ds
+                    ON ds.id_service = l.id_service
+            LEFT JOIN pr_grapher.graph_wh_nagios gs
+                    ON (gs.id_label, gs.id_graph)=(l.id, ds.id_graph);
+    END IF;
 END;
 $$
 LANGUAGE plpgsql
