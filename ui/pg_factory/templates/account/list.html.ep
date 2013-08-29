@@ -2,7 +2,7 @@
 % my @acc = @{stash 'acc'};
 
 <div class="row">
-  <div class="span6">
+  <div class="span6" id="acc_list">
     <div class="box">
       <b><%=l 'List of accounts' %> :</b><br />
       <ul>
@@ -17,7 +17,7 @@
     </div>
   </div>
 
-  <div class="span4">
+  <div class="span4" id="acc_create">
     <div class="box">
       <%= form_for account_list => (method => 'POST') => begin %>
         <fieldset>
