@@ -121,8 +121,9 @@ sub edit {
         }
     }
 
+    # Select account(s) assigned to user
     $sql = $dbh->prepare(
-        "SELECT accname FROM list_users() WHERE rolname = ? ORDER BY 1;"
+        "SELECT accname FROM list_users() WHERE rolname = ? AND accname IS NOT NULL ORDER BY 1;"
     );
     $sql->execute($rolname);
 
@@ -133,6 +134,7 @@ sub edit {
     }
     $sql->finish();
 
+    # Select account(s) not assigned to user
     $sql = $dbh->prepare(
         "SELECT accname FROM list_accounts() EXCEPT SELECT accname FROM list_users() WHERE rolname = ? ORDER BY 1;"
     );
