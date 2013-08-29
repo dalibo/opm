@@ -255,7 +255,11 @@
                     $tr.append(fragments[i]);
                 }
                 $table.append($tr);
-                $legend.append($table);
+                $legend.append($table)
+                    .css({
+                        height: this.flotr.canvasHeight,
+                        overflow: 'auto'
+                    });
 
                 series.map(function(s, i) {
                     if (s.hide) $legend.find('#legendcolor'+i).hide()
