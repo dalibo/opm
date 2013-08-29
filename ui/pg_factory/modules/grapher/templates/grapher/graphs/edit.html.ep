@@ -2,7 +2,9 @@
 % content_for header => begin
   <script type="text/javascript" src="<%= url_for '/js/edit.js' %>"></script>
 % end
-% my @labels = @{stash 'labels'};
+% my @labels       = @{ stash 'labels' };
+% my $rowid        = 0;
+% my $curr_service = -1;
 
 <div class="row-fluid">
   <h2><%=l 'Update a graph' %></h2>
@@ -187,19 +189,32 @@
             </div>
             <% if ( scalar (stash 'id_server')) { %>
               <div class="tab-pane" id="series">
-                <%
-                my $rowid=0;
-                foreach my $l (@labels) {
-                %>
-                  <% unless ($rowid%4) {%><div class="row-fluid"><% } %>
-                  <label class="checkbox span3" ><%= check_box "labels" => $l->[0] %> <%= "$l->[1] ($l->[2]) "%></label>
-                  <% if ($rowid%4 == 3) {%></div><% } %>
-                <%
-                  $rowid++;
-                }
+%             foreach my $l (@labels) {
+%               if ($curr_service != $l->{'id_service'}) {
+%                 $curr_service = $l->{'id_service'};
+%                 if ($rowid > 0) {
+                  </div>
+%                 }
+%                 $rowid = 0;
+                  <strong><%= $l->{'service'} %></strong>
+%               }
+%               if ($rowid%4 == 0) {
+                  <div class="row-fluid">
+%               }
+                    <label class="checkbox span3" >
+                      <%= check_box "labels" => $l->{'id_label'} %> <%= "$l->{'label'} ($l->{'unit'}) "%>
+                    </label>
 
-                unless ($rowid%4 == 3) { %></div><% }
-                %>
+%               if ($rowid%4 == 3) {
+                  </div>
+%               }
+%               $rowid++;
+%             }
+
+%             if ($rowid%4 != 3) {
+                  </div>
+%             }
+
               </div>
             <% } else { %>
               <div class="tab-pane" id="y2axis">

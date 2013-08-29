@@ -399,8 +399,11 @@ sub edit {
 
         $sth = $dbh->prepare(
             qq{
-                SELECT id_service, id_graph, id_label, label, unit, available AS checked
-                FROM pr_grapher.list_wh_nagios_labels(?)
+                SELECT l.id_service, l.id_label, l.label, l.unit,
+                    l.available AS checked, s.service
+                FROM pr_grapher.list_wh_nagios_labels(?) AS l
+                JOIN wh_nagios.list_services() AS s
+                    ON l.id_service = s.id
             });
 
         if (
@@ -413,15 +416,16 @@ sub edit {
             return;
         }
 
-        my $labels = [];
+        my @labels;
 
         my $row;
 
         while ( defined($row = $sth->fetchrow_hashref) ) {
             $row->{'unit'} = 'no unit' if $row->{'unit'} eq '';
-            push @{$labels}, [ $row->{'id_label'}, $row->{'label'}, $row->{'unit'} ];
+            push @labels, { %{ $row } };
             $self->req->params->append( "labels", $row->{'id_label'}) if $row->{'checked'};
         }
+
         $sth->finish;
         $dbh->commit;
 
@@ -441,7 +445,7 @@ sub edit {
         }
 
         # Is the graph associated with a service ?
-        $self->stash( id_server => $id_server, labels => $labels );
+        $self->stash( id_server => $id_server, labels => \@labels );
     }
 
     $dbh->disconnect;
