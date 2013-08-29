@@ -85,8 +85,84 @@ sub show {
 
     $dbh->disconnect;
 
-    $self->stash( graph => $graph, hostname => $hostname,
-        server_list => $server_list, graph_list => $graph_list );
+    $self->stash(
+        graph => $graph,
+        hostname => $hostname,
+        server_list => $server_list,
+        graph_list => $graph_list
+    );
+
+    $self->render;
+
+}
+
+
+sub showservice {
+    my $self       = shift;
+    my $id_service = $self->param('id');
+    my $dbh        = $self->database;
+    my $server_list;
+    my $graph_list;
+    my @graphs;
+    my $hostname;
+
+    # Get the graphs associated with the given service
+    my $sth = $dbh->prepare(qq{
+        SELECT g.id, CASE
+            WHEN s.hostname IS NOT NULL THEN s.hostname || '::'
+            ELSE ''
+        END || graph AS graph,
+            description, s.id AS id_server, s.hostname
+        FROM pr_grapher.list_wh_nagios_graphs() g
+        LEFT JOIN public.list_servers() s ON g.id_server = s.id
+        WHERE g.id_service = ?
+    });
+
+    $sth->execute($id_service);
+    push @graphs => $_ while $_ = $sth->fetchrow_hashref();
+
+    # Check if it exists (this can be reach by url)
+    if ( @graphs < 1 ) {
+        $dbh->disconnect;
+        return $self->render_not_found;
+    }
+
+    $sth->finish;
+
+    $hostname = $graphs[0]{'hostname'};
+
+    if (scalar $hostname) {
+
+        # fetch data for the "jump to server" list
+        $sth = $dbh->prepare(qq{
+            SELECT s.id, s.hostname
+            FROM public.list_servers() s
+            WHERE s.hostname <> ?
+        });
+        $sth->execute($hostname);
+        $server_list = $sth->fetchall_hashref([ 1 ]);
+        $sth->finish;
+
+        $sth = $dbh->prepare(
+            qq{SELECT g.id,g.graph
+            FROM public.list_servers() s
+            JOIN pr_grapher.list_wh_nagios_graphs() g ON s.id = g.id_server
+            WHERE s.hostname = ? AND g.id <> ?
+            ORDER BY 2}
+        );
+        $sth->execute($hostname, $id_service);
+        $graph_list = $sth->fetchall_hashref([ 1 ]);
+        $sth->finish;
+
+    }
+
+    $dbh->disconnect;
+
+    $self->stash(
+        graphs => \@graphs,
+        hostname => $hostname,
+        server_list => $server_list,
+        graph_list => $graph_list );
 
     $self->render;
 

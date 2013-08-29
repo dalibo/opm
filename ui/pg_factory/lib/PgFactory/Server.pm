@@ -75,30 +75,32 @@ sub host {
 
     # FIXME: handle pr_grapher and wh_nagios dependancy
     $sql = $dbh->prepare(
-        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph
-        FROM wh_nagios.list_services() s
-        JOIN pr_grapher.list_wh_nagios_graphs() g
-            ON g.id_service = s.id
-        WHERE s.id_server = ?
-        ORDER BY service, graph;"
+        "SELECT DISTINCT s.id,s.warehouse,s.service,s.last_modified,
+            s.creation_ts,lower(s.state) as state
+        FROM wh_nagios.services s
+        WHERE EXISTS (
+                SELECT 1
+                FROM wh_nagios.labels AS l
+                JOIN pr_grapher.graph_wh_nagios AS gs ON gs.id_label=l.id
+                WHERE s.id = l.id_service
+            )
+            AND s.id_server = ?;
+        "
     );
     $sql->execute($id);
     my $services = [];
     while (
-        my ($id,          $warehouse, $service,  $last_mod,
-            $creation_ts, $state,  $id_graph, $graphname )
-        = $sql->fetchrow() )
-    {
-        push @{$services},
-            {
+        my ( $id, $warehouse, $service, $last_mod, $creation_ts, $state )
+            = $sql->fetchrow()
+    ) {
+        push @{$services}, {
             id          => $id,
             warehouse   => $warehouse,
             servicename => $service,
             lst_mod     => $last_mod,
             creation_ts => $creation_ts,
-            state       => $state,
-            id_graph    => $id_graph,
-            graphname   => $graphname };
+            state       => $state
+        };
     }
     $sql->finish();
 

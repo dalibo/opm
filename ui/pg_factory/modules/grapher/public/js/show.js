@@ -92,7 +92,7 @@ $(document).ready(function () {
   });
   $('#server_list').change(function (e) {
     if ( $('#server_list option:selected').val() != '')
-      window.location = '/grapher/graphs/'+$('#server_list option:selected').val();
+      window.location = '/server/'+$('#server_list option:selected').val();
   });
   $('#serverall_list').change(function (e) {
     if ( $('#serverall_list option:selected').val() != '')
