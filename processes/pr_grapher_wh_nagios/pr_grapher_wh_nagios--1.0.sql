@@ -53,11 +53,17 @@ BEGIN
     RETURN;
   END IF;
 
-  FOR labelsrow IN (SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit FROM wh_nagios.services s
+  FOR labelsrow IN (
+    SELECT DISTINCT s.service, l.id_service, COALESCE(l.unit,'') AS unit
+    FROM wh_nagios.services s
     JOIN wh_nagios.labels l ON s.id = l.id_service
-    LEFT JOIN pr_grapher.graph_wh_nagios gs ON gs.id_label = l.id
     WHERE s.id_server = p_server_id
-    AND gs.id_label IS NULL)
+        AND NOT EXISTS (
+            SELECT 1 FROM pr_grapher.graph_wh_nagios gs
+            JOIN wh_nagios.labels l2 ON l2.id=gs.id_label
+            WHERE l2.id_service=s.id
+        )
+    )
   LOOP
     WITH new_graphs (id_graph) AS (
       INSERT INTO pr_grapher.graphs (graph, config)
