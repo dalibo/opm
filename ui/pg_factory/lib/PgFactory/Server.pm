@@ -66,7 +66,7 @@ sub host {
     }
 
     # FIXME: handle pr_grapher dependancy
-    $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_services(?)");
+    $sql = $dbh->prepare("SELECT pr_grapher.create_graph_for_wh_nagios(?)");
     $sql->execute($id);
     $sql->finish();
     $dbh->commit();
@@ -75,7 +75,12 @@ sub host {
 
     # FIXME: handle pr_grapher and wh_nagios dependancy
     $sql = $dbh->prepare(
-        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph FROM wh_nagios.list_services() s JOIN pr_grapher.list_graph() g ON g.id_service = s.id WHERE s.id_server = ? ORDER BY service, graph;"
+        "SELECT s.id,s.warehouse,s.service,s.last_modified,s.creation_ts,lower(s.state) as state, g.id, g.graph
+        FROM wh_nagios.list_services() s
+        JOIN pr_grapher.list_wh_nagios_graphs() g
+            ON g.id_service = s.id
+        WHERE s.id_server = ?
+        ORDER BY service, graph;"
     );
     $sql->execute($id);
     my $services = [];

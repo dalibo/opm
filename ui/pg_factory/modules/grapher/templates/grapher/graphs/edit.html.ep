@@ -2,6 +2,7 @@
 % content_for header => begin
   <script type="text/javascript" src="<%= url_for '/js/edit.js' %>"></script>
 % end
+% my @labels = @{stash 'labels'};
 
 <div class="row-fluid">
   <h2><%=l 'Update a graph' %></h2>
@@ -186,7 +187,11 @@
             </div>
             <% if ( scalar (stash 'id_server')) { %>
               <div class="tab-pane" id="series">
-                Series here
+                <div class="controls">
+                <% foreach my $l (@labels) { %>
+                <label class="checkbox inline"><%= check_box "labels" => $l->[0] %> <%= $l->[1] %></label>
+                <% } %>
+                </div>
               </div>
             <% } else { %>
               <div class="tab-pane" id="y2axis">

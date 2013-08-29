@@ -86,8 +86,8 @@ sub validate {
     }
 
     # Process null fields
-    foreach my $k (qw/xaxis_title yaxis_title y2axis_title colors/) {
-        $d{$k} = undef if $d{$k} =~ m!^\s*$!;
+    foreach my $k (qw/xaxis_title yaxis_title y2axis_title/) {
+        $d{$k} = undef if $d{$k} =~ m/^\s*$/;
     }
 
     # Process numbers
