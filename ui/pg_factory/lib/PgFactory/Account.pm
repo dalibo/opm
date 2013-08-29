@@ -173,12 +173,8 @@ sub edit {
             }
             if ( !$e ) {
                 $sql =
-                    $dbh->prepare( "SELECT public.create_user('"
-                        . $form_data->{new_username} . "','"
-                        . $form_data->{password} . "','{"
-                        . $accname
-                        . "}');" );
-                if ( $sql->execute() ) {
+                    $dbh->prepare( "SELECT public.create_user(?, ?,'{" . $accname . "}');" );
+                if ( $sql->execute($form_data->{new_username},$form_data->{password}) ) {
                     $self->msg->info("User added");
                     $dbh->commit() if (!$dbh->{AutoCommit});
                 }
