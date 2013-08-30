@@ -8,8 +8,8 @@ SET statement_timeout TO 0;
 
 -- A graph can display one or more services
 CREATE TABLE pr_grapher.graph_wh_nagios (
-  id_graph bigint not null references pr_grapher.graphs (id),
-  id_label bigint not null references wh_nagios.labels (id)
+  id_graph bigint not null references pr_grapher.graphs (id) on delete cascade on update cascade,
+  id_label bigint not null references wh_nagios.labels (id) on delete cascade on update cascade
 );
 
 ALTER TABLE pr_grapher.graph_wh_nagios ADD PRIMARY KEY (id_graph, id_label);
