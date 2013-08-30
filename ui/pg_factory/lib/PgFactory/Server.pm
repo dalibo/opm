@@ -75,33 +75,36 @@ sub host {
 
     # FIXME: handle pr_grapher and wh_nagios dependancy
     $sql = $dbh->prepare(
-        "SELECT DISTINCT s.id,s.warehouse,s.service,s.last_modified,
-            s.creation_ts,lower(s.state) as state
-        FROM wh_nagios.services s
-        WHERE EXISTS (
-                SELECT 1
-                FROM wh_nagios.labels AS l
-                JOIN pr_grapher.graph_wh_nagios AS gs ON gs.id_label=l.id
-                WHERE s.id = l.id_service
-            )
-            AND s.id_server = ?;
+        "SELECT s.id AS id_service, s.service, lower(s.state) as state,
+            lg.id AS id_graph, lg.graph
+        FROM wh_nagios.list_services() s
+        JOIN pr_grapher.list_wh_nagios_graphs() lg
+            ON lg.id_service = s.id
+        WHERE s.id_server = ?
+        ORDER BY s.service, s.id;
         "
     );
     $sql->execute($id);
-    my $services = [];
-    while (
-        my ( $id, $warehouse, $service, $last_mod, $creation_ts, $state )
-            = $sql->fetchrow()
-    ) {
-        push @{$services}, {
-            id          => $id,
-            warehouse   => $warehouse,
-            servicename => $service,
-            lst_mod     => $last_mod,
-            creation_ts => $creation_ts,
-            state       => $state
+
+    my $curr_service = { 'id' => -1 };
+    my @services;
+    while ( my $row = $sql->fetchrow_hashref() ) {
+        if ( $curr_service->{'id'} != $row->{'id_service'} ) {
+            push @services, \%{ $curr_service } if $curr_service->{'id'} != -1;
+            $curr_service = {
+                'id'          => $row->{'id_service'},
+                'service'     => $row->{'service'},
+                'state'       => $row->{'state'},
+                'graphs'      => []
+            };
+        }
+
+        push @{ $curr_service->{'graphs'} }, {
+            'id_graph' => $row->{'id_graph'},
+            'graph'    => $row->{'graph'}
         };
     }
+    push @services, \%{ $curr_service } if $curr_service->{'id'} != -1;
     $sql->finish();
 
     $sql = $dbh->prepare(
@@ -110,7 +113,7 @@ sub host {
     my $hostname = $sql->fetchrow();
     $sql->finish();
 
-    $self->stash( services => $services, hostname => $hostname, id => $id );
+    $self->stash( services => \@services, hostname => $hostname, id => $id );
 
     $dbh->disconnect();
     $self->render();
