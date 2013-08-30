@@ -20,9 +20,9 @@ sub register {
         ->name('graphs_add');
     $r_auth->route( '/graphs/:id', id => qr/\d+/ )->to('grapher-graphs#show')
         ->name('graphs_show');
-    $r_auth->route( '/graphs/:id/edit', id => qr/\d+/ )
+    $r_adm->route( '/graphs/:id/edit', id => qr/\d+/ )
         ->to('grapher-graphs#edit')->name('graphs_edit');
-    $r_auth->route( '/graphs/:id/remove', id => qr/\d+/ )
+    $r_adm->route( '/graphs/:id/remove', id => qr/\d+/)
         ->to('grapher-graphs#remove')->name('graphs_remove');
     $r_auth->post('/graphs/data')->to('grapher-graphs#data')
         ->name('graphs_data');

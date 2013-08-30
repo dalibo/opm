@@ -86,10 +86,11 @@ sub show {
     $dbh->disconnect;
 
     $self->stash(
-        graph => $graph,
-        hostname => $hostname,
+        graph       => $graph,
+        hostname    => $hostname,
         server_list => $server_list,
-        graph_list => $graph_list
+        graph_list  => $graph_list,
+        is_admin    => $self->session('user_admin')
     );
 
     $self->render;
@@ -159,10 +160,12 @@ sub showservice {
     $dbh->disconnect;
 
     $self->stash(
-        graphs => \@graphs,
-        hostname => $hostname,
+        graphs      => \@graphs,
+        hostname    => $hostname,
         server_list => $server_list,
-        graph_list => $graph_list );
+        graph_list  => $graph_list,
+        is_admin    => $self->session('user_admin')
+    );
 
     $self->render;
 
@@ -207,8 +210,12 @@ sub showserver {
     $dbh->commit;
     $dbh->disconnect;
 
-    $self->stash( graphs => $graphs, hostname => $hostname,
-        server_list => $server_list );
+    $self->stash(
+        graphs      => $graphs,
+        hostname    => $hostname,
+        server_list => $server_list,
+        is_admin    => $self->session('user_admin')
+    );
 
     $self->render;
 
