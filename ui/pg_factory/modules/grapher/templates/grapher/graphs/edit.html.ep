@@ -250,6 +250,7 @@
 
     <div class="form-actions">
       <%= submit_button l('Save'), name => 'save', class => 'btn btn-primary' %>
+      <%= submit_button l('Drop'), name => 'drop', id => 'btn_drop_graph', class => 'btn btn-danger' %>
       <%= submit_button l('Cancel'), name => 'cancel', class => 'btn' %>
     </div>
 

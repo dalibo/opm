@@ -13,6 +13,11 @@ $(document).ready(function () {
     if ( $('#graph_type_select option:selected').val() != '')
       toggleGraphType();
   });
+
+  $('#btn_drop_graph').click(function () {
+      return confirm('Do you really want to drop this graph ?');
+  });
+
   // Need to call it the first time
   toggleGraphType();
 });

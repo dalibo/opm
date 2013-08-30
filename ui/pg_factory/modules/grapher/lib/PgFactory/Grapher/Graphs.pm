@@ -361,6 +361,14 @@ sub edit {
             return $self->redirect_to('graphs_show', id => $id);
         }
 
+        if ( exists $form->{drop} ) {
+            $dbh->disconnect;
+            return $self->redirect_to('graphs_remove',
+                id => $id,
+                id_server => $id_server,
+            );
+        }
+
         if ( exists $form->{save} ) {
             $form->{y1_query} = '' unless defined $form->{y1_query};
             $form->{y2_query} = '' unless defined $form->{y2_query};
@@ -536,7 +544,36 @@ sub edit {
     $self->render;
 }
 
-sub remove { }
+sub remove {
+    my $self      = shift;
+    my $id        = $self->param('id');
+    my $id_server = $self->param('id_server');
+    my $dbh       = $self->database;
+
+    # Get the graph, and the service if a service is associated
+    my $sth = $dbh->prepare(qq{
+        DELETE FROM pr_grapher.graphs
+        WHERE id = ?
+    });
+
+    $sth->execute($id);
+    unless ( defined $sth->execute($id) ) {
+        $self->render_exception( $dbh->errstr );
+        $sth->finish;
+        $dbh->rollback;
+        $dbh->disconnect;
+        return;
+    }
+    $sth->finish;
+    $dbh->commit;
+    $dbh->disconnect;
+
+    if ( (defined $self->flash('saved_route')) && (defined $self->flash('stack')) ) {
+        return $self->redirect_to($self->flash('saved_route'), $self->flash('stack'));
+    }
+
+    return $self->redirect_to( 'server_host', id => $id_server );
+}
 
 sub data {
     my $self = shift;
