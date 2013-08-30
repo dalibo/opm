@@ -12,8 +12,9 @@
         <ul>
           <% foreach my $a (@acc) { %>
             <%   my %line = %{$a}; %>
-            <li><%= link_to account_edit => {accname => $line{accname} } => begin %><%= $line{accname} %><% end %>
-            <%= link_to user_delacc => {rolname => $rolname, accname => $line{accname}} => begin %><span class="badge badge-important">X</span><% end %>
+            <li>
+            <%= link_to user_delacc => {rolname => $rolname, accname => $line{accname}} => begin %><span class="badge badge-important"><i class="icon-remove icon-white"></i></span><% end %>
+            <%= link_to account_edit => {accname => $line{accname} } => begin %><%= $line{accname} %><% end %>
             </li>
           <% } %>
         </ul>

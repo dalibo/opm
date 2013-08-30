@@ -9,11 +9,12 @@
         <ul>
           <% foreach my $r (@roles) { %>
             <%   my %line = %{$r}; %>
-            <li><%= link_to user_edit => { rolname => $line{rolname} } => begin %><%= $line{rolname} %><% end %> 
+            <li>
             <% if ($line{rolname} ne (session 'user_username')) {
-              <%= link_to user_delete => {rolname => $line{rolname}} => ( onclick => "return confirmDel('user','$line{rolname}');" ) => begin %><span class="badge badge-important">X</span><% end %>
-              </li>
+              <%= link_to user_delete => {rolname => $line{rolname}} => ( onclick => "return confirmDel('user','$line{rolname}');" ) => begin %><span class="badge badge-important"><i class="icon-remove icon-white"></i></span><% end %>
             <% } %>
+              <%= link_to user_edit => { rolname => $line{rolname} } => begin %><%= $line{rolname} %><% end %>
+              </li>
           <% } %>
         </ul>
     </div>
