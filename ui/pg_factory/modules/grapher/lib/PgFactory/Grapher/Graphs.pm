@@ -179,9 +179,9 @@ sub showserver {
     # Get the graphs
     my $sth = $dbh->prepare(
         qq{SELECT g.id, CASE WHEN s.hostname IS NOT NULL THEN s.hostname || '::' ELSE '' END || graph AS graph,description,s.hostname
-        FROM pr_grapher.list_graph() g
+        FROM pr_grapher.list_wh_nagios_graphs() g
         JOIN public.list_servers() s ON g.id_server = s.id
-        WHERE s.id = ?});
+        WHERE g.id_server = ?});
     $sth->execute($idserver);
     my $graphs = [];
     my $hostname;
