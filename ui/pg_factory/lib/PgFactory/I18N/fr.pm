@@ -35,6 +35,7 @@ our %Lexicon = (
     "view all"                    => "tout voir",
     "Unassigned servers"          => "Serveurs non assignés",
     "Unassigned"                  => "Non assigné",
+    "Assign"                      => "Assigner",
     "Members of"                  => "Membres de",
     "Member of"                   => "Membre de",
     "Language"                    => "Langue",
@@ -120,7 +121,11 @@ our %Lexicon = (
     "Repeat password"           => "Répéter le mot de passe",
     "Export"                    => "Exporter",
     "Show/Hide series"          => "Afficher/Cacher séries",
-    "Invert Sel."               => "Inverser Sel."
+    "Invert Sel."               => "Inverser Sel.",
+    "Show all"                  => "Afficher tout",
+    "Hide all"                  => "Cacher tout",
+    "View all"                  => "Tout voir",
+    "Drop"                      => "Supprimer"
     );
 
 1;
