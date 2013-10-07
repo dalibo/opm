@@ -438,6 +438,7 @@ sub watch_directory {
             # If not inserted, we retry
             unless ($inserted) {
                 $dbh->disconnect();
+		undef $dbh;
 
                 log_message
                     "ERROR: Could not insert '$entry' datas. Retrying.";
