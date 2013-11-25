@@ -370,6 +370,13 @@ sub edit {
             );
         }
 
+        if ( exists $form->{clone} ) {
+            $dbh->disconnect;
+            return $self->redirect_to('graphs_clone',
+                id => $id
+            );
+        }
+
         if ( exists $form->{save} ) {
             $form->{y1_query} = '' unless defined $form->{y1_query};
             $form->{y2_query} = '' unless defined $form->{y2_query};
@@ -576,6 +583,46 @@ sub remove {
     }
 
     return $self->redirect_to( 'server_host', id => $id_server );
+}
+
+sub clone {
+    my $self      = shift;
+    my $id        = $self->param('id');
+    my $dbh       = $self->database;
+    my $new_id;
+
+    # Clone the graph and its associated labels
+    my $sth = $dbh->prepare(qq{WITH graph AS (
+            INSERT INTO pr_grapher.graphs
+                (graph, description, y1_query, y2_query, config)
+            SELECT 'Clone - ' || graph, description, y1_query,
+                y2_query, config
+            FROM pr_grapher.graphs
+            WHERE id = ? returning id
+        )
+        INSERT INTO pr_grapher.graph_wh_nagios
+        SELECT graph.id, id_label
+        FROM pr_grapher.graph_wh_nagios, graph
+        WHERE id_graph=?
+        RETURNING id_graph
+    });
+
+    unless ( defined $sth->execute( $id, $id ) ) {
+        $self->render_exception( $dbh->errstr );
+        $sth->finish;
+        $dbh->rollback;
+        $dbh->disconnect;
+        return;
+    }
+
+    ( $new_id ) = $sth->fetchrow;
+    $sth->finish;
+    $dbh->commit;
+    $dbh->disconnect;
+
+    $self->msg->info("Graph cloned, please edit it.");
+
+    return $self->redirect_to( 'graphs_edit', id => $new_id );
 }
 
 sub data {

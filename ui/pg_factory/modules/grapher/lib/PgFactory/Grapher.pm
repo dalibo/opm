@@ -26,6 +26,9 @@ sub register {
         id => qr/\d+/,
         id_server => qr/\d+/
     )->to('grapher-graphs#remove')->name('graphs_remove');
+    $r_adm->route( '/graphs/:id/clone',
+        id => qr/\d+/,
+    )->to('grapher-graphs#clone')->name('graphs_clone');
     $r_auth->post('/graphs/data')->to('grapher-graphs#data')
         ->name('graphs_data');
     $r_auth->route( '/graphs/showservice/:id', id => qr/\d+/ )->to('grapher-graphs#showservice')
