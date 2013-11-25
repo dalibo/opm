@@ -46,7 +46,8 @@ sub load {
     }
     close(FH);
 
-    my $d = Mojo::JSON->decode($c);
+    my $json = Mojo::JSON->new;
+    my $d = $json->decode($c);
     croak "Could not parse default properties file" if !defined $d;
 
     return $d;
@@ -57,17 +58,19 @@ sub save {
 
     my $data = $self->data;
     my $file = $data->{file};
+    my $json = Mojo::JSON->new;
 
-    my $json = Mojo::JSON->encode($c);
+    my $props_json = $json->encode($c);
 
     open( FH, "> $file" )
         or croak "Could not save default properties file: $!";
-    print FH $json;
+    print FH $props_json;
     close(FH);
 }
 
 sub validate {
     my ( $self, $input ) = @_;
+    my $json = Mojo::JSON->new;
 
     my %d = %$input;
 
@@ -82,7 +85,7 @@ sub validate {
         bars_filled bars_grouped lines_stacked lines_filled points_filled
         pie_filled show_legend/ )
     {
-        $d{$c} = ( exists $d{$c} ) ? Mojo::JSON->true : Mojo::JSON->false;
+        $d{$c} = ( exists $d{$c} ) ? $json->true : $json->false;
     }
 
     # Process null fields
@@ -131,6 +134,7 @@ sub diff {
 
 sub to_plot {
     my ( $self, $props ) = @_;
+    my $json = Mojo::JSON->new;
 
     # This function does (and must do) the same as Grapher.options()
     # in public/js/grapher.js
@@ -140,7 +144,7 @@ sub to_plot {
         title      => $props->{'title'},
         subtitle   => $props->{'subtitle'},
         legend     => { position => 'ne' },
-        HtmlText   => Mojo::JSON->false,
+        HtmlText   => $json->false,
         xaxis      => { autoscaleMargin => 5 },
         selection  => { mode => 'x', fps => 30 } };
 
@@ -162,7 +166,7 @@ sub to_plot {
         if ( $p eq 'type' ) {
             $options->{ $props->{$p} } = {}
                 if !exists $options->{ $props->{$p} };
-            $options->{ $props->{$p} }->{show} = Mojo::JSON->true;
+            $options->{ $props->{$p} }->{show} = $json->true;
             next;
         }
     }

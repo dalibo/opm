@@ -283,7 +283,8 @@ sub add {
 
                 # Only save the properties with different values from
                 # the defaults
-                my $config = Mojo::JSON->encode(
+                my $json = Mojo::JSON->new;
+                my $config = $json->encode(
                     $self->properties->diff( $properties, $props ) );
 
                 my $dbh = $self->database;
@@ -419,7 +420,8 @@ sub edit {
 
                 # Only save the properties with different values from
                 # the defaults
-                my $config = Mojo::JSON->encode(
+                my $json = Mojo::JSON->new;
+                my $config = $json->encode(
                     $self->properties->diff( $properties, $props ) );
 
                 $sth = $dbh->prepare(
@@ -521,7 +523,8 @@ sub edit {
         $dbh->commit;
 
         # Prepare properties
-        my $config = Mojo::JSON->decode( $graph->{config} );
+        my $json = Mojo::JSON->new;
+        my $config = $json->decode( $graph->{config} );
         delete $graph->{config};
 
         @$properties{ keys %$config } = values %$config;
@@ -608,7 +611,8 @@ sub data {
 
         $properties = $self->properties->load;
         if ( defined $config ) {
-            $config = Mojo::JSON->decode($config);
+            my $json = Mojo::JSON->new;
+            $config = $json->decode($config);
             @$properties{ keys %$config } = values %$config;
         }
 
