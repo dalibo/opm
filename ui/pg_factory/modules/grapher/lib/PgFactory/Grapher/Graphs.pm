@@ -566,7 +566,6 @@ sub remove {
         WHERE id = ?
     });
 
-    $sth->execute($id);
     unless ( defined $sth->execute($id) ) {
         $self->render_exception( $dbh->errstr );
         $sth->finish;
@@ -797,13 +796,6 @@ sub data {
             series     => $data,
             properties => $self->properties->to_plot($properties)
         } );
-
 }
-
-sub series_add { }
-
-sub series_edit { }
-
-sub series_remove { }
 
 1;

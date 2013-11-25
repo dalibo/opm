@@ -50,20 +50,6 @@ sub register {
     $r_auth->route( '/categories/:id/remove', id => qr/\d+/ )
         ->to('grapher-categories#remove')->name('categories_remove');
 
-    # Series configuration
-    $r_auth->route( '/graphs/:id/series/add', id => qr/\d+/ )
-        ->to('grapher-graphs#series_add')->name('graphs_series_add');
-    $r_auth->route(
-        '/graphs/:id/series/:is/edit',
-        id => qr/\d+/,
-        is => qr/\d+/
-    )->to('grapher-graphs#series_edit')->name('graphs_series_edit');
-    $r_auth->route(
-        '/graphs/:id/series/:is/remove',
-        id => qr/\d+/,
-        is => qr/\d+/
-    )->to('grapher-graphs#series_remove')->name('graphs_series_remove');
-
 }
 
 1;
