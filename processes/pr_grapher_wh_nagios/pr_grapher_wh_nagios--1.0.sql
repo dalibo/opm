@@ -22,7 +22,7 @@ Function pr_grapher.create_graph_for_wh_nagios(p_id_server bigint) returns boole
 
 This function automatically generates for wh_nagios all graphs for a specified
 server. If this function is called multiple times, it will only generate
-"missing" graphs. A graph will is considered as missing if a label is not
+"missing" graphs. A graph will be considered as missing if a label is not
 present in any graph. Therefore, it's currently impossible not to graph a label.
 FIXME: fix this limitation.
 */
@@ -61,7 +61,7 @@ BEGIN
         AND NOT EXISTS (
             SELECT 1 FROM pr_grapher.graph_wh_nagios gs
             JOIN wh_nagios.labels l2 ON l2.id=gs.id_label
-            WHERE l2.id_service=s.id
+            WHERE l2.id=l.id
         )
     )
   LOOP
@@ -75,7 +75,12 @@ BEGIN
       FROM new_graphs
       CROSS JOIN wh_nagios.labels l
       WHERE l.id_service = labelsrow.id_service
-      AND COALESCE(l.unit,'') = labelsrow.unit;
+        AND COALESCE(l.unit,'') = labelsrow.unit
+        AND NOT EXISTS (
+            SELECT 1 FROM pr_grapher.graph_wh_nagios gs
+            JOIN wh_nagios.labels l2 ON l2.id=gs.id_label
+            WHERE l2.id=l.id
+        );
   END LOOP;
   rc := true;
 EXCEPTION
