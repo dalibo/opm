@@ -156,7 +156,7 @@ GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_graphs() TO opm_roles;
 COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
     IS 'List all graphs related to warehouse wh_nagios';
 
-/* pr_grapher.list_wh_nagios_labels()
+/* pr_grapher.list_wh_nagios_labels(bigint)
 Return every wh_nagios's labels used in all graphs that current user is granted.
 
 */
