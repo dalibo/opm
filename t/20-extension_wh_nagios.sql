@@ -257,7 +257,7 @@ SELECT has_table('wh_nagios', 'counters_detail_1',
 
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.list_label(1)$$,
-    $$VALUES (1::bigint, 'template0', '')$$,
+    $$VALUES (1::bigint, 'template0', '',0::numeric,0::numeric,524288000::numeric,209715200::numeric)$$,
     'list_label should see label template0.'
 );
 
@@ -316,11 +316,12 @@ SELECT set_eq(
 -- check table wh_nagios.services
 SELECT set_eq(
     $$SELECT s1.id, s2.hostname, s1.warehouse, s1.service, s1.last_modified, s1.creation_ts,
-            s1.last_cleanup, s1.servalid, s2.id_role, s1.state, s1.min::numeric,
-            s1.max::numeric, s1.critical::numeric, s1.warning::numeric,
+            s1.last_cleanup, s1.servalid, s2.id_role, s1.state, l.min::numeric,
+            l.max::numeric, l.critical::numeric, l.warning::numeric,
             extract(epoch FROM s1.oldest_record) AS oldest_record,
             extract(epoch FROM s1.newest_record) AS newest_record
         FROM wh_nagios.services s1
+        JOIN wh_nagios.labels l ON s1.id = l.id_service
         JOIN public.servers s2 ON s1.id_server = s2.id$$,
     $$VALUES
         (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
@@ -337,9 +338,13 @@ SELECT set_eq(
 -- check table public.labels
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.labels$$,
-    $$VALUES (1,1,'template0', ''),
-        (2,2,'template0', 'B'),
-        (3,2,'postgres', 'B')$$,
+    $$VALUES
+        (1,1,'template0', '', 0::numeric, 0::numeric,
+            524288000::numeric, 209715200::numeric),
+        (2,2,'template0', 'B', 0::numeric, 0::numeric,
+            524288000::numeric, 209715200::numeric),
+        (3,2,'postgres', 'B', 0::numeric, 0::numeric,
+            524288000::numeric, 209715200::numeric)$$,
     'Table "wh_nagios.labels" should contains labels of records 9, 10 and 11.'
 );
 
@@ -563,7 +568,8 @@ SELECT lives_ok(
 -- check table public.labels do not have label from service 2 anymore
 SELECT set_eq(
     $$SELECT * FROM wh_nagios.labels$$,
-    $$VALUES (1,1,'template0', '')$$,
+    $$VALUES (1,1,'template0', '', 0::numeric, 0::numeric,
+        524288000::numeric, 209715200::numeric)$$,
     'Table "wh_nagios.labels" should not contains labels of service id 2 anymore.'
 );
 
