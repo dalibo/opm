@@ -227,7 +227,7 @@ SELECT set_eq(
 );
 
 SELECT set_eq(
-    $$SELECT pg_has_role('u2','_admins','MEMBER')$$,
+    $$SELECT pg_has_role('u2','opm_admins','MEMBER')$$,
     $$VALUES (FALSE)$$,
     '"u2" should not be admin anymore.'
 );
@@ -593,7 +593,7 @@ SELECT set_eq(
 SELECT throws_matching(
     $$SELECT * FROM drop_account('opm_admins')$$,
     'can not be deleted!',
-    'Account opm_admin can not be deleted.'
+    'Account opm_admins can not be deleted.'
 );
 
 SELECT set_eq(
