@@ -1,8 +1,8 @@
 # pr-grapher_wh_nagios extension
-comment = 'wh_nagios extension for grapher process for pgFactory'
+comment = 'wh_nagios extension for grapher process for OPM'
 default_version = '1.0'
 module_pathname = '$libdir/pr_grapher-wh-nagios'
-requires = 'pgfactory_core, pr_grapher, wh_nagios'
+requires = 'opm_core, pr_grapher, wh_nagios'
 superuser = false
 relocatable = false
 schema = 'pr_grapher'

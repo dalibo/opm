@@ -6,8 +6,8 @@ SELECT plan(28);
 SELECT diag(E'\n==== Setup environnement ====\n');
 
 SELECT lives_ok(
-    $$CREATE EXTENSION pgfactory_core$$,
-    'Create extension "pgfactory_core"');
+    $$CREATE EXTENSION opm_core$$,
+    'Create extension "opm_core"');
 
 SELECT diag(E'\n==== Install pr_grapher ====\n');
 

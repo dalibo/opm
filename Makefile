@@ -1,14 +1,14 @@
-all: pgfactory_core wh_nagios pr_grapher pr_grapher_wh_nagios
+all: opm_core wh_nagios pr_grapher pr_grapher_wh_nagios
 	
-pgfactory_core:
+opm_core:
 	@cd core; \
 	$(MAKE) install
 
-wh_nagios: pgfactory_core
+wh_nagios: opm_core
 	@cd warehouses/wh_nagios; \
 	$(MAKE) install
 
-pr_grapher: pgfactory_core
+pr_grapher: opm_core
 	@cd processes/pr_grapher; \
 	$(MAKE) install
 

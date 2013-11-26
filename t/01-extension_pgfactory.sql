@@ -3,24 +3,24 @@
 
 SELECT plan(81);
 
-SELECT diag(E'\n==== Install pgfactory-core ====\n');
+SELECT diag(E'\n==== Install opm-core ====\n');
 
 SELECT has_schema('public', 'Schema public exists.' );
 
 SELECT lives_ok(
-    $$CREATE EXTENSION pgfactory_core$$,
-    'Create extension "pgfactory_core"');
+    $$CREATE EXTENSION opm_core$$,
+    'Create extension "opm_core"');
 
-SELECT has_extension('pgfactory_core', 'Extension "pgfactory_core" is installed.');
+SELECT has_extension('opm_core', 'Extension "opm_core" is installed.');
 
-SELECT has_role('pgfactory', 'Role "pgfactory" exists.');
-SELECT has_role('pgf_admins', 'Role "pgf_admins" exists.');
-SELECT has_role('pgf_roles', 'Role "pgf_roles" exists.');
-SELECT is_member_of('pgfactory', 'pgf_admins', 'Role "pgf_admins" is member of "pgfactory".');
-SELECT is_member_of('pgf_roles', 'pgf_admins', 'Role "pgf_admins" is member of "pgf_roles".');
+SELECT has_role('opm', 'Role "opm" exists.');
+SELECT has_role('opm_admins', 'Role "opm_admins" exists.');
+SELECT has_role('opm_roles', 'Role "opm_roles" exists.');
+SELECT is_member_of('opm', 'opm_admins', 'Role "opm_admins" is member of "opm".');
+SELECT is_member_of('opm_roles', 'opm_admins', 'Role "opm_admins" is member of "opm_roles".');
 
-SELECT has_table('public', 'roles', 'Schema public contains table "roles" of pgfactory-core.' );
-SELECT has_table('public', 'services', 'Schema public contains table "services" of pgfactory-core.' );
+SELECT has_table('public', 'roles', 'Schema public contains table "roles" of opm_core.' );
+SELECT has_table('public', 'services', 'Schema public contains table "services" of opm_core.' );
 
 SELECT has_function('public', 'create_account', '{text}', 'Function "create_account" exists.');
 SELECT has_function('public', 'create_user', '{text, text, name[]}', 'Function "create_user" exists.');
@@ -28,7 +28,7 @@ SELECT has_function('public', 'drop_account', '{name}', 'Function "drop_account"
 SELECT has_function('public', 'drop_user', '{name}', 'Function "drop_user" exists.');
 SELECT has_function('public', 'list_accounts', '{}', 'Function "list_accounts" exists.');
 SELECT has_function('public', 'list_users', '{name}', 'Function "list_users" exists.');
-SELECT has_function('public', 'is_pgf_role', '{name}', 'Function "is_pgf_role" exists.');
+SELECT has_function('public', 'is_opm_role', '{name}', 'Function "is_opm_role" exists.');
 SELECT has_function('public', 'is_user', '{name}', 'Function "is_user" exists.');
 SELECT has_function('public', 'is_account', '{name}', 'Function "is_account" exists.');
 SELECT has_function('public', 'is_admin', '{name}', 'Function "is_admin" exists.');
@@ -45,11 +45,11 @@ SELECT has_function('public', 'list_servers', '{}', 'Function "list_servers" exi
 SELECT has_function('public', 'grant_account', '{name,name}', 'Function "grant_account" exists.');
 SELECT has_function('public', 'revoke_account', '{name,name}', 'Function "revoke_account" exists.');
 
--- Does "pgf_admins" is in table roles ?
+-- Does "opm_admins" is in table roles ?
 SELECT set_eq(
-    $$SELECT id, rolname FROM public.roles WHERE rolname='pgf_admins'$$,
-    $$VALUES (1, 'pgf_admins')$$,
-    'Account "pgf_admins" exists in public.roles.'
+    $$SELECT id, rolname FROM public.roles WHERE rolname='opm_admins'$$,
+    $$VALUES (1, 'opm_admins')$$,
+    'Account "opm_admins" exists in public.roles.'
 );
 
 SELECT diag(E'\n==== List warehouses and processes ====\n');
@@ -80,11 +80,13 @@ SELECT set_eq(
 
 SELECT lives_ok(
     $$CREATE EXTENSION hstore$$,
-    'Create extension "hstore"');
+    'Create extension "hstore"'
+);
 
 SELECT lives_ok(
     $$CREATE EXTENSION wh_nagios$$,
-    'Create extension "wh_nagios"');
+    'Create extension "wh_nagios"'
+);
 
 SELECT set_eq(
     $$SELECT * FROM list_warehouses()$$,
@@ -100,7 +102,8 @@ SELECT set_eq(
 
 SELECT lives_ok(
     $$CREATE EXTENSION pr_grapher$$,
-    'Create extension "pr_grapher"');
+    'Create extension "pr_grapher"'
+);
 
 SELECT set_eq(
     $$SELECT * FROM list_processes()$$,
@@ -114,46 +117,53 @@ SELECT set_eq(
     'Should find process pr_grapher.'
 );
 
-SELECT diag(E'\n==== Drop pgfactory_core ====\n');
+SELECT diag(E'\n==== Drop opm_core ====\n');
 
 SELECT lives_ok(
     $$DROP EXTENSION pr_grapher$$,
-    'Drop extension "pr_grapher"');
+    'Drop extension "pr_grapher"'
+);
 
 SELECT lives_ok(
     $$DROP SCHEMA pr_grapher$$,
-    'Drop schema "pr_grapher"');
+    'Drop schema "pr_grapher"'
+);
 
 SELECT lives_ok(
     $$DROP EXTENSION wh_nagios$$,
-    'Drop extension "wh_nagios"');
+    'Drop extension "wh_nagios"'
+);
 
 SELECT lives_ok(
     $$DROP SCHEMA wh_nagios$$,
-    'Drop schema "wh_nagios"');
+    'Drop schema "wh_nagios"'
+);
 
 SELECT lives_ok(
-    $$DROP EXTENSION pgfactory_core$$,
-    'Drop extension "pgfactory_core"');
+    $$DROP EXTENSION opm_core$$,
+    'Drop extension "opm_core"'
+);
 
-SELECT hasnt_extension('pgfactory_core', 'Extension "pgfactory_core" does not exist.');
-SELECT hasnt_table('public', 'roles', 'Schema public does not contains table "roles" of pgfactory-core.' );
-SELECT hasnt_table('public', 'services', 'Schema public does not contains table "services" of pgfactory-core.' );
-
-SELECT lives_ok(
-    format('REVOKE ALL ON DATABASE %I FROM pgfactory',pg_catalog.current_database()),
-    'Revoke ALL on current db from pgfactory');
-SELECT lives_ok($$DROP ROLE pgfactory$$, 'Drop role pgfactory');
-SELECT lives_ok($$DROP ROLE pgf_admins$$, 'Drop role pgf_admin');
+SELECT hasnt_extension('opm_core', 'Extension "opm_core" does not exist.');
+SELECT hasnt_table('public', 'roles', 'Schema public does not contains table "roles" of opm_core.' );
+SELECT hasnt_table('public', 'services', 'Schema public does not contains table "services" of opm_core.' );
 
 SELECT lives_ok(
-    format('REVOKE CONNECT ON DATABASE %I FROM pgf_roles',pg_catalog.current_database()),
-    'Revoke CONNECT on current db from pgf_roles');
-SELECT lives_ok($$DROP ROLE pgf_roles$$, 'Drop role pgf_roles');
+    format('REVOKE ALL ON DATABASE %I FROM opm', pg_catalog.current_database()),
+    'Revoke ALL on current db from opm'
+);
+SELECT lives_ok($$DROP ROLE opm$$, 'Drop role opm');
+SELECT lives_ok($$DROP ROLE opm_admins$$, 'Drop role opm_admin');
 
-SELECT hasnt_role('pgfactory', 'Role "pgfactory" does not exists anymore.');
-SELECT hasnt_role('pgf_admins', 'Role "pgf_admins" does not exists anymore.');
-SELECT hasnt_role('pgf_roles', 'Role "pgf_roles" does not exists anymore.');
+SELECT lives_ok(
+    format('REVOKE CONNECT ON DATABASE %I FROM opm_roles', pg_catalog.current_database()),
+    'Revoke CONNECT on current db from opm_roles'
+);
+SELECT lives_ok($$DROP ROLE opm_roles$$, 'Drop role opm_roles');
+
+SELECT hasnt_role('opm', 'Role "opm" does not exists anymore.');
+SELECT hasnt_role('opm_admins', 'Role "opm_admins" does not exists anymore.');
+SELECT hasnt_role('opm_roles', 'Role "opm_roles" does not exists anymore.');
 
 SELECT hasnt_function('public', 'create_account', '{text}', 'Function "create_account" does not exist anymore.');
 SELECT hasnt_function('public', 'create_user', '{text, text, name[]}', 'Function "create_user" does not exist anymore.');
@@ -161,7 +171,7 @@ SELECT hasnt_function('public', 'drop_account', '{name}', 'Function "drop_accoun
 SELECT hasnt_function('public', 'drop_user', '{name}', 'Function "drop_user" does not exist anymore.');
 SELECT hasnt_function('public', 'list_accounts', '{name}', 'Function "list_accounts" does not exists anymore.');
 SELECT hasnt_function('public', 'list_users', '{}', 'Function "list_users" does not exist anymore.');
-SELECT hasnt_function('public', 'is_pgf_role', '{name}', 'Function "is_pgf_role" does not exist anymore.');
+SELECT hasnt_function('public', 'is_opm_role', '{name}', 'Function "is_opm_role" does not exist anymore.');
 SELECT hasnt_function('public', 'is_user', '{name}', 'Function "is_user" does not exist anymore.');
 SELECT hasnt_function('public', 'is_account', '{}', 'Function "is_account" does not exist anymore.');
 SELECT hasnt_function('public', 'is_admin', '{name}', 'Function "is_admin" does not exist anymore.');

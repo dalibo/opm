@@ -6,25 +6,32 @@ SELECT plan(84);
 SELECT diag(E'\n==== Setup environnement ====\n');
 
 SELECT lives_ok(
-    $$CREATE EXTENSION pgfactory_core$$,
-    'Create extension "pgfactory_core"');
+    $$CREATE EXTENSION opm_core$$,
+    'Create extension "opm_core"'
+);
 
 SELECT diag(E'\n==== Install wh_nagios ====\n');
 
 SELECT throws_matching(
     $$CREATE EXTENSION wh_nagios$$,
     'required extension "hstore" is not installed',
-    'Should not create extension "wh_nagios"');
+    'Should not create extension "wh_nagios"'
+);
 
 SELECT lives_ok(
     $$CREATE EXTENSION hstore$$,
-    'Create extension "hstore"');
+    'Create extension "hstore"'
+);
 
 SELECT lives_ok(
     $$CREATE EXTENSION wh_nagios$$,
-    'Create extension "wh_nagios"');
+    'Create extension "wh_nagios"'
+);
 
-SELECT has_extension('wh_nagios', 'Extension "wh_nagios" should exist.');
+SELECT has_extension(
+    'wh_nagios',
+    'Extension "wh_nagios" should exist.'
+);
 SELECT extension_schema_is('wh_nagios', 'wh_nagios',
     'Schema of extension "wh_nagios" should "wh_nagios".'
 );
@@ -69,8 +76,8 @@ SELECT diag(
     E'\n'
 );
 
-SELECT schema_privs_are('wh_nagios', 'pgf_roles', '{USAGE}',
-    'Group "pgf_roles" should only have priv "USAGE" on schema "wh_nagios".'
+SELECT schema_privs_are('wh_nagios', 'opm_roles', '{USAGE}',
+    'Group "opm_roles" should only have priv "USAGE" on schema "wh_nagios".'
 );
 
 SELECT set_eq(
@@ -571,8 +578,9 @@ SELECT hasnt_table('wh_nagios', 'counters_detail_3',
 SELECT diag(E'\n==== Drop wh_nagios ====\n');
 
 SELECT lives_ok(
-	$$DROP EXTENSION wh_nagios CASCADE;$$,
-	'Drop extension "wh_nagios"');
+    $$DROP EXTENSION wh_nagios CASCADE;$$,
+    'Drop extension "wh_nagios"'
+);
 
 SELECT hasnt_table('wh_nagios', 'hub',
     'Table "hub" of schema "wh_nagios" should not exists anymore.'

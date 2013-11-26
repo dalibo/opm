@@ -6,8 +6,9 @@ SELECT plan(100);
 SELECT diag(E'\n==== Setup environnement ====\n');
 
 SELECT lives_ok(
-    $$CREATE EXTENSION pgfactory_core$$,
-    'Create extension "pgfactory_core"');
+    $$CREATE EXTENSION opm_core$$,
+    'Create extension "opm_core"'
+);
 
 SELECT diag(E'\n==== Create somes accounts ====\n');
 
@@ -28,14 +29,18 @@ SELECT set_eq(
     'Account "acc1" exists in public.roles.'
 );
 
--- Is "acc1" member of pgf_roles ?
-SELECT is_member_of('pgf_roles', 'acc1', 'Account "acc1" should be a member of "pgf_roles".');
+-- Is "acc1" member of opm_roles ?
+SELECT is_member_of(
+    'opm_roles',
+    'acc1',
+    'Account "acc1" should be a member of "opm_roles".'
+);
 
--- Is "acc1" a pgfactory role ?
+-- Is "acc1" an opm role ?
 SELECT set_eq(
-    $$SELECT * FROM is_pgf_role('acc1')$$,
+    $$SELECT * FROM is_opm_role('acc1')$$,
     $$VALUES (true)$$,
-    'Account "acc1" is a pgfactory role.'
+    'Account "acc1" is an OPM role.'
 );
 
 -- Is "acc1" an account ?
@@ -69,14 +74,14 @@ SELECT set_eq(
     'Account "acc2" should exists in public.roles.'
 );
 
--- Is "acc2" member of pgf_roles ?
-SELECT is_member_of('pgf_roles', 'acc2', 'Account "acc2" should be a member of "pgf_roles".');
+-- Is "acc2" member of opm_roles ?
+SELECT is_member_of('opm_roles', 'acc2', 'Account "acc2" should be a member of "opm_roles".');
 
--- Is "acc2" a pgfactory role ?
+-- Is "acc2" an opm role ?
 SELECT set_eq(
-    $$SELECT * FROM is_pgf_role('acc2')$$,
+    $$SELECT * FROM is_opm_role('acc2')$$,
     $$VALUES (true)$$,
-    'Account "acc2" is a pgfactory role.'
+    'Account "acc2" is an OPM role.'
 );
 
 -- Is "acc2" an account ?
@@ -136,9 +141,9 @@ SELECT set_eq(
 
 -- Creates user "admin1"
 SELECT set_eq(
-    $$SELECT * FROM create_user('admin1', 'passadmin1', '{pgf_admins}')$$,
+    $$SELECT * FROM create_user('admin1', 'passadmin1', '{opm_admins}')$$,
     $$VALUES (8, 'admin1')$$,
-    'User "admin1" in account "pgf_admins" should be created.'
+    'User "admin1" in account "opm_admins" should be created.'
 );
 
 SELECT set_eq(
@@ -204,25 +209,25 @@ SELECT set_eq(
 );
 
 SELECT set_eq(
-    $$SELECT * FROM grant_account('u2','pgf_admins')$$,
+    $$SELECT * FROM grant_account('u2','opm_admins')$$,
     $$VALUES (TRUE)$$,
-    '"u2" should be added to "pgf_admins".'
+    '"u2" should be added to "opm_admins".'
 );
 
 SELECT set_eq(
-    $$SELECT pg_has_role('u2','pgf_admins','MEMBER WITH ADMIN OPTION')$$,
+    $$SELECT pg_has_role('u2','opm_admins','MEMBER WITH ADMIN OPTION')$$,
     $$VALUES (TRUE)$$,
     '"u2" should be able to add new admins.'
 );
 
 SELECT set_eq(
-    $$SELECT * FROM revoke_account('u2','pgf_admins')$$,
+    $$SELECT * FROM revoke_account('u2','opm_admins')$$,
     $$VALUES (TRUE)$$,
-    '"u2" should be removed from "pgf_admins".'
+    '"u2" should be removed from "opm_admins".'
 );
 
 SELECT set_eq(
-    $$SELECT pg_has_role('u2','pgf_admins','MEMBER')$$,
+    $$SELECT pg_has_role('u2','_admins','MEMBER')$$,
     $$VALUES (FALSE)$$,
     '"u2" should not be admin anymore.'
 );
@@ -231,7 +236,7 @@ SELECT diag(E'\n==== functions list_users and list_accounts ====\n');
 
 SELECT set_eq(
     $$SELECT * FROM list_users() WHERE rolname = 'admin1'$$,
-    $$VALUES (8, 'pgf_admins', 'admin1')$$,
+    $$VALUES (8, 'opm_admins', 'admin1')$$,
     'Only list admin admin1.'
 );
 
@@ -243,8 +248,11 @@ SELECT set_eq(
     'Only list users of account "acc1".'
 );
 
---Need to allow u3 to create temp tables for pgtap
-SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u3',current_database()),'Grant TEMPORARY on current db to u3');
+-- Need to allow u3 to create temp tables for pgtap
+SELECT lives_ok(
+    format('GRANT TEMPORARY ON DATABASE %I TO u3', current_database()),
+    'Grant TEMPORARY on current db to u3'
+);
 
 -- User should only see account/users member of their own account
 -- u3 is in both accounts
@@ -275,10 +283,16 @@ SELECT set_eq(
     'Only list accounts of "u3".'
 );
 
-SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+SELECT lives_ok(
+    'RESET SESSION AUTHORIZATION',
+    'Reset session authorization'
+);
 
---Revoke from u3 create temp tables
-SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u3',current_database()),'Revoke TEMPORARY on current db from u3');
+-- Revoke from u3 create temp tables
+SELECT lives_ok(
+    format('REVOKE TEMPORARY ON DATABASE %I FROM u3', current_database()),
+    'Revoke TEMPORARY on current db from u3'
+);
 
 SELECT results_ne(
     $$SELECT current_user, session_user$$,
@@ -287,11 +301,17 @@ SELECT results_ne(
 );
 
 --Need to allow u3 to create temp tables for pgtap
-SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u1',current_database()),'Grant TEMPORARY on current db to u1');
+SELECT lives_ok(
+    format('GRANT TEMPORARY ON DATABASE %I TO u1',current_database()),
+    'Grant TEMPORARY on current db to u1'
+);
 
 -- User should only see account/users member of their own account
 -- u1 is only in acc1.
-SELECT lives_ok('SET SESSION AUTHORIZATION u1','Set session authorization u1');
+SELECT lives_ok(
+    'SET SESSION AUTHORIZATION u1',
+    'Set session authorization u1'
+);
 SELECT lives_ok('SET ROLE u1','Set role u1');
 
 SELECT results_eq(
@@ -314,9 +334,15 @@ SELECT set_eq(
     'Only list accounts of "u1".'
 );
 
-SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
---Revoke from u1 create temp tables
-SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),'Revoke TEMPORARY on current db from u1');
+SELECT lives_ok(
+    'RESET SESSION AUTHORIZATION',
+    'Reset session authorization'
+);
+-- Revoke from u1 create temp tables
+SELECT lives_ok(
+    format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),
+    'Revoke TEMPORARY on current db from u1'
+);
 
 SELECT results_ne(
     $$SELECT current_user, session_user$$,
@@ -326,7 +352,10 @@ SELECT results_ne(
 
 -- User should only see account/users member of their own account
 -- u1 is only in acc1.
-SELECT lives_ok('SET SESSION AUTHORIZATION admin1','Set session authorization admin1');
+SELECT lives_ok(
+    'SET SESSION AUTHORIZATION admin1',
+    'Set session authorization admin1'
+);
 SELECT lives_ok('SET ROLE admin1','Set role admin1');
 
 SELECT results_eq(
@@ -343,13 +372,13 @@ SELECT set_eq(
         (5, 'acc2', 'u2'),
         (6, 'acc2', 'u3'),
         (7, 'acc2', 'u4'),
-        (8, 'pgf_admins', 'admin1')$$,
+        (8, 'opm_admins', 'admin1')$$,
     'Admin can see all users.'
 );
 
 SELECT set_eq(
     $$SELECT * FROM list_accounts()$$,
-    $$VALUES (1, 'pgf_admins'),
+    $$VALUES (1, 'opm_admins'),
         (2, 'acc1'),
         (3, 'acc2')$$,
     'Admin can see all accounts.'
@@ -390,10 +419,16 @@ SELECT set_eq(
     'Grant server "hostname1" to "u1".'
 );
 
---Need to allow u1 to create temp tables for pgtap
-SELECT lives_ok(format('GRANT TEMPORARY ON DATABASE %I TO u1',current_database()),'Grant TEMPORARY on current db to u1');
+-- Need to allow u1 to create temp tables for pgtap
+SELECT lives_ok(
+    format('GRANT TEMPORARY ON DATABASE %I TO u1', current_database()),
+    'Grant TEMPORARY on current db to u1'
+);
 
-SELECT lives_ok('SET SESSION AUTHORIZATION u1','Set session authorization u1');
+SELECT lives_ok(
+    'SET SESSION AUTHORIZATION u1',
+    'Set session authorization u1'
+);
 SELECT lives_ok('SET ROLE u1','Set role u1');
 
 SELECT set_eq(
@@ -402,7 +437,10 @@ SELECT set_eq(
     '"u1" should only see server "hostname1".'
 );
 
-SELECT lives_ok('RESET SESSION AUTHORIZATION','Reset session authorization');
+SELECT lives_ok(
+    'RESET SESSION AUTHORIZATION',
+    'Reset session authorization'
+);
 SELECT lives_ok('RESET ROLE','Reset role');
 
 SELECT set_eq(
@@ -412,7 +450,10 @@ SELECT set_eq(
 );
 
 --Revoke from u1 create temp tables
-SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),'Revoke TEMPORARY on current db from u1');
+SELECT lives_ok(
+    format('REVOKE TEMPORARY ON DATABASE %I FROM u1', current_database()),
+    'Revoke TEMPORARY on current db from u1'
+);
 
 SELECT diag(E'\n==== Drop admin and user ====\n');
 
@@ -427,7 +468,7 @@ SELECT hasnt_role('admin1', 'Role "admin1" should not exist anymore.');
 
 SELECT set_hasnt(
     $$SELECT * FROM list_users()$$,
-    $$VALUES (8, 'pgf_admins', 'admin1')$$,
+    $$VALUES (8, 'opm_admins', 'admin1')$$,
     'User "admin1" is not listed by list_users() anymore.'
 );
 
@@ -509,9 +550,9 @@ SELECT set_eq(
 -- test role existance-related functions on "acc2"
 -- They all should returns NULL
 SELECT set_eq(
-    $$SELECT * FROM is_pgf_role('acc2')$$,
+    $$SELECT * FROM is_opm_role('acc2')$$,
     $$VALUES ('f'::boolean)$$,
-    'Account "acc2" is not a pgfactory role anymore.'
+    'Account "acc2" is not an OPM role anymore.'
 );
 
 SELECT set_eq(
@@ -547,12 +588,12 @@ SELECT set_eq(
     'Function list_users() list nothing.'
 );
 
--- Dropping pgf_admin is not allowed.
+-- Dropping opm_admin is not allowed.
 
 SELECT throws_matching(
-    $$SELECT * FROM drop_account('pgf_admins')$$,
+    $$SELECT * FROM drop_account('opm_admins')$$,
     'can not be deleted!',
-    'Account pgf_admin can not be deleted.'
+    'Account opm_admin can not be deleted.'
 );
 
 SELECT set_eq(

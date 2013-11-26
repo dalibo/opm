@@ -1,8 +1,8 @@
 # pr_grapher extension
-comment = 'Grapher process for pgFactory'
+comment = 'Grapher process for OPM'
 default_version = '1.0'
 module_pathname = '$libdir/pr_grapher'
-requires = 'pgfactory_core'
+requires = 'opm_core'
 superuser = false
 relocatable = false
 schema = 'pr_grapher'

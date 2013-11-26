@@ -3,7 +3,7 @@
 
 SET statement_timeout TO 0;
 
--- Schema should already be created and granted for pgFactory, with pr_grapher extension.
+-- Schema should already be created and granted for opm, with pr_grapher extension.
 -- We only have to create a few objects.
 
 -- A graph can display one or more services
@@ -13,7 +13,7 @@ CREATE TABLE pr_grapher.graph_wh_nagios (
 );
 
 ALTER TABLE pr_grapher.graph_wh_nagios ADD PRIMARY KEY (id_graph, id_label);
-ALTER TABLE pr_grapher.graph_wh_nagios OWNER TO pgfactory;
+ALTER TABLE pr_grapher.graph_wh_nagios OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.graph_wh_nagios FROM public;
 
 /*
@@ -104,7 +104,7 @@ LANGUAGE plpgsql
 LEAKPROOF
 SECURITY DEFINER;
 
-ALTER FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) OWNER TO pgfactory;
+ALTER FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) TO public;
 
@@ -114,12 +114,13 @@ COMMENT ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OU
 Return every pr_grapher.graphs%ROWTYPE a user can see
 
 */
-CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_graphs() RETURNS TABLE (id bigint, graph text, description text,
-  y1_query text, y2_query text, config json, id_server bigint, id_service bigint)
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_graphs()
+RETURNS TABLE (id bigint, graph text, description text, y1_query text,
+    y2_query text, config json, id_server bigint, id_service bigint)
 AS $$
 DECLARE
 BEGIN
-    IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
+    IF pg_has_role(session_user, 'opm_admins', 'MEMBER') THEN
         RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
             FROM ( SELECT DISTINCT g.id, l.id_service
                 FROM pr_grapher.graphs g
@@ -144,12 +145,13 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql
-VOLATILE
+STABLE
 LEAKPROOF
 SECURITY DEFINER;
-ALTER FUNCTION pr_grapher.list_wh_nagios_graphs() OWNER TO pgfactory;
+
+ALTER FUNCTION pr_grapher.list_wh_nagios_graphs() OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_graphs() FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_graphs() TO pgf_roles;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_graphs() TO opm_roles;
 
 COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
     IS 'List all graphs related to warehouse wh_nagios';
@@ -158,11 +160,13 @@ COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
 Return every wh_nagios's labels used in all graphs that current user is granted.
 
 */
-CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint) RETURNS TABLE (id_graph bigint, id_label bigint, label text, unit text, id_service bigint, available boolean )
+CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint)
+RETURNS TABLE (id_graph bigint, id_label bigint, label text, unit text,
+    id_service bigint, available boolean )
 AS $$
 BEGIN
 
-    IF pg_has_role(session_user, 'pgf_admins', 'MEMBER') THEN
+    IF pg_has_role(session_user, 'opm_admins', 'MEMBER') THEN
         RETURN QUERY
             SELECT ds.id_graph, l.id AS id_label, l.label, l.unit,
                 l.id_service, gs.id_graph IS NOT NULL AS available
@@ -200,12 +204,13 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql
-VOLATILE
+STABLE
 LEAKPROOF
 SECURITY DEFINER;
-ALTER FUNCTION pr_grapher.list_wh_nagios_labels(bigint) OWNER TO pgfactory;
+
+ALTER FUNCTION pr_grapher.list_wh_nagios_labels(bigint) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) TO pgf_roles;
+GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) TO opm_roles;
 
 COMMENT ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint)
     IS 'List all wh_nagios''s labels used in a specific graph.';
