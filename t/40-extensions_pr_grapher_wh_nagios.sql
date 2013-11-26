@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(47);
+SELECT plan(45);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -42,8 +42,7 @@ SELECT has_table('pr_grapher', 'graph_wh_nagios',
 );
 
 SELECT has_function('pr_grapher', 'create_graph_for_wh_nagios', '{bigint}', 'Function "pr_grapher.create_graph_for_wh_nagios(bigint)" exists.');
-SELECT has_function('pr_grapher', 'list_wh_nagios_graphs', '{}', 'Function "pr_grapher.list_wh_nagios_graphs" exists.');
-SELECT has_function('pr_grapher', 'list_wh_nagios_labels', '{}', 'Function "pr_grapher.list_wh_nagios_labels" exists.');
+SELECT has_function('pr_grapher', 'list_wh_nagios_graphs', '{}', 'Function "pr_grapher.list_wh_nagios_graphs()" exists.');
 SELECT has_function('pr_grapher', 'list_wh_nagios_labels', '{bigint}', 'Function "pr_grapher.list_wh_nagios_labels(bigint)" exists.');
 
 SELECT diag(E'\n==== Test ACl ====\n');
@@ -133,13 +132,8 @@ SELECT lives_ok('RESET ROLE','Reset role');
 --Revoke from u1 create temp tables
 SELECT lives_ok(format('REVOKE TEMPORARY ON DATABASE %I FROM u1',current_database()),'Revoke TEMPORARY on current db from u1');
 
-SELECT set_eq($$SELECT * FROM pr_grapher.list_wh_nagios_labels()$$,
-    $$VALUES (1::bigint,1::bigint),(2::bigint,2::bigint)$$,
-    'Should see the two labels'
-);
-
 SELECT set_eq($$SELECT * FROM pr_grapher.list_wh_nagios_labels(1)$$,
-    $$VALUES (1::bigint)$$,
+    $$VALUES (1::bigint, 1::bigint, 'service1 label1', NULL::text, 1::bigint, true)$$,
     'Should see one labels for graph 1'
 );
 SELECT diag(E'\n==== Drop pr_grapher_wh_nagios ====\n');
