@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(40);
+SELECT plan(52);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -77,6 +77,49 @@ SELECT set_eq($$SELECT proallargtypes,proargmodes,proargnames FROM pg_proc p
     $$VALUES ('{20,25,25,25,25,114}'::oid[],'{t,t,t,t,t,t}'::"char"[],'{id,graph,description,y1_query,y2_query,config}'::text[])$$,
     'Return arguments of function list_graph of schema "pr_grapher" should be correct.'
 );
+
+
+SELECT diag(E'\n==== Check owner ====\n');
+
+-- schemas privs
+SELECT schema_owner_is( 'pr_grapher', 'opm' );
+
+-- tables owner
+SELECT table_owner_is( n.nspname, c.relname, 'opm'::name )
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'r'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'pr_grapher'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences owner
+SELECT sequence_owner_is(n.nspname, c.relname, 'opm'::name)
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'S'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'pr_grapher'
+    )
+    AND c.relpersistence <> 't';
+
+
+-- functions owner
+SELECT function_owner_is( n.nspname, p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'opm'::name
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher'
+    );
 
 
 SELECT diag(E'\n==== Check privileges ====\n');

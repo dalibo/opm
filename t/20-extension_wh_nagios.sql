@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(104);
+SELECT plan(125);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -586,6 +586,47 @@ SELECT hasnt_table('wh_nagios', 'counters_detail_3',
 
 
 
+SELECT diag(E'\n==== Check owner ====\n');
+
+-- schemas owner
+SELECT schema_owner_is( 'wh_nagios', 'opm' );
+
+-- tables owner
+SELECT table_owner_is( n.nspname, c.relname, 'opm'::name )
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'r'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences owner
+SELECT sequence_owner_is(n.nspname, c.relname, 'opm'::name)
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'S'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- functions owner
+SELECT function_owner_is( n.nspname, p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'opm'::name
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'wh_nagios'
+    );
+
 
 
 SELECT diag(E'\n==== Check privileges ====\n');
@@ -612,7 +653,7 @@ WHERE c.relkind = 'S'
     AND c.relpersistence <> 't';
 
 -- functions privs
-SELECT function_privs_are( 'wh_nagios', p.proname, (
+SELECT function_privs_are( n.nspname, p.proname, (
         SELECT string_to_array(oidvectortypes(proargtypes), ', ')
         FROM pg_proc
         WHERE oid=p.oid
@@ -621,14 +662,11 @@ SELECT function_privs_are( 'wh_nagios', p.proname, (
 )
 FROM pg_depend dep
     JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
 WHERE dep.deptype= 'e'
     AND dep.refobjid = (
         SELECT oid FROM pg_extension WHERE extname = 'wh_nagios'
     );
-
-
-
-
 
 
 SELECT diag(E'\n==== Drop wh_nagios ====\n');

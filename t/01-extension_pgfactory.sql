@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(112);
+SELECT plan(141);
 
 SELECT diag(E'\n==== Install opm-core ====\n');
 
@@ -144,6 +144,50 @@ SELECT lives_ok(
 );
 
 
+SELECT diag(E'\n==== Check owner ====\n');
+
+-- schemas owner
+SELECT schema_owner_is( n.nspname, 'opm' )
+FROM pg_catalog.pg_namespace n
+WHERE n.nspname !~ '^pg_' AND n.nspname <> 'information_schema';
+
+-- tables owner
+SELECT table_owner_is( n.nspname, c.relname, 'opm'::name )
+FROM pg_catalog.pg_class c
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind IN ('r','')
+    AND n.nspname <> 'pg_catalog'
+    AND n.nspname <> 'information_schema'
+    AND n.nspname !~ '^pg_toast'
+    AND c.relpersistence <> 't';
+
+-- sequences owner
+SELECT sequence_owner_is(n.nspname, c.relname, 'opm'::name)
+FROM pg_catalog.pg_class c
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind IN ('S','')
+    AND n.nspname <> 'pg_catalog'
+    AND n.nspname <> 'information_schema'
+    AND n.nspname !~ '^pg_toast'
+    AND c.relpersistence <> 't';
+
+-- functions owner
+SELECT function_owner_is( n.nspname, p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'opm'
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+WHERE dep.deptype= 'e' AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'opm_core'
+    )
+    AND pg_catalog.pg_function_is_visible(p.oid);
+
+
 SELECT diag(E'\n==== Check privileges ====\n');
 
 -- database privs
@@ -189,6 +233,7 @@ WHERE dep.deptype= 'e' AND dep.refobjid = (
         SELECT oid FROM pg_extension WHERE extname = 'opm_core'
     )
     AND pg_catalog.pg_function_is_visible(p.oid);
+
 
 SELECT diag(E'\n==== Drop opm_core ====\n');
 
