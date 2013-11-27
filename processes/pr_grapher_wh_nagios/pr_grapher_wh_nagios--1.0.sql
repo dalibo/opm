@@ -1,10 +1,10 @@
--- complain if script is sourced in psql, rather than via CREATE EXTENSION
-\echo Use "CREATE EXTENSION pr_grapher_wh_nagios" to load this file. \quit
-
 -- This program is open source, licensed under the PostgreSQL License.
 -- For license terms, see the LICENSE file.
 --
 -- Copyright (C) 2012-2013: Open PostgreSQL Monitoring Development Group
+
+-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION pr_grapher_wh_nagios" to load this file. \quit
 
 SET statement_timeout TO 0;
 
@@ -111,7 +111,7 @@ SECURITY DEFINER;
 
 ALTER FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) TO public;
+GRANT EXECUTE ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) TO opm_roles;
 
 COMMENT ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OUT rc boolean) IS 'Create default graphs for all new services.';
 
