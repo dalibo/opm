@@ -125,7 +125,7 @@ RETURNS TABLE (id bigint, graph text, description text, y1_query text,
 AS $$
 DECLARE
 BEGIN
-    IF pg_has_role(session_user, 'opm_admins', 'MEMBER') THEN
+    IF is_admin(session_user) THEN
         RETURN QUERY SELECT  g2.id, g2.graph, g2.description, g2.y1_query, g2.y2_query, g2.config, s2.id, s1.id
             FROM ( SELECT DISTINCT g.id, l.id_service
                 FROM pr_grapher.graphs g
@@ -171,7 +171,7 @@ RETURNS TABLE (id_graph bigint, id_label bigint, label text, unit text,
 AS $$
 BEGIN
 
-    IF pg_has_role(session_user, 'opm_admins', 'MEMBER') THEN
+    IF is_admin(session_user) THEN
         RETURN QUERY
             SELECT ds.id_graph, l.id AS id_label, l.label, l.unit,
                 l.id_service, gs.id_graph IS NOT NULL AS available

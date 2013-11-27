@@ -119,7 +119,7 @@ RETURNS TABLE (id bigint, graph text, description text,
 AS $$
 DECLARE
 BEGIN
-    IF pg_has_role(session_user, 'opm_admins', 'MEMBER') THEN
+    IF is_admin(session_user) THEN
         RETURN QUERY SELECT g.id, g.graph, g.description,
             g.y1_query, g.y2_query, g.config
           FROM pr_grapher.graphs g;
