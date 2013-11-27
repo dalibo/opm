@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(28);
+SELECT plan(40);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -46,6 +46,9 @@ SELECT has_function('pr_grapher', 'js_time', '{timestamp with time zone}', 'Func
 SELECT has_function('pr_grapher', 'get_categories', '{}', 'Function "pr_grapher.get_categories" exists.');
 SELECT has_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list_graph" exists.');
 
+
+SELECT diag(E'\n==== Test functions ====\n');
+
 SELECT set_eq($$SELECT * from pr_grapher.js_time('2013-01-01 12:34:56 CEST')$$,
     $$VALUES (1357040096000)$$,
     'Test js_time function.'
@@ -75,11 +78,52 @@ SELECT set_eq($$SELECT proallargtypes,proargmodes,proargnames FROM pg_proc p
     'Return arguments of function list_graph of schema "pr_grapher" should be correct.'
 );
 
+
+SELECT diag(E'\n==== Check privileges ====\n');
+
+-- schemas privs
+SELECT schema_privs_are('pr_grapher', 'public', ARRAY[]::name[]);
+
+-- tables privs
+SELECT table_privs_are('pr_grapher', c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+WHERE c.relkind = 'r'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'pr_grapher'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences privs
+SELECT sequence_privs_are('pr_grapher', c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+WHERE c.relkind = 'S'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'pr_grapher'
+    )
+    AND c.relpersistence <> 't';
+
+-- functions privs
+SELECT function_privs_are( 'pr_grapher', p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'public', ARRAY[]::name[]
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher'
+    );
+
+
 SELECT diag(E'\n==== Drop pr_grapher ====\n');
 
 SELECT lives_ok(
-	$$DROP EXTENSION pr_grapher CASCADE;$$,
-	'Drop extension "pr_grapher"');
+    $$DROP EXTENSION pr_grapher CASCADE;$$,
+    'Drop extension "pr_grapher"'
+);
 
 SELECT hasnt_extension('pr_grapher','Extensions "pr_grapher" should not exists anymore.');
 

@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(83);
+SELECT plan(104);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -583,6 +583,54 @@ SELECT hasnt_table('wh_nagios', 'counters_detail_3',
     'Table "wh_nagios.counters_detail_3" should not exists anymore.'
 );
 
+
+
+
+
+
+SELECT diag(E'\n==== Check privileges ====\n');
+
+-- schemas privs
+SELECT schema_privs_are('wh_nagios', 'public', ARRAY[]::name[]);
+
+-- tables privs
+SELECT table_privs_are('wh_nagios', c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+WHERE c.relkind = 'r'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences privs
+SELECT sequence_privs_are('wh_nagios', c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+WHERE c.relkind = 'S'
+    AND c.relnamespace = (
+        SELECT oid FROM pg_catalog.pg_namespace n WHERE nspname = 'wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- functions privs
+SELECT function_privs_are( 'wh_nagios', p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'public', ARRAY[]::name[]
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'wh_nagios'
+    );
+
+
+
+
+
+
 SELECT diag(E'\n==== Drop wh_nagios ====\n');
 
 SELECT lives_ok(
@@ -591,19 +639,19 @@ SELECT lives_ok(
 );
 
 SELECT hasnt_table('wh_nagios', 'hub',
-    'Table "hub" of schema "wh_nagios" should not exists anymore.'
+    'Table "wh_nagios.hub" should not exists anymore.'
 );
 SELECT hasnt_table('wh_nagios', 'hub_reject',
-    'Table "hub_reject" of schema "wh_nagios" should not exists anymore.'
+    'Table "wh_nagios.hub_reject" should not exists anymore.'
 );
 SELECT hasnt_table('wh_nagios', 'services',
-    'Table "services" of schema "wh_nagios" should not exists anymore.'
+    'Table "wh_nagios.services" should not exists anymore.'
 );
 SELECT hasnt_table('wh_nagios', 'labels',
-    'Table "labels" of schema "wh_nagios" should not exists anymore.'
+    'Table "wh_nagios.labels" should not exists anymore.'
 );
 SELECT hasnt_table('wh_nagios', 'services_labels',
-    'Table "services_labels" of schema "wh_nagios" should not exists anymore.'
+    'Table "wh_nagios.services_labels" should not exists anymore.'
 );
 
 SELECT hasnt_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "wh_nagios.grant_service" should not exists anymore.');

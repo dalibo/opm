@@ -530,6 +530,7 @@ SELECT set_hasnt(
     'User "u4" is not in table "public.roles" anymore.'
 );
 
+
 SELECT diag(E'\n==== Drop accounts ====\n');
 
 SELECT diag(E'User "acc2" has two accounts: u2 only member of acc2 and u4 member of acc1 as well ===\n');

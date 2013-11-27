@@ -91,3 +91,24 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+-- PATCH _fprivs_are ( TEXT, NAME, NAME[], TEXT )
+-- original one use NAME as first parameter leading to function
+-- signature truncature because NAME's max length is 64
+CREATE OR REPLACE FUNCTION _fprivs_are ( TEXT, NAME, NAME[], TEXT )
+RETURNS TEXT AS $$
+DECLARE
+    grants TEXT[] := _get_func_privs($2, $1);
+BEGIN
+    IF grants[1] = 'undefined_function' THEN
+        RETURN ok(FALSE, $4) || E'\n' || diag(
+            '    Function ' || $1 || ' does not exist'
+        );
+    ELSIF grants[1] = 'undefined_role' THEN
+        RETURN ok(FALSE, $4) || E'\n' || diag(
+            '    Role ' || quote_ident($2) || ' does not exist'
+        );
+    END IF;
+    RETURN _assets_are('privileges', grants, $3, $4);
+END;
+$$ LANGUAGE plpgsql;

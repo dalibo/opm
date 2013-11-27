@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(81);
+SELECT plan(112);
 
 SELECT diag(E'\n==== Install opm-core ====\n');
 
@@ -107,6 +107,16 @@ SELECT set_eq(
 );
 
 SELECT lives_ok(
+    $$DROP EXTENSION wh_nagios$$,
+    'Drop extension "wh_nagios"'
+);
+
+SELECT lives_ok(
+    $$DROP SCHEMA wh_nagios$$,
+    'Drop schema "wh_nagios"'
+);
+
+SELECT lives_ok(
     $$CREATE EXTENSION pr_grapher$$,
     'Create extension "pr_grapher"'
 );
@@ -123,8 +133,6 @@ SELECT set_eq(
     'Should find process pr_grapher.'
 );
 
-SELECT diag(E'\n==== Drop opm_core ====\n');
-
 SELECT lives_ok(
     $$DROP EXTENSION pr_grapher$$,
     'Drop extension "pr_grapher"'
@@ -135,15 +143,54 @@ SELECT lives_ok(
     'Drop schema "pr_grapher"'
 );
 
-SELECT lives_ok(
-    $$DROP EXTENSION wh_nagios$$,
-    'Drop extension "wh_nagios"'
-);
 
-SELECT lives_ok(
-    $$DROP SCHEMA wh_nagios$$,
-    'Drop schema "wh_nagios"'
-);
+SELECT diag(E'\n==== Check privileges ====\n');
+
+-- database privs
+SELECT database_privs_are(current_database(), 'public', ARRAY[]::name[]);
+
+-- schemas privs
+SELECT schema_privs_are(n.nspname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_namespace n
+WHERE n.nspname !~ '^pg_' AND n.nspname <> 'information_schema';
+
+-- tables privs
+SELECT table_privs_are(n.nspname, c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind IN ('r','')
+    AND n.nspname <> 'pg_catalog'
+    AND n.nspname <> 'information_schema'
+    AND n.nspname !~ '^pg_toast'
+    AND c.relpersistence <> 't';
+
+-- sequences privs
+SELECT sequence_privs_are(n.nspname, c.relname, 'public', ARRAY[]::name[])
+FROM pg_catalog.pg_class c
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind IN ('S','')
+    AND n.nspname <> 'pg_catalog'
+    AND n.nspname <> 'information_schema'
+    AND n.nspname !~ '^pg_toast'
+    AND c.relpersistence <> 't';
+
+-- functions privs
+SELECT function_privs_are( n.nspname, p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'public', ARRAY[]::name[]
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+WHERE dep.deptype= 'e' AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'opm_core'
+    )
+    AND pg_catalog.pg_function_is_visible(p.oid);
+
+SELECT diag(E'\n==== Drop opm_core ====\n');
 
 SELECT lives_ok(
     $$DROP EXTENSION opm_core$$,
@@ -155,15 +202,20 @@ SELECT hasnt_table('public', 'roles', 'Schema public does not contains table "ro
 SELECT hasnt_table('public', 'services', 'Schema public does not contains table "services" of opm_core.' );
 
 SELECT lives_ok(
-    format('REVOKE ALL ON DATABASE %I FROM opm', pg_catalog.current_database()),
+    format('REVOKE ALL ON DATABASE %I FROM opm, opm_roles', pg_catalog.current_database()),
     'Revoke ALL on current db from opm'
 );
+SELECT lives_ok(
+    'REASSIGN OWNED BY opm, opm_roles, opm_admins TO postgres',
+    'Reasigned all objects of opm, opm_roles, opm_admins to postgres'
+);
+
 SELECT lives_ok($$DROP ROLE opm$$, 'Drop role opm');
 SELECT lives_ok($$DROP ROLE opm_admins$$, 'Drop role opm_admin');
 
 SELECT lives_ok(
-    format('REVOKE CONNECT ON DATABASE %I FROM opm_roles', pg_catalog.current_database()),
-    'Revoke CONNECT on current db from opm_roles'
+    'REVOKE ALL ON SCHEMA public FROM opm_roles',
+    'Revoke all on schema public from opm_roles'
 );
 SELECT lives_ok($$DROP ROLE opm_roles$$, 'Drop role opm_roles');
 
