@@ -82,8 +82,6 @@ BEGIN
             OR NOT oid = ANY ( _grolist($1) )
          ORDER BY s.i
     ) INTO missing;
-    RAISE WARNING '$2[1]: %', $2[1];
-    RAISE WARNING 'missing[1]: %', missing[1];
     IF missing[1] IS NULL THEN
         RETURN ok( true, $3 );
     END IF;
