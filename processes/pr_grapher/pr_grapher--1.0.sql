@@ -104,6 +104,11 @@ $$
 LANGUAGE SQL
 STABLE;
 
+ALTER FUNCTION pr_grapher.get_categories() OWNER TO opm;
+REVOKE ALL ON FUNCTION pr_grapher.get_categories() FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.get_categories() TO opm_roles;
+
+
 /* pr_grapher.list_graph()
 Return every pr_grapher.graphs%ROWTYPE a user can see
 
