@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(45);
+SELECT plan(55);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -141,6 +141,103 @@ SELECT set_eq($$SELECT * FROM pr_grapher.list_wh_nagios_labels(1)$$,
     $$VALUES (1::bigint, 1::bigint, 'service1 label1', NULL::text, 1::bigint, true)$$,
     'Should see one labels for graph 1'
 );
+
+
+
+SELECT diag(E'\n==== Check owner ====\n');
+
+-- schemas privs
+SELECT schema_owner_is( 'pr_grapher', 'opm' );
+
+-- tables owner
+SELECT table_owner_is( n.nspname, c.relname, 'opm'::name )
+FROM pg_depend dep
+JOIN pg_catalog.pg_class c ON dep.objid = c.oid
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'r'
+    AND dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences owner
+SELECT sequence_owner_is(n.nspname, c.relname, 'opm'::name)
+FROM pg_depend dep
+JOIN pg_catalog.pg_class c ON dep.objid = c.oid
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'S'
+    AND dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+
+-- functions owner
+SELECT function_owner_is( n.nspname, p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'opm'::name
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    );
+
+
+SELECT diag(E'\n==== Check privileges ====\n');
+
+-- schemas privs
+SELECT schema_privs_are('pr_grapher', 'public', ARRAY[]::name[]);
+
+-- tables privs
+SELECT table_privs_are('pr_grapher', c.relname, 'public', ARRAY[]::name[])
+FROM pg_depend dep
+JOIN pg_catalog.pg_class c ON dep.objid = c.oid
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'r'
+    AND dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- sequences privs
+SELECT sequence_privs_are('pr_grapher', c.relname, 'public', ARRAY[]::name[])
+FROM pg_depend dep
+JOIN pg_catalog.pg_class c ON dep.objid = c.oid
+JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+WHERE c.relkind = 'S'
+    AND dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    )
+    AND c.relpersistence <> 't';
+
+-- functions privs
+SELECT function_privs_are( 'pr_grapher', p.proname, (
+        SELECT string_to_array(oidvectortypes(proargtypes), ', ')
+        FROM pg_proc
+        WHERE oid=p.oid
+    ),
+    'public'::name, ARRAY[]::name[]
+)
+FROM pg_depend dep
+    JOIN pg_catalog.pg_proc p ON dep.objid = p.oid
+    JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE dep.deptype= 'e'
+    AND dep.refobjid = (
+        SELECT oid FROM pg_extension WHERE extname = 'pr_grapher_wh_nagios'
+    );
+
+
+
 SELECT diag(E'\n==== Drop pr_grapher_wh_nagios ====\n');
 
 SELECT lives_ok(
