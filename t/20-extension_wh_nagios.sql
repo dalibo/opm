@@ -1,7 +1,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(84);
+SELECT plan(83);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -352,12 +352,9 @@ SELECT set_eq(
 SELECT set_eq(
     $$SELECT wh_nagios.revoke_dispatcher('u1')$$,
     $$VALUES (true)$$,
-    'User "u1" should not been granted to dispatch in "wh_nagios".'
+    'Revoke dispatch in "wh_nagios" from role "u1".'
 );
 
-SELECT schema_privs_are('wh_nagios', 'u1', '{}',
-    'Role "u1" should not have privs on schema "wh_nagios".'
-);
 SELECT table_privs_are('wh_nagios', 'hub', 'u1', '{}',
     'Role "u1" should not have privs on table "wh_nagios.hub".'
 );

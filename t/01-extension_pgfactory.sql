@@ -9,7 +9,8 @@ SELECT has_schema('public', 'Schema public exists.' );
 
 SELECT lives_ok(
     $$CREATE EXTENSION opm_core$$,
-    'Create extension "opm_core"');
+    'Create extension "opm_core"'
+);
 
 SELECT has_extension('opm_core', 'Extension "opm_core" is installed.');
 
