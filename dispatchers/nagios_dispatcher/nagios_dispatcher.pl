@@ -1,10 +1,14 @@
 #!/usr/bin/perl -w
+# This program is open source, licensed under the PostgreSQL License.
+# For license terms, see the LICENSE file.
+#
+# Copyright (C) 2012-2013: Open PostgreSQL Monitoring Development Group
+
 
 =head1 About
 
 Authors :
-  marc.cousin@dalibo.com
-  jgdr@dalibo.com
+  Open PostgreSQL Monitoring Development Group
 
 Version 1.0 : 2012-11-19
 Version 1.1 : 2012-12-28
@@ -613,8 +617,9 @@ This library is free software; you can redistribute it and/or modify it under th
 
 the rest is
 
-Copyright (C) 2012 Dalibo
+This program is open source, licensed under the PostgreSQL License.
+Copyright (C) 2012-2013 Open PostgreSQL Monitoring Development Group
 
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
 
 =cut

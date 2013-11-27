@@ -1,6 +1,11 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION pr_grapher_wh_nagios" to load this file. \quit
 
+-- This program is open source, licensed under the PostgreSQL License.
+-- For license terms, see the LICENSE file.
+--
+-- Copyright (C) 2012-2013: Open PostgreSQL Monitoring Development Group
+
 SET statement_timeout TO 0;
 
 -- Schema should already be created and granted for opm, with pr_grapher extension.

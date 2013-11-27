@@ -1,0 +1,9 @@
+Open PostgreSQL Monitoring
+==========================
+
+This directory contains the source code of Open PostgreSQL Monitoring.
+
+For information about the user interface, check the README.md file in
+the ui/opm directory.
+
+Copyright and license information can be found in the file LICENSE.

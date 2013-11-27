@@ -1,0 +1,33 @@
+List of contributors
+====================
+
+Marc Cousin
+  * work on nagios_dispatcher
+
+Thomas Reiss
+  * work on check_pgactivity
+  * work on opm_core
+  * work on wh_nagios
+
+Jehan-Guillaume de Rorthais
+  * work on check_pgactivity
+  * work on nagios_dispatcher
+  * work on opm_core
+  * work on pr_grapher
+  * work on pr_grapher_wh_nagios
+  * work on UI
+  * work on UI grapher
+  * work on wh_nagios
+
+Julien Rouhaud
+  * work on check_pgactivity
+  * work on opm_core
+  * work on pr_grapher
+  * work on pr_grapher_wh_nagios
+  * work on UI
+  * work on UI grapher
+  * work on wh_nagios
+
+Nicolas Thauvin
+  * work on pr_grapher
+  * work on UI grapher
