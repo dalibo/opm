@@ -13,13 +13,25 @@ SET statement_timeout TO 0;
 
 -- A graph can display one or more services
 CREATE TABLE pr_grapher.graph_wh_nagios (
-  id_graph bigint not null references pr_grapher.graphs (id) on delete cascade on update cascade,
+  id_graph bigint references pr_grapher.graphs (id) on delete cascade on update cascade,
   id_label bigint not null references wh_nagios.labels (id) on delete cascade on update cascade
 );
 
-ALTER TABLE pr_grapher.graph_wh_nagios ADD PRIMARY KEY (id_graph, id_label);
+CREATE UNIQUE INDEX ON pr_grapher.graph_wh_nagios (id_label, id_graph);
+CREATE INDEX ON pr_grapher.graph_wh_nagios (id_graph);
 ALTER TABLE pr_grapher.graph_wh_nagios OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.graph_wh_nagios FROM public;
+
+COMMENT ON TABLE pr_grapher.graph_wh_nagios IS
+'This table defines which labels (series) appears in each graphs.
+As this module is related to the UI, each time a new label is added to
+an existing service, a new graph is created with this new label
+automatically. We make the difference between a new label appearing from
+a service with an old one deactivated in every related graphs using
+"id_graph IS NULL". So as far as a label exists in this table, it is not
+new and a new graph will not be created.
+The natural PK here should be on (id_label, id_graph). But as "id_graph"
+is NULLable we only use a UNIQUE INDEX.';
 
 /*
 Function pr_grapher.create_graph_for_wh_nagios(p_id_server bigint) returns boolean
@@ -117,7 +129,6 @@ COMMENT ON FUNCTION pr_grapher.create_graph_for_wh_nagios(p_server_id bigint, OU
 
 /* pr_grapher.list_wh_nagios_graphs()
 Return every pr_grapher.graphs%ROWTYPE a user can see
-
 */
 CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_graphs()
 RETURNS TABLE (id bigint, graph text, description text, y1_query text,
@@ -163,7 +174,6 @@ COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
 
 /* pr_grapher.list_wh_nagios_labels(bigint)
 Return every wh_nagios's labels used in all graphs that current user is granted.
-
 */
 CREATE OR REPLACE FUNCTION pr_grapher.list_wh_nagios_labels(p_id_graph bigint)
 RETURNS TABLE (id_graph bigint, id_label bigint, label text, unit text,
@@ -219,3 +229,85 @@ GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint) TO opm_roles;
 
 COMMENT ON FUNCTION pr_grapher.list_wh_nagios_labels(bigint)
     IS 'List all wh_nagios''s labels used in a specific graph.';
+
+/* pr_grapher.update_graph_labels(bigint, bigint[])
+Update what are the labels associated to the given graph.
+
+Returns 2 arrays:
+  * added bigint[]: Array of added labels
+  * removed bigint[]: Array of removed labels
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.update_graph_labels( p_id_graph bigint, p_id_labels bigint[], OUT added bigint[], OUT removed bigint[])
+AS $$
+DECLARE
+    v_result record;
+    v_remove  bigint[];
+    v_add     bigint[];
+BEGIN
+    IF NOT is_admin(session_user) THEN
+        SELECT 1 FROM pr_grapher.list_wh_nagios_graphs()
+        WHERE id = p_id_graph;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Graph id % does not exists or not granted.', p_id_graph;
+        END IF;
+    END IF;
+
+    FOR v_result IN
+        SELECT gs.id_label AS to_remove, a.id_label AS to_add
+        FROM (
+            SELECT id_label FROM pr_grapher.graph_wh_nagios
+            WHERE id_graph = p_id_graph
+        ) AS gs
+        FULL JOIN (
+            SELECT * FROM unnest ( p_id_labels )
+        ) AS a(id_label) ON a.id_label = gs.id_label
+        WHERE gs.id_label IS NULL OR a.id_label IS NULL
+    LOOP
+        /* if "existing" is NULL, the label should be added to the graph
+         * else "given" is NULL, the label should be removed from the
+         * graph
+         */
+        IF v_result.to_add IS NOT NULL THEN
+            v_add := array_append(v_add, v_result.to_add);
+        ELSE
+            v_remove := array_append(v_remove, v_result.to_remove);
+        END IF;
+    END LOOP;
+
+    -- Add new labels to the graph
+    INSERT INTO pr_grapher.graph_wh_nagios (id_graph, id_label)
+    SELECT p_id_graph, unnest(v_add);
+
+    -- Remove labels from the graph
+    PERFORM 1 FROM pr_grapher.graph_wh_nagios
+    WHERE id_graph = p_id_graph FOR UPDATE;
+
+    FOR v_result IN SELECT array_agg(id_label) AS vals, to_delete
+        FROM (
+                SELECT id_label, count(*) > 1 AS to_delete
+                FROM pr_grapher.graph_wh_nagios
+                WHERE id_label = any( v_remove ) group by id_label
+        ) AS sub
+        GROUP BY to_delete
+    LOOP
+        IF v_result.to_delete THEN
+            DELETE FROM pr_grapher.graph_wh_nagios
+            WHERE id_label = any( v_result.vals )
+                AND id_graph = p_id_graph;
+        ELSE
+            UPDATE pr_grapher.graph_wh_nagios SET id_graph = NULL
+            WHERE id_label = any( v_result.vals )
+                AND id_graph = p_id_graph;
+        END IF;
+    END LOOP;
+
+    added := v_add; removed := v_remove;
+END
+$$
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER;
+
+ALTER FUNCTION pr_grapher.update_graph_labels(bigint, bigint) OWNER TO opm;
+REVOKE ALL ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint) TO opm_roles;
