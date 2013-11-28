@@ -308,6 +308,6 @@ LANGUAGE plpgsql
 VOLATILE
 SECURITY DEFINER;
 
-ALTER FUNCTION pr_grapher.update_graph_labels(bigint, bigint) OWNER TO opm;
-REVOKE ALL ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint) FROM public;
-GRANT EXECUTE ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint) TO opm_roles;
+ALTER FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) OWNER TO opm;
+REVOKE ALL ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) TO opm_roles;
