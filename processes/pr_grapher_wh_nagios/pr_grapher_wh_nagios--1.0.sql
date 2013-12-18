@@ -31,7 +31,9 @@ a service with an old one deactivated in every related graphs using
 "id_graph IS NULL". So as far as a label exists in this table, it is not
 new and a new graph will not be created.
 The natural PK here should be on (id_label, id_graph). But as "id_graph"
-is NULLable we only use a UNIQUE INDEX.';
+is NULLable we only use a UNIQUE INDEX.' ;
+COMMENT ON COLUMN pr_grapher.graph_wh_nagios.id_graph IS 'Unique identifier of referenced graph. Can be NULL' ;
+COMMENT ON COLUMN pr_grapher.graph_wh_nagios.id_label IS 'Unique identifier of referenced label.' ;
 
 /*
 Function pr_grapher.create_graph_for_wh_nagios(p_id_server bigint) returns boolean
@@ -170,7 +172,7 @@ REVOKE ALL ON FUNCTION pr_grapher.list_wh_nagios_graphs() FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.list_wh_nagios_graphs() TO opm_roles;
 
 COMMENT ON FUNCTION pr_grapher.list_wh_nagios_graphs()
-    IS 'List all graphs related to warehouse wh_nagios';
+    IS 'List all graphs related to warehouse wh_nagios.' ;
 
 /* pr_grapher.list_wh_nagios_labels(bigint)
 Return every wh_nagios's labels used in all graphs that current user is granted.
@@ -311,3 +313,4 @@ SECURITY DEFINER;
 ALTER FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) TO opm_roles;
+COMMENT ON FUNCTION pr_grapher.update_graph_labels(bigint, bigint[]) IS 'Update what are the labels associated to the given graph.' ;
