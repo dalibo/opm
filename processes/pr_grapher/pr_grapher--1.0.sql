@@ -23,6 +23,13 @@ CREATE TABLE pr_grapher.graphs (
 
 ALTER TABLE pr_grapher.graphs OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.graphs FROM public;
+COMMENT ON TABLE pr_grapher.graphs IS 'Store all graphs definitions.' ;
+COMMENT ON COLUMN pr_grapher.graphs.id IS 'Graph unique identifier. Is the primary key of the table pr_grapher.graphs.' ;
+COMMENT ON COLUMN pr_grapher.graphs.graph IS 'Title of the graph.' ;
+COMMENT ON COLUMN pr_grapher.graphs.description IS 'Description of the graph.' ;
+COMMENT ON COLUMN pr_grapher.graphs.y1_query IS 'y1 axis query. NULL if linked to a service.' ;
+COMMENT ON COLUMN pr_grapher.graphs.y2_query IS 'y2 axis query. NULL if linked to a service.' ;
+COMMENT ON COLUMN pr_grapher.graphs.config IS 'Specific flotr2 graph configuration, stored in json.' ;
 
 -- Categories
 CREATE TABLE pr_grapher.categories (
@@ -33,6 +40,10 @@ CREATE TABLE pr_grapher.categories (
 
 ALTER TABLE pr_grapher.categories OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.categories FROM public;
+COMMENT ON TABLE pr_grapher.categories IS 'Store all graphs categories.' ;
+COMMENT ON COLUMN pr_grapher.categories.id IS 'Category unique identifier. Is the primary key of the table pr_grapher.categories.' ;
+COMMENT ON COLUMN pr_grapher.categories.category IS 'Name of the category.' ;
+COMMENT ON COLUMN pr_grapher.categories.description IS 'Description of the category.' ;
 
 -- Categories can be nested
 CREATE TABLE pr_grapher.nested_categories (
@@ -43,6 +54,9 @@ CREATE TABLE pr_grapher.nested_categories (
 ALTER TABLE pr_grapher.nested_categories ADD PRIMARY KEY (id_parent,id_child);
 ALTER TABLE pr_grapher.nested_categories OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.nested_categories FROM public;
+COMMENT ON TABLE pr_grapher.nested_categories IS 'Store relationships between two categories.' ;
+COMMENT ON COLUMN pr_grapher.nested_categories.id_parent IS 'Unique identifer of the parent category.' ;
+COMMENT ON COLUMN pr_grapher.nested_categories.id_child IS 'Unique identifer of the child category.' ;
 
 
 -- A graph can be in zero to many categories
@@ -54,6 +68,9 @@ CREATE TABLE pr_grapher.graph_categories (
 ALTER TABLE pr_grapher.graph_categories ADD PRIMARY KEY (id_graph,id_category);
 ALTER TABLE pr_grapher.graph_categories OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.graph_categories FROM public;
+COMMENT ON TABLE pr_grapher.graph_categories IS 'Store which graphs are in which categories.' ;
+COMMENT ON COLUMN pr_grapher.graph_categories.id_graph IS 'Unique identifer of the related graph.' ;
+COMMENT ON COLUMN pr_grapher.graph_categories.id_category IS 'Unique identifer of the related category.' ;
 
 -- Each series of a graph can be configured
 CREATE TABLE pr_grapher.series (
@@ -65,6 +82,11 @@ CREATE TABLE pr_grapher.series (
 
 ALTER TABLE pr_grapher.series OWNER TO opm;
 REVOKE ALL ON TABLE pr_grapher.series FROM public;
+COMMENT ON TABLE pr_grapher.series IS 'Store specific configuration for a specific graph serie.' ;
+COMMENT ON COLUMN pr_grapher.series.id IS 'Unique identifier of a serie. Is the primary key of the table pr_grapher.series.' ;
+COMMENT ON COLUMN pr_grapher.series.label IS 'Name of the serie.' ;
+COMMENT ON COLUMN pr_grapher.series.config IS 'Specific flotr2 configuration of the serie, stored in json.' ;
+COMMENT ON COLUMN pr_grapher.series.id_graph IS 'Unique identifer of the related graph.' ;
 
 -- jstime: Convert the input date to ms from the Epoch in UTC, suitable for javascript
 CREATE OR REPLACE FUNCTION pr_grapher.js_time(timestamptz)
@@ -78,6 +100,7 @@ IMMUTABLE;
 ALTER FUNCTION pr_grapher.js_time(timestamptz) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.js_time(timestamptz) FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.js_time(timestamptz) TO opm_roles;
+COMMENT ON FUNCTION pr_grapher.js_time(timestamptz) IS 'Return a timestamp with time zone formatted for javascript use.' ;
 
 -- get_categories: Get the tree of categories
 CREATE OR REPLACE FUNCTION pr_grapher.get_categories()
@@ -107,6 +130,7 @@ STABLE;
 ALTER FUNCTION pr_grapher.get_categories() OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.get_categories() FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.get_categories() TO opm_roles;
+COMMENT ON FUNCTION pr_grapher.get_categories() IS 'Return the tree of the specified category.' ;
 
 
 /* pr_grapher.list_graph()
