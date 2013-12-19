@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(125);
+SELECT plan(126);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -62,7 +62,7 @@ SELECT has_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "wh
 SELECT has_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "wh_nagios.revoke_service" exists.');
 SELECT has_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" exists.');
 SELECT has_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" exists.');
-SELECT has_function('wh_nagios', 'cleanup_service', '{bigint, timestamp with time zone}', 'Function "wh_nagios.cleanup_service" exists.');
+SELECT has_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" exists.');
 SELECT has_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" exists.');
 SELECT has_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" exists.');
 SELECT has_function('wh_nagios', 'dispatch_record', '{boolean}', 'Function "wh_nagios.dispatch_record" exists.');
@@ -531,7 +531,7 @@ SELECT set_eq(
 );
 
 SELECT set_eq(
-    $$SELECT wh_nagios.cleanup_service(1, now())$$,
+    $$SELECT wh_nagios.cleanup_service(1)$$,
     $$VALUES (true)$$,
     'Run cleanup_service on service 1.'
 );
@@ -555,9 +555,20 @@ SELECT set_eq(
     $$VALUES
         ('2013-01-01'::date, 1357038000::double precision, 5284356::numeric),
         ('2013-01-01'::date, 1357039200, 5284356),
-        ('2013-01-01'::date, 1357039500, 7285356)
+        ('2013-01-01'::date, 1357039500, 7285356),
+        ('2013-01-01'::date, 1357038300, 5284356),
+        ('2013-01-01'::date, 1357038600, 5284356),
+        ('2013-01-01'::date, 1357038900, 5284356)
         $$,
-    'Records of "wh_nagios.counters_detail_1" should be cleaned.'
+    'Consecutive records with same value of "wh_nagios.counters_detail_1" should not be cleaned.'
+);
+
+SELECT set_eq(
+    $$SELECT date_records FROM wh_nagios.counters_detail_1$$,
+    $$VALUES
+        ('2013-01-01'::date)
+    $$,
+    'Records of "wh_nagios.counters_detail_1" should be aggregated.'
 );
 
 SELECT diag(E'\n==== Dropping a service ====\n');
@@ -696,7 +707,7 @@ SELECT hasnt_function('wh_nagios', 'grant_service', '{bigint,name}', 'Function "
 SELECT hasnt_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "wh_nagios.revoke_service" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" should not exists anymore.');
-SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint, timestamp with time zone}', 'Function "wh_nagios.cleanup_service" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'dispatch_record', '{boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
