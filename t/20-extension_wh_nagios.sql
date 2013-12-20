@@ -332,11 +332,11 @@ SELECT set_eq(
         (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
-            209715200, 1357038000::double precision, NULL::double precision),
+            209715200, 1357038000::double precision, 1357038000::double precision),
         (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
-            209715200, 1357038000::double precision, NULL::double precision)$$,
+            209715200, 1357038000::double precision, 1357038000::double precision)$$,
     'Table "wh_nagios.services" should have services defined by records 9, 10 (and 11).'
 );
 
