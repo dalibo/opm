@@ -120,7 +120,7 @@ SELECT results_eq(
 );
 
 SELECT lives_ok($$
-    INSERT INTO wh_nagios.hub VALUES
+    INSERT INTO wh_nagios.hub (id, data) VALUES
         (1, ARRAY[ -- more than one dim
             ['BAD RECORD'], ['BAD RECORD'],
             ['BAD RECORD'], ['BAD RECORD'],
@@ -236,15 +236,15 @@ SELECT results_eq(
 
 -- check rejected lines and status
 SELECT set_eq(
-    $$SELECT id, msg FROM wh_nagios.hub_reject$$,
-    $$VALUES (1::bigint, 'given array has more than 1 dimension'),
-        (2, 'less than 10 values'),
-        (3, 'number of parameter not even'),
-        (4, 'hostname required'),
-        (5, 'servicedesc required'),
-        (6, 'label required'),
-        (7, 'timet required'),
-        (8, 'value required')$$,
+    $$SELECT id, rolname, msg FROM wh_nagios.hub_reject$$,
+    $$VALUES (1::bigint, 'u1'::name, 'given array has more than 1 dimension'),
+        (2, 'u1', 'less than 10 values'),
+        (3, 'u1', 'number of parameter not even'),
+        (4, 'u1', 'hostname required'),
+        (5, 'u1', 'servicedesc required'),
+        (6, 'u1', 'label required'),
+        (7, 'u1', 'timet required'),
+        (8, 'u1', 'value required')$$,
     'Checking rejected lines.'
 );
 
@@ -377,7 +377,7 @@ SELECT results_eq(
 
 
 SELECT throws_matching($$
-    INSERT INTO wh_nagios.hub VALUES
+    INSERT INTO wh_nagios.hub (id, data) VALUES
         (12, ARRAY[ -- a good one
             'MIN','0',
             'WARNING','209715200',
@@ -404,7 +404,7 @@ SELECT results_ne(
 );
 
 SELECT lives_ok($$
-    INSERT INTO wh_nagios.hub VALUES
+    INSERT INTO wh_nagios.hub (id, data) VALUES
         (1, ARRAY[ -- unit is now "b"
             'MIN','0',
             'WARNING','209715200',
@@ -443,7 +443,7 @@ SELECT set_eq(
 SELECT diag(E'\n==== Partition cleanup ====\n');
 
 SELECT lives_ok($$
-    INSERT INTO wh_nagios.hub VALUES
+    INSERT INTO wh_nagios.hub (id, data) VALUES
         (13, ARRAY[
             'MIN','0',
             'WARNING','209715200',

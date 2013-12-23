@@ -369,7 +369,7 @@ sub insert_parsed_data {
         and log_message
         sprintf( 'DEBUG: Processing batch #%u.', $batch_number );
 
-    my $sth = $dbh->do('COPY wh_nagios.hub FROM STDIN');
+    my $sth = $dbh->do('COPY wh_nagios.hub (id, data) FROM STDIN');
 
     foreach my $record ( @{$parsed_data} ) {
         my $copy    = "$batch_number\t";
