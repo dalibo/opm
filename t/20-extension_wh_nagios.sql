@@ -152,28 +152,28 @@ SELECT lives_ok($$
             'SERVICESTATE','OK'
         ]),
         (5, ARRAY[ -- missing service desc
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'LABEL','template0',
             'TIMET','1357208343',
             'VALUE','5284356',
             'SERVICESTATE','OK'
         ]),
         (6, ARRAY[ -- missing label
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'SERVICEDESC','pgactivity Database size',
             'TIMET','1357208343',
             'VALUE','5284356',
             'SERVICESTATE','OK'
         ]),
         (7, ARRAY[ -- missing timet
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'SERVICEDESC','pgactivity Database size',
             'LABEL','template0',
             'VALUE','5284356',
             'SERVICESTATE','OK'
         ]),
         (8, ARRAY[ -- missing value
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'SERVICEDESC','pgactivity Database size',
             'LABEL','template0',
             'TIMET','1357208343',
@@ -185,7 +185,7 @@ SELECT lives_ok($$
             'VALUE','5284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -198,7 +198,7 @@ SELECT lives_ok($$
             'VALUE','6284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','gouda.dalibo.net',
+            'HOSTNAME','server2',
             'MAX','0',
             'UOM','B',
             'SERVICESTATE','OK',
@@ -211,7 +211,7 @@ SELECT lives_ok($$
             'VALUE','7284356',
             'CRITICAL','524288000',
             'LABEL','postgres',
-            'HOSTNAME','gouda.dalibo.net',
+            'HOSTNAME','server2',
             'MAX','0',
             'UOM','B',
             'SERVICESTATE','OK',
@@ -316,10 +316,10 @@ SELECT set_eq(
             s1.last_cleanup, s1.servalid, s2.id_role
         FROM public.services s1 JOIN public.servers s2 ON s1.id_server = s2.id$$,
     $$VALUES
-        (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
+        (1::bigint, 'server1', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint),
-        (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
+        (2::bigint, 'server2', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint)$$,
     'Table "public.services" should have services defined by records 9, 10 (and 11).'
@@ -336,11 +336,11 @@ SELECT set_eq(
         JOIN wh_nagios.labels l ON s1.id = l.id_service
         JOIN public.servers s2 ON s1.id_server = s2.id$$,
     $$VALUES
-        (1::bigint, 'roquefort.dalibo.net', 'wh_nagios'::name,
+        (1::bigint, 'server1', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
             209715200, 1357038000::double precision, 1357038000::double precision),
-        (2::bigint, 'gouda.dalibo.net', 'wh_nagios'::name,
+        (2::bigint, 'server2', 'wh_nagios'::name,
             'pgactivity Database size', current_date, now(), now(),
             NULL::interval, NULL::bigint, 'OK', 0, 0, 524288000,
             209715200, 1357038000::double precision, 1357038000::double precision)$$,
@@ -391,7 +391,7 @@ SELECT throws_matching($$
             'VALUE','7284356',
             'CRITICAL','524288000',
             'LABEL','postgres',
-            'HOSTNAME','gouda.dalibo.net',
+            'HOSTNAME','server2',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -418,7 +418,7 @@ SELECT lives_ok($$
             'VALUE','6284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','gouda.dalibo.net',
+            'HOSTNAME','server2',
             'MAX','0',
             'UOM','b',
             'SERVICESTATE','OK',
@@ -440,7 +440,7 @@ SELECT set_eq(
         FROM wh_nagios.labels l
         JOIN wh_nagios.services s1 ON l.id_service = s1.id
         JOIN public.servers s2 ON s1.id_server = s2.id
-        WHERE s2.hostname = 'gouda.dalibo.net'
+        WHERE s2.hostname = 'server2'
             AND service = 'pgactivity Database size'
             AND label = 'template0'$$,
     $$VALUES ('b')$$,
@@ -457,7 +457,7 @@ SELECT lives_ok($$
             'VALUE','5284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -470,7 +470,7 @@ SELECT lives_ok($$
             'VALUE','5284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -483,7 +483,7 @@ SELECT lives_ok($$
             'VALUE','5284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -496,7 +496,7 @@ SELECT lives_ok($$
             'VALUE','5284356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
@@ -509,7 +509,7 @@ SELECT lives_ok($$
             'VALUE','7285356',
             'CRITICAL','524288000',
             'LABEL','template0',
-            'HOSTNAME','roquefort.dalibo.net',
+            'HOSTNAME','server1',
             'MAX','0',
             'UOM','',
             'SERVICESTATE','OK',
