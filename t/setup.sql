@@ -23,3 +23,5 @@ BEGIN;
 \i t/pgtap.sql
 \i t/opmtap.sql
 
+-- Get output messages in english
+SET lc_messages='C'
