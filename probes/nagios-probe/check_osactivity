@@ -1,0 +1,589 @@
+#!/usr/bin/perl
+# This program is open source, licensed under the PostgreSQL License.
+# For license terms, see the LICENSE file.
+#
+# Copyright (C) 2012-2014: Open PostgreSQL Monitoring Development Group
+
+=head1 check_osactivity
+
+check_osactivity - System plugins for Nagios
+
+Version 1.0
+
+=head1 SYNOPSIS
+
+  check_osactivity {-w|--warning THRESHOLD} {-c|--critical THRESHOLD} [-s|--service SERVICE ] [--debug] [--status-file FILE] [--path PATH]
+  check_osactivity [--list]
+  check_osactivity [--help]
+
+=head1 DESCRIPTION
+
+check_osactivity is dedicated to monitoring a server from Nagios. It
+offers many different services and returns various useful perfdata for
+metrology.
+
+=cut
+
+use vars qw($VERSION $PROGRAM);
+
+use strict;
+use warnings;
+
+use POSIX;
+use File::Basename 'dirname';
+use Getopt::Long qw(:config bundling no_ignore_case_always);
+use List::Util qw(max);
+use POSIX qw(locale_h sys_wait_h);
+use IPC::Open3;
+use Data::Dumper;
+use Storable qw(store retrieve);
+use Pod::Usage;
+use File::Basename;
+
+setlocale( LC_ALL, 'C' );
+
+$| = 1;
+
+$VERSION = '1.0';
+$PROGRAM = 'check_osactivity';
+
+# Available services and descriptions.
+#
+# The referenced sub called to exec each service takes one parameters: a
+# reference to the arguments hash (%args)
+#
+# Note that we can not use perl prototype for these subroutine as they are
+# called indirectly (thus the args given by references).
+
+my %services = (
+    # 'service_name' => {
+    #    'sub'     => sub reference to call to run this service
+    #    'desc'    => 'a desctiption of the service'
+    # }
+
+    'process_age' => {
+        'sub'  => \&check_process_age,
+        'desc' => 'Check age of a specific process.'
+    },
+    'process_exists' => {
+        'sub'  => \&check_process_exists,
+        'desc' => 'Check if a specific process exists.'
+    }
+);
+
+
+=over
+
+=item B<-s>, B<--service> SERVICE
+
+The nagios service to run. See section SERVICES for a description of available
+services or option C<--list> for a short service and description list.
+
+=item B<-w>, B<--warning> THRESHOLD
+
+The warning threshold.
+
+=item B<-c>, B<--critical> THRESHOLD
+
+The critical threshold.
+
+=item B<--status-file> PATH
+
+PATH to the file where service status information will be kept between two
+call. Default to check_osactivity.data in the same directory of the script.
+
+=item B<--list>
+
+List available services.
+
+=item B<-V>, B<--version>
+
+Print version and exit.
+
+=item B<--debug>
+
+Print some debug messages.
+
+=item B<-?>, B<--help>
+
+Show this help page.
+
+=back
+
+=cut
+
+my %args = (
+    'service'               => undef,
+    'warning'               => undef,
+    'critical'              => undef,
+    'path'                  => undef,
+    'status-file'           => dirname(__FILE__) . '/check_osactivity.data',
+    'command'               => undef,
+    'list'                  => 0,
+    'help'                  => 0,
+    'debug'                 => 0
+);
+
+# Set name of the program without path*
+my $orig_name = $0;
+$0 = $PROGRAM;
+
+# Die on kill -2, -3 or -15
+$SIG{'INT'} = $SIG{'QUIT'} = $SIG{'TERM'} = 'terminate';
+
+# print the version and exit
+sub version() {
+    print "check_osactivity version $VERSION\n";
+
+    exit 0;
+}
+
+# List services that can be performed
+sub list_services() {
+
+    print "List of available services:\n\n";
+
+    foreach my $service ( sort keys %services ) {
+        printf "\t%-17s\t%s\n", $service, $services{$service}{'desc'};
+    }
+
+    exit 0;
+}
+
+# Record the given ref content in a file on disk.
+# The file is defined by argument "--status-file" on command line. By default:
+#
+#  dirname(__FILE__) . '/check_osactivity.data'
+#
+# Format of data in this file is:
+#   {
+#       "$name" => ref
+#   }
+# data can be retrieved later using the "load" sub.
+#
+# Parameters are :
+#  * the name of the structure to save
+#  * the ref of the structure to save
+#  * the path to the file storage
+sub save($$$) {
+    my $name    = shift;
+    my $ref     = shift;
+    my $storage = shift;
+    my $all     = {};
+
+    $all = retrieve($storage) if -f $storage;
+
+    $all->{$name} = $ref;
+
+    store( $all, $storage )
+        or die "Can't store data in '$storage'!\n";
+}
+
+# Load the given ref content from the file on disk.
+#
+# See "save" sub comments for more info.
+# Parameters are :
+#  * the name of the structure to load
+#  * the path to the file storage
+sub load($$) {
+    my $name    = shift;
+    my $storage = shift;
+    my $all;
+
+    return undef unless -f $storage;
+
+    $all = retrieve($storage);
+
+    return $all->{$name};
+}
+
+# Returns formated time string with units.
+# Takes a duration in seconds as parameter.
+sub to_interval($) {
+    my $val      = shift;
+    my $interval = '';
+
+    return $val if $val =~ /^-?inf/i;
+
+    $val = int($val);
+
+    if ( $val > 604800 ) {
+        $interval = int( $val / 604800 ) . "w ";
+        $val %= 604800;
+    }
+
+    if ( $val > 86400 ) {
+        $interval .= int( $val / 86400 ) . "d ";
+        $val %= 86400;
+    }
+
+    if ( $val > 3600 ) {
+        $interval .= int( $val / 3600 ) . "h";
+        $val %= 3600;
+    }
+
+    if ( $val > 60 ) {
+        $interval .= int( $val / 60 ) . "m";
+        $val %= 60;
+    }
+
+    $interval .= "${val}s" if $val > 0;
+
+    return $interval;
+}
+
+=head1 THRESHOLDS
+
+THRESHOLD given as warning and critical values can either be a raw number, a
+percentage, an interval or a size. Each available service supports one or more
+form (eg. a size and a percentage).
+
+=over
+
+=item B<Percentage>
+
+If threshold is a percentage, the value should finish with a '%' without space
+with the actual value. Eg.: 95%.
+
+=item B<Interval>
+
+If THRESHOLD is an interval, the following units are accepted (not case
+sensitive): s (second), m (minute), h (hour), d (day). You can use more than
+one unit per give value. If not set, the last unit is in seconds. Eg.: "1h 55m
+6" = "1h55m6s".
+
+=cut
+
+sub is_time($){
+    my $str_time = lc( shift() );
+    return 1 if ( $str_time
+        =~ /^(\s*([0-9]\s*[smhd]?\s*))+$/
+    );
+    return 0;
+}
+
+# Takes an interval (with units) as parameter and returns a duration in second.
+sub get_time($) {
+    my $str_time = lc( shift() );
+    my $ts       = 0;
+    my @date;
+
+    die(      "Malformed interval: «$str_time»!\n"
+            . "Authorized unit are: dD, hH, mM, sS\n" )
+        unless is_time($str_time);
+
+    # no bad units should exists after this line!
+
+    @date = split( /([smhd])/, $str_time );
+
+LOOP_TS: while ( my $val = shift @date ) {
+
+        $val = int($val) || die("Wrong value for an interval: «$val»!");
+        my $unit = shift(@date) || '';
+
+        if ( $unit eq 'm' ) {
+            $ts += $val * 60;
+            next LOOP_TS;
+        }
+
+        if ( $unit eq 'h' ) {
+            $ts += $val * 3600;
+            next LOOP_TS;
+        }
+
+        if ( $unit eq 'd' ) {
+            $ts += $val * 86400;
+            next LOOP_TS;
+        }
+
+        $ts += $val;
+    }
+
+    return $ts;
+}
+
+=pod
+
+=item B<Size>
+If THRESHOLD is a size, the following units are accepted (not case sensitive):
+b (Byte), k (KB), m (MB), g (GB), t (TB), p (PB), e (EB) or Z (ZB). The factor
+between units is 1024 Bytes. Eg. 1g = 1G = 1024*1024*1024.
+
+=back
+
+=cut
+
+# Takes a size with unit as parameter and returns it in bytes.
+# If unit is '%', use the second parameter to compute the size in byte.
+sub get_size($;$) {
+    my $str_size = shift;
+    my $size     = 0;
+    my $unit     = '';
+
+    $str_size =~ /^([0-9.]+)(.*)$/;
+
+    $size = int($1);
+    $unit = lc($2);
+
+    return $size unless $unit ne '';
+
+    if ( $unit eq '%' ) {
+        my $ratio = shift;
+
+        die("Can not compute a ratio without the factor!")
+            unless defined $unit;
+
+        return int( $size * $ratio / 100 );
+    }
+
+    return $size           if $unit eq 'b';
+    return $size * 1024    if $unit =~ '^k[bo]?$';
+    return $size * 1024**2 if $unit =~ '^m[bo]?$';
+    return $size * 1024**3 if $unit =~ '^g[bo]?$';
+    return $size * 1024**4 if $unit =~ '^t[bo]?$';
+    return $size * 1024**5 if $unit =~ '^p[bo]?$';
+    return $size * 1024**6 if $unit =~ '^e[bo]?$';
+    return $size * 1024**7 if $unit =~ '^z[bo]?$';
+
+    die("Unknown size unit: $unit");
+}
+
+
+sub dprint {
+    return unless $args{'debug'};
+    foreach (@_) {
+        print "DEBUG: $_";
+    }
+}
+
+sub unknown($;$$) {
+    return output( 3, $_[0], $_[1], $_[2], $_[3] );
+}
+
+sub critical($;$$) {
+    return output( 2, $_[0], $_[1], $_[2], $_[3] );
+}
+
+sub warning($;$$) {
+    return output( 1, $_[0], $_[1], $_[2], $_[3] );
+}
+
+sub ok($;$$) {
+    return output( 0, $_[0], $_[1], $_[2], $_[3] );
+}
+
+sub output ($$;$$) {
+    my $rc  = shift;
+    my $ret = shift;
+    my $state;
+    my @msg;
+    my @perfdata;
+
+    $ret .= " OK"       if $rc == 0;
+    $ret .= " WARNING"  if $rc == 1;
+    $ret .= " CRITICAL" if $rc == 2;
+    $ret .= " UNKNOWN"  if $rc == 3;
+
+    @msg      = @{ $_[0] } if defined $_[0];
+    @perfdata = @{ $_[1] } if defined $_[1];
+
+    $ret .= ": ".  join( ', ', @msg )     if @msg;
+    $ret .= " | ". join( ' ', @perfdata ) if @perfdata;
+
+    print $ret;
+
+    return $rc;
+}
+
+=head1 SERVICES
+
+Here is the list, descriptions and parameters of available services.
+
+=over
+
+=item B<process_age>
+
+Check age of a specific process.
+
+Perfdata returns the age in second of the process, NaN if not found.
+
+Critical and Warning thresholds accept an interval. Specific option
+--command is required.
+
+=cut
+
+sub check_process_age {
+
+    my $perfdata;
+    my $c_limit;
+    my $w_limit;
+    my %args         = %{ $_[0] };
+    my $me           = 'SYSTM_PROCESS';
+    my $etime = 0;
+    my $command = $args{'command'};
+    my $msg = "process $command";
+
+    # warning and critical are mandatory.
+    pod2usage(
+        -message => "FATAL: you must specify critical and warning thresholds.",
+        -exitval => 127
+    ) unless defined $args{'warning'} and defined $args{'critical'} ;
+
+    # warning and critical must be interval
+    pod2usage(
+        -message => "FATAL: critical and warning thresholds only accept interval.",
+        -exitval => 127
+    ) unless is_time( $args{'warning'} )
+        and  is_time( $args{'critical'} );
+
+    $c_limit = get_time( $args{'critical'} );
+    $w_limit = get_time( $args{'warning'} );
+
+    if ($^O eq "MSWin32") {
+        $etime = qx{pslist $command};
+        $etime =~ s/^.*\s([0-9]+:[0-9]+:[0-9]+)(\.[0-9]*)\s*$/$1/m;
+    }
+    else {
+        $etime = qx{ps --no-header -o etime -C $command};
+    }
+
+    $perfdata = "s;$w_limit;$c_limit";
+    return ok( $me, [ "$msg not found." ], [ "age=NaN$perfdata" ] ) if ($etime eq '');
+
+    $etime =~ /\s*((?<d>([0-9]*))-)?((?<h>([0-9]+)):)?(?<m>[0-9]+):(?<s>[0-9]+).*$/;
+    $etime = (((((($+{d}||0)+0)*24) + (($+{h}||0)+0)) * 60) + $+{m})*60 + $+{s};
+    $msg .= " running since " . to_interval($etime) . " seconds.";
+    $perfdata = "age=$etime$perfdata";
+
+    return critical( $me, [ "$msg" ], [ $perfdata ] ) if ( $etime > $c_limit );
+    return warning( $me, [ "$msg" ], [ $perfdata ] ) if ( $etime > $w_limit );
+    return ok( $me, [ "$msg" ], [ $perfdata ] );
+}
+
+=item B<process_exists>
+
+Check if a specific process exists.
+
+Perfdata returns the age in second of the process, NaN if not found.
+
+Critical and Warning thresholds are ignored. Specific option --command is
+required.
+
+=cut
+
+sub check_process_exists {
+
+    my %args         = %{ $_[0] };
+    my $me           = 'SYSTM_PROCESS';
+    my $etime        = 0;
+    my $command = $args{'command'};
+    my $msg = "process $command";
+
+    if ($^O eq "MSWin32") {
+        $etime = qx{pslist $command};
+        $etime =~ s/^.*\s([0-9]+:[0-9]+:[0-9]+)(\.[0-9]*)\s*$/$1/m;
+    }
+    else {
+        $etime = qx{ps --no-header -o pid -C $command};
+        $etime = qx{ps --no-header -o etime -C $command};
+    }
+
+    return critical( $me, [ "$msg not found." ], [ 'age=NaNs' ] ) if ($etime eq '');
+
+    $etime =~ /\s*((?<d>([0-9]*))-)?((?<h>([0-9]+)):)?(?<m>[0-9]+):(?<s>[0-9]+).*$/;
+    $etime = (((((($+{d}||0)+0)*24) + (($+{h}||0)+0)) * 60) + $+{m})*60 + $+{s};
+
+    return ok( $me, [ "$msg found, running since " . to_interval($etime) ."." ], [ "age=${etime}s" ] );
+}
+
+
+# End of SERVICE section in pod doc
+=pod
+
+=back
+
+=cut
+
+Getopt::Long::Configure('bundling');
+GetOptions(
+    \%args,
+        'service|s=s',
+        'warning|w=s',
+        'critical|c=s',
+        'path=s',
+        'status-file=s',
+        'command|C=s',
+        'list!',
+        'version|V!',
+        'help|?!',
+        'debug!'
+) or pod2usage( -exitval => 127 );
+
+list_services() if $args{'list'};
+version()       if $args{'version'};
+
+pod2usage( -verbose => 2 ) if $args{'help'};
+
+
+# One service must be given
+pod2usage(
+    -message => "FATAL: you must specify one service.\n"
+        . "    See -s or --service command line option.",
+    -exitval => 127
+) unless defined $args{'service'};
+
+
+# Check that the given service exists.
+pod2usage(
+    -message => "FATAL: service $args{'service'} does not exist.\n"
+        . "    Use --list to show the available services.",
+    -exitval => 127
+) unless exists $services{ $args{'service'} };
+
+
+# Both critical and warning must be given if optionnal
+pod2usage(
+    -message => 'FATAL: you must provide both warning and critical thresholds.',
+    -exitval => 127
+) if ( ( defined $args{'critical'} and !defined $args{'warning'} ) or ( !defined $args{'critical'} and defined $args{'warning'} ) );
+
+
+# Check "process_age" and "process_exists" specific arg --command
+pod2usage(
+    -message => 'FATAL: "command" is only allowed with "process_age" and "process_exists" services.',
+    -exitval => 127
+) if $args{'command'} and ( $args{'service'} ne 'process_age' and $args{'service'} ne 'process_exists' );
+
+pod2usage(
+    -message => 'FATAL: "command" is mandatory with "' . $args{'service'} . '" service.',
+    -exitval => 127
+) if !$args{'command'} and $args{'service'} eq 'process';
+
+
+
+
+exit $services{ $args{'service'} }{'sub'}->( \%args );
+
+__END__
+
+=head1 EXAMPLES
+
+=over
+
+=item C<check_osactivity --service process_age -w 5m -c 10m> --command pg_standby
+
+Execute service "process" to check if process pg_standby is present.
+
+=back
+
+=head1 LICENSING
+
+This program is open source, licensed under the PostgreSQL license.
+For license terms, see the LICENSE provided with the sources.
+
+=head1 AUTHORS
+
+Author: Open PostgreSQL Monitoring Development Group
+Copyright: (C) 2012-2014 Open PostgreSQL Development Group
+
+=cut
