@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(127);
+SELECT plan(131);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -543,6 +543,54 @@ SELECT set_eq(
     'Run cleanup_service on service 1.'
 );
 
+SELECT set_eq(
+    $$SELECT last_cleanup, extract(epoch FROM oldest_record) AS oldest_record,
+            extract(epoch FROM newest_record) AS newest_record
+        FROM wh_nagios.services
+        WHERE id=1$$,
+    $$VALUES (now(), 1357038000::double precision,
+        1357039500::double precision)$$,
+    'Table "wh_nagios.services" fields should reflect last cleanup activity.'
+);
+
+-- add some new datas
+SELECT lives_ok($$
+    INSERT INTO wh_nagios.hub (id, data) VALUES
+        (13, ARRAY[
+            'MIN','0',
+            'WARNING','209715200',
+            'VALUE','5284356',
+            'CRITICAL','524288000',
+            'LABEL','template0',
+            'HOSTNAME','server1',
+            'MAX','0',
+            'UOM','',
+            'SERVICESTATE','OK',
+            'TIMET','1357038300',
+            'SERVICEDESC','pgactivity Database size'
+        ])$$,
+    'Insert some more values for service 1, label "template0"'
+);
+
+SELECT set_eq(
+    $$WITH u AS (UPDATE wh_nagios.services
+            SET last_cleanup = oldest_record - INTERVAL '1 month'
+	    WHERE service = 'pgactivity Database size'
+            RETURNING last_cleanup
+        )
+        SELECT * FROM u$$,
+    $$VALUES (to_timestamp(1357038000) - INTERVAL '1 month')$$,
+    'Set a fake last_cleanup timestamp.'
+);
+
+-- dispatching new records
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.dispatch_record(10000,true)$$,
+    $$VALUES (1::bigint,0::bigint)$$,
+    'Dispatching 1 new records.'
+);
+
+-- verify that wh_nagios.dispatch_record() called also the cleanup() function
 SELECT set_eq(
     $$SELECT last_cleanup, extract(epoch FROM oldest_record) AS oldest_record,
             extract(epoch FROM newest_record) AS newest_record
