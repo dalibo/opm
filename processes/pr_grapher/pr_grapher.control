@@ -1,6 +1,6 @@
 # pr_grapher extension
 comment = 'Grapher process for OPM'
-default_version = '1.0'
+default_version = '1.1'
 module_pathname = '$libdir/pr_grapher'
 requires = 'opm_core'
 superuser = false
