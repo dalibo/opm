@@ -88,11 +88,11 @@ COMMENT ON COLUMN pr_grapher.series.label IS 'Name of the serie.' ;
 COMMENT ON COLUMN pr_grapher.series.config IS 'Specific flotr2 configuration of the serie, stored in json.' ;
 COMMENT ON COLUMN pr_grapher.series.id_graph IS 'Unique identifer of the related graph.' ;
 
--- jstime: Convert the input date to ms from the Epoch in UTC, suitable for javascript
+-- js_time: Convert the input date to ms (UTC), suitable for javascript
 CREATE OR REPLACE FUNCTION pr_grapher.js_time(timestamptz)
 RETURNS bigint
 AS $$
-SELECT ((extract(epoch FROM $1) + extract(timezone FROM $1))*1000)::bigint;
+SELECT (extract(epoch FROM $1)*1000)::bigint;
 $$
 LANGUAGE SQL
 IMMUTABLE;
@@ -100,7 +100,21 @@ IMMUTABLE;
 ALTER FUNCTION pr_grapher.js_time(timestamptz) OWNER TO opm;
 REVOKE ALL ON FUNCTION pr_grapher.js_time(timestamptz) FROM public;
 GRANT EXECUTE ON FUNCTION pr_grapher.js_time(timestamptz) TO opm_roles;
-COMMENT ON FUNCTION pr_grapher.js_time(timestamptz) IS 'Return a timestamp with time zone formatted for javascript use.' ;
+COMMENT ON FUNCTION pr_grapher.js_time(timestamptz) IS 'Return a timestamp without time zone formatted for javascript use.' ;
+
+-- js_timetz: Convert the input date to ms (with timezone), suitable for javascript
+CREATE OR REPLACE FUNCTION pr_grapher.js_timetz(timestamptz)
+RETURNS bigint
+AS $$
+SELECT ((extract(epoch FROM $1) + extract(timezone FROM $1))*1000)::bigint;
+$$
+LANGUAGE SQL
+IMMUTABLE;
+
+ALTER FUNCTION pr_grapher.js_timetz(timestamptz) OWNER TO opm;
+REVOKE ALL ON FUNCTION pr_grapher.js_timetz(timestamptz) FROM public;
+GRANT EXECUTE ON FUNCTION pr_grapher.js_timetz(timestamptz) TO opm_roles;
+COMMENT ON FUNCTION pr_grapher.js_timetz(timestamptz) IS 'Return a timestamp with time zone formatted for javascript use.' ;
 
 -- get_categories: Get the tree of categories
 CREATE OR REPLACE FUNCTION pr_grapher.get_categories()

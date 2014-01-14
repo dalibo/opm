@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(52);
+SELECT plan(56);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -21,6 +21,13 @@ SELECT lives_ok(
     'Create extension "pr_grapher"');
 
 SELECT has_extension('pr_grapher', 'Extension "pr_grapher" should exist.');
+
+SELECT results_eq(
+    $$SELECT extversion FROM pg_extension WHERE extname = 'pr_grapher'$$,
+    $$ VALUES('1.1')$$,
+    'pr_grapher should be in version 1.1'
+);
+
 SELECT extension_schema_is('pr_grapher', 'pr_grapher',
     'Schema of extension "pr_grapher" should be "pr_grapher".'
 );
@@ -50,6 +57,11 @@ SELECT has_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list
 SELECT diag(E'\n==== Test functions ====\n');
 
 SELECT set_eq($$SELECT * from pr_grapher.js_time('2013-01-01 12:34:56 CEST')$$,
+    $$VALUES (1357036496000)$$,
+    'Test js_time function.'
+);
+
+SELECT set_eq($$SELECT * from pr_grapher.js_timetz('2013-01-01 12:34:56 CEST')$$,
     $$VALUES (1357040096000)$$,
     'Test js_time function.'
 );
