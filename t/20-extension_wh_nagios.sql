@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(131);
+SELECT plan(135);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -70,6 +70,7 @@ SELECT has_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function "w
 SELECT has_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" exists.');
 SELECT has_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" exists.');
 SELECT has_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" exists.');
+SELECT has_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" exists.');
 SELECT has_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" exists.');
 SELECT has_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" exists.');
 SELECT has_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" exists.');
@@ -763,6 +764,7 @@ SELECT hasnt_function('wh_nagios', 'revoke_service', '{bigint,name}', 'Function 
 SELECT hasnt_function('wh_nagios', 'grant_dispatcher', '{name}', 'Function "wh_nagios.grant_dispatcher" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_nagios.revoke_dispatcher" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
