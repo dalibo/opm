@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(56);
+SELECT plan(58);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -50,6 +50,7 @@ SELECT has_table('pr_grapher', 'series',
 );
 
 SELECT has_function('pr_grapher', 'js_time', '{timestamp with time zone}', 'Function "pr_grapher.js_time" exists.');
+SELECT has_function('pr_grapher', 'js_timetz', '{timestamp with time zone}', 'Function "pr_grapher.js_timetz" exists.');
 SELECT has_function('pr_grapher', 'get_categories', '{}', 'Function "pr_grapher.get_categories" exists.');
 SELECT has_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list_graph" exists.');
 
@@ -199,6 +200,7 @@ SELECT hasnt_table('pr_grapher', 'series',
 );
 
 SELECT hasnt_function('pr_grapher', 'js_time', '{timestamp with time zone}', 'Function "pr_grapher.js_time" does not exists.');
+SELECT hasnt_function('pr_grapher', 'js_timetz', '{timestamp with time zone}', 'Function "pr_grapher.js_timetz" does not exists.');
 SELECT hasnt_function('pr_grapher', 'get_categories', '{}', 'Function "pr_grapher.get_categories" does not exists.');
 SELECT hasnt_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list_graph" does not exists.');
 
