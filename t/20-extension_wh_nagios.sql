@@ -768,8 +768,8 @@ SELECT hasnt_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh
 SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
-SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{bigint, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (label) should not exists anymore.');
-SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{text, text, text, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.dispatch_record" (hostname, service, label) should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{bigint, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.get_sampled_label_data" (id_label, timet_begin, timet_end, sample_sec) should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'get_sampled_label_data', '{text, text, text, timestamp with time zone, timestamp with time zone, integer}', 'Function "wh_nagios.get_sampled_label_data" (hostname, service, label, timet_begin, timet_end, sample_sec) should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'create_partition_on_insert_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'drop_partition_on_delete_label', '{}', 'Function "wh_nagios.create_partition_on_insert_label" should not exists anymore.');
 
