@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(139);
+SELECT plan(149);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -72,6 +72,7 @@ SELECT has_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_na
 SELECT has_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" exists.');
 SELECT has_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" exists.');
 SELECT has_function('wh_nagios', 'delete_services', '{bigint[]}', 'Function "wh_nagios.delete_services" exists.');
+SELECT has_function('wh_nagios', 'update_services_validity', '{interval, bigint[]}', 'Function "wh_nagios.update_services_validity" exists.');
 SELECT has_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" exists.');
 SELECT has_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" exists.');
 SELECT has_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" exists.');
@@ -628,6 +629,48 @@ SELECT set_eq(
     'Records of "wh_nagios.counters_detail_1" should be aggregated.'
 );
 
+SELECT diag(E'\n==== Updating a service validity ====\n');
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.update_services_validity('2 days',999,null,1024)$$,
+    $$VALUES (true)$$,
+    'Updating unexisting services should return true.'
+);
+
+SELECT set_eq(
+    $$SELECT COUNT(*) FROM wh_nagios.services
+    WHERE servalid = '2 days'$$,
+    $$VALUES (0)$$,
+    'No service should be updated.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.update_services_validity('2 days', 1)$$,
+    $$VALUES (true)$$,
+    'Update one service.'
+);
+
+SELECT set_eq(
+    $$SELECT id, servalid FROM wh_nagios.services$$,
+    $$VALUES (1::bigint, '2 days'::interval),
+    (2, null)$$,
+    'Only service 1 should be updated.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.update_services_validity('5 days', 1, 2)$$,
+    $$VALUES (true)$$,
+    'Update two services.'
+);
+
+SELECT set_eq(
+    $$SELECT id, servalid FROM wh_nagios.services$$,
+    $$VALUES (1::bigint,'5 days'::interval),
+    (2, '5 days')$$,
+    'Service 1 and 2  should be updated.'
+);
+
+
 SELECT diag(E'\n==== Dropping a service ====\n');
 
 SELECT lives_ok(
@@ -767,6 +810,7 @@ SELECT hasnt_function('wh_nagios', 'revoke_dispatcher', '{name}', 'Function "wh_
 SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_nagios.cleanup_service" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'delete_services', '{bigint[]}', 'Function "wh_nagios.delete_services" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'update_services_validity', '{interval, bigint[]}', 'Function "wh_nagios.update_services_validity" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
