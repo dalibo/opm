@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(149);
+SELECT plan(159);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -73,6 +73,7 @@ SELECT has_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_na
 SELECT has_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" exists.');
 SELECT has_function('wh_nagios', 'delete_services', '{bigint[]}', 'Function "wh_nagios.delete_services" exists.');
 SELECT has_function('wh_nagios', 'update_services_validity', '{interval, bigint[]}', 'Function "wh_nagios.update_services_validity" exists.');
+SELECT has_function('wh_nagios', 'delete_labels', '{bigint[]}', 'Function "wh_nagios.delete_labels" exists.');
 SELECT has_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" exists.');
 SELECT has_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" exists.');
 SELECT has_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" exists.');
@@ -780,6 +781,44 @@ WHERE dep.deptype= 'e'
     );
 
 
+SELECT diag(E'\n==== Dropping a label ====\n');
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.delete_labels(-1)$$,
+    $$VALUES (true)$$,
+    'Deleting an unexisting label should return true'
+);
+
+SELECT set_eq(
+    $$SELECT id FROM wh_nagios.labels$$,
+    $$VALUES (1::bigint)$$,
+    'All labels should still be there.'
+);
+
+SELECT set_eq(
+    $$SELECT relname FROM pg_class WHERE relkind = 'r' AND relname ~ '^counters_detail'$$,
+    $$VALUES ('counters_detail_1')$$,
+    'All partitions related to labels should still be there.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM wh_nagios.delete_labels(1)$$,
+    $$VALUES (true)$$,
+    'Delete a label should return true'
+);
+
+SELECT set_eq(
+    $$SELECT count(*) FROM wh_nagios.labels$$,
+    $$VALUES (0)$$,
+    'Label 1 should be deleted.'
+);
+SELECT set_eq(
+    $$SELECT count(*) FROM pg_class WHERE relkind = 'r' AND relname ~ '^counters_detail'$$,
+    $$VALUES (0)$$,
+    'Partition related to label 1 should be dropped.'
+);
+
+
 SELECT diag(E'\n==== Drop wh_nagios ====\n');
 
 SELECT lives_ok(
@@ -811,6 +850,7 @@ SELECT hasnt_function('wh_nagios', 'cleanup_service', '{bigint}', 'Function "wh_
 SELECT hasnt_function('wh_nagios', 'purge_services', '{bigint[]}', 'Function "wh_nagios.purge_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'delete_services', '{bigint[]}', 'Function "wh_nagios.delete_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'update_services_validity', '{interval, bigint[]}', 'Function "wh_nagios.update_services_validity" should not exists anymore.');
+SELECT hasnt_function('wh_nagios', 'delete_labels', '{bigint[]}', 'Function "wh_nagios.delete_labels" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_label', '{bigint}', 'Function "wh_nagios.list_label" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'list_services', '{}', 'Function "wh_nagios.list_services" should not exists anymore.');
 SELECT hasnt_function('wh_nagios', 'dispatch_record', '{integer,boolean}', 'Function "wh_nagios.dispatch_record" should not exists anymore.');
