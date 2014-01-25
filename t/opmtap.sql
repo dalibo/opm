@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION extension_owner_is( NAME, NAME, TEXT )
 RETURNS TEXT AS $$
     SELECT ok( (_extension_properties($1)).rolname = $2, $3);
 $$ LANGUAGE SQL;
- 
+
 -- extension_ower_is( extension, owner)
 CREATE OR REPLACE FUNCTION extension_owner_is( NAME, NAME )
 RETURNS TEXT AS $$

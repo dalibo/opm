@@ -87,7 +87,7 @@ SELECT has_function('wh_nagios', 'drop_partition_on_delete_label', '{}', 'Functi
 SELECT diag(E'\n==== Test wh_nagios functions ====\n');
 
 SELECT diag(
-    'Create account: ' || public.create_account('acc1') || 
+    'Create account: ' || public.create_account('acc1') ||
     E'\nCreate user: ' || public.create_user('u1', 'pass', '{acc1}') ||
     E'\n'
 );
@@ -138,7 +138,7 @@ SELECT lives_ok($$
             ['BAD RECORD'], ['BAD RECORD'],
             ['BAD RECORD'], ['BAD RECORD'],
             ['BAD RECORD'], ['BAD RECORD']
-        ]), 
+        ]),
         (2, ARRAY['BAD RECORD', 'ANOTHER ONE']), -- less than 10 values
         (3, ARRAY[ -- number of parameter not even
             'BAD RECORD', 'BAD RECORD',
@@ -147,7 +147,7 @@ SELECT lives_ok($$
             'BAD RECORD', 'BAD RECORD',
             'BAD RECORD', 'BAD RECORD',
             'BAD RECORD'
-        ]), 
+        ]),
         (4, ARRAY[ -- missing hostname
             'SERVICEDESC','pgactivity Database size',
             'LABEL','template0',

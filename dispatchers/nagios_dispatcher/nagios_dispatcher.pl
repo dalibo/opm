@@ -483,7 +483,7 @@ sub parse_config {
         $ref_password,   $ref_syslog,            $ref_debug,
         $ref_hostfilter, $ref_servfilter,        $ref_lablfilter
     ) = @_;
-    
+
     my $confH;
     open $confH, $config or die "Can't open <$config>:$!\n";
 
@@ -492,7 +492,7 @@ sub parse_config {
 
         #It's a simple ini file
         $line =~ s/\s*#.*//;    # Remove comments, and spaces before them
-        
+
         next if ( $line eq '' );    # Ignore empty lines
 
         $line =~ s/=\s+/=/;         # Remove spaces after the first =
