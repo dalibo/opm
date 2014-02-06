@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(100);
+SELECT plan(104);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -458,6 +458,32 @@ SELECT set_eq(
 SELECT lives_ok(
     format('REVOKE TEMPORARY ON DATABASE %I FROM u1', current_database()),
     'Revoke TEMPORARY on current db from u1'
+);
+
+SELECT diag(E'\n==== Update user ====\n');
+
+SELECT set_eq(
+    $$SELECT passwd FROM pg_catalog.pg_shadow WHERE usename = 'u1'$$,
+    $$SELECT 'md5' || md5('pass1u1')$$,
+    'Password for user "u1" should be "pass1".'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM public.update_user('donotexists','somepassword')$$,
+    $$VALUES (false)$$,
+    'Changing password of an unexisting user should return false.'
+);
+
+SELECT set_eq(
+    $$SELECT * FROM public.update_user('u1','newpassword')$$,
+    $$VALUES (true)$$,
+    'Changing password of user "u1" should return true.'
+);
+
+SELECT set_eq(
+    $$SELECT passwd FROM pg_catalog.pg_shadow WHERE usename = 'u1'$$,
+    $$SELECT 'md5' || md5('newpasswordu1')$$,
+    'Password for user "u1" should be "newpassword".'
 );
 
 SELECT diag(E'\n==== Drop admin and user ====\n');
