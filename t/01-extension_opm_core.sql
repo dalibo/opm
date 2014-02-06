@@ -251,8 +251,8 @@ SELECT lives_ok(
     'Revoke ALL on current db from opm'
 );
 SELECT lives_ok(
-    'REASSIGN OWNED BY opm, opm_roles, opm_admins TO postgres',
-    'Reasigned all objects of opm, opm_roles, opm_admins to postgres'
+    'REASSIGN OWNED BY opm, opm_roles, opm_admins TO ' || current_user,
+    'Reasigned all objects of opm, opm_roles, opm_admins to ' || current_user
 );
 
 SELECT lives_ok($$DROP ROLE opm$$, 'Drop role opm');
