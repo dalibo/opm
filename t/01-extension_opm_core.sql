@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(145);
+SELECT plan(149);
 
 SELECT diag(E'\n==== Install opm-core ====\n');
 
@@ -51,6 +51,7 @@ SELECT has_function('public', 'list_servers', '{}', 'Function "list_servers" exi
 SELECT has_function('public', 'grant_account', '{name,name}', 'Function "grant_account" exists.');
 SELECT has_function('public', 'revoke_account', '{name,name}', 'Function "revoke_account" exists.');
 SELECT has_function('public', 'update_user', '{name, text}', 'Function "update_user" exists.');
+SELECT has_function('public', 'update_current_user', '{text}', 'Function "update_current_user" exists.');
 
 -- Does "opm_admins" is in table roles ?
 SELECT set_eq(
@@ -291,6 +292,7 @@ SELECT hasnt_function('public', 'list_servers', '{}', 'Function "list_servers" d
 SELECT hasnt_function('public', 'grant_account', '{name,name}', 'Function "grant_account" does not exists anymore.');
 SELECT hasnt_function('public', 'revoke_account', '{name,name}', 'Function "revoke_account" does not exists anymore.');
 SELECT hasnt_function('public', 'update_user', '{name, text}', 'Function "update_user" should not exists anymore.');
+SELECT hasnt_function('public', 'update_current_user', '{text}', 'Function "update_current_user" should not exists anymore.');
 
 -- Finish the tests and clean up.
 SELECT * FROM finish();
