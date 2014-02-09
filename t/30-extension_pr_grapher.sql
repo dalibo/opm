@@ -6,7 +6,7 @@
 \unset ECHO
 \i t/setup.sql
 
-SELECT plan(58);
+SELECT plan(68);
 
 SELECT diag(E'\n==== Setup environnement ====\n');
 
@@ -53,6 +53,7 @@ SELECT has_function('pr_grapher', 'js_time', '{timestamp with time zone}', 'Func
 SELECT has_function('pr_grapher', 'js_timetz', '{timestamp with time zone}', 'Function "pr_grapher.js_timetz" exists.');
 SELECT has_function('pr_grapher', 'get_categories', '{}', 'Function "pr_grapher.get_categories" exists.');
 SELECT has_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list_graph" exists.');
+SELECT has_function('pr_grapher', 'delete_graph', '{bigint}', 'Function "pr_grapher.delete_graph" exists.');
 
 
 SELECT diag(E'\n==== Test functions ====\n');
@@ -65,6 +66,26 @@ SELECT set_eq($$SELECT * from pr_grapher.js_time('2013-01-01 12:34:56 CEST')$$,
 SELECT set_eq($$SELECT * from pr_grapher.js_timetz('2013-01-01 12:34:56 CEST')$$,
     $$VALUES (1357040096000)$$,
     'Test js_time function.'
+);
+
+SELECT set_eq($$SELECT * from pr_grapher.delete_graph(1)$$,
+    $$VALUES (false)$$,
+    'Deleting an unexisting graph should return false.'
+);
+
+SELECT lives_ok($$INSERT INTO pr_grapher.graphs (graph,description,config) VALUES
+    ('Test graph 1','A simple graph test','{}'::json)$$,
+    'Insert an empty graph.'
+);
+
+SELECT set_eq($$SELECT * from pr_grapher.delete_graph(1)$$,
+    $$VALUES (true)$$,
+    'Deleting a graph should return true.'
+);
+
+SELECT set_eq($$SELECT COUNT(*) from pr_grapher.graphs$$,
+    $$VALUES (0)$$,
+    'Graph should be deleted.'
 );
 
 SELECT diag(E'\n==== Test ACl ====\n');
@@ -80,7 +101,7 @@ SELECT lives_ok($$INSERT INTO pr_grapher.graphs (graph,description,config) VALUE
 );
 
 SELECT set_eq($$SELECT id,graph,description,y1_query,y2_query,config::text  FROM pr_grapher.list_graph()$$,
-    $$VALUES (1::bigint,'Test graph 1','A simple graph test',NULL,NULL,'{}')$$,
+    $$VALUES (2::bigint,'Test graph 1','A simple graph test',NULL,NULL,'{}')$$,
     'Should see one graph.'
 );
 -- As PG 9.2 can't compare two json, we need to test the return args
@@ -91,6 +112,13 @@ SELECT set_eq($$SELECT proallargtypes,proargmodes,proargnames FROM pg_proc p
     'Return arguments of function list_graph of schema "pr_grapher" should be correct.'
 );
 
+SELECT function_privs_are('pr_grapher','delete_graph','{bigint}','opm_roles', '{}',
+    'Non opm admins should not be be able to execute delete_graph(bigint)'
+);
+
+SELECT function_privs_are('pr_grapher','delete_graph','{bigint}','opm_admins', '{EXECUTE}',
+    'Opm admins should be be able to execute delete_graph(bigint)'
+);
 
 SELECT diag(E'\n==== Check owner ====\n');
 
@@ -203,6 +231,7 @@ SELECT hasnt_function('pr_grapher', 'js_time', '{timestamp with time zone}', 'Fu
 SELECT hasnt_function('pr_grapher', 'js_timetz', '{timestamp with time zone}', 'Function "pr_grapher.js_timetz" does not exists.');
 SELECT hasnt_function('pr_grapher', 'get_categories', '{}', 'Function "pr_grapher.get_categories" does not exists.');
 SELECT hasnt_function('pr_grapher', 'list_graph', '{}', 'Function "pr_grapher.list_graph" does not exists.');
+SELECT hasnt_function('pr_grapher', 'delete_graph', '{bigint}', 'Function "pr_grapher.delete_graph" does not exists.');
 
 -- Finish the tests and clean up.
 SELECT * FROM finish();

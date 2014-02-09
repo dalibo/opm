@@ -176,3 +176,55 @@ GRANT EXECUTE ON FUNCTION pr_grapher.list_graph() TO opm_roles;
 COMMENT ON FUNCTION pr_grapher.list_graph()
     IS 'List all graphs';
 
+/* pr_grapher.delete_graph(bigint)
+Delete a specific graph.
+@id : unique identifier of graph to delete.
+@return : true if everything went well, false otherwise or if graph doesn't exists
+
+*/
+CREATE OR REPLACE FUNCTION pr_grapher.delete_graph(p_id bigint)
+RETURNS boolean
+AS $$
+DECLARE
+        v_state      text ;
+        v_msg        text ;
+        v_detail     text ;
+        v_hint       text ;
+        v_context    text ;
+        v_exists     boolean ;
+BEGIN
+    SELECT count(*) = 1 INTO v_exists FROM pr_grapher.graphs WHERE id = p_id ;
+    IF NOT v_exists THEN
+        RETURN false ;
+    END IF ;
+    DELETE FROM pr_grapher.graphs WHERE id = p_id ;
+    RETURN true;
+EXCEPTION
+    WHEN OTHERS THEN
+        GET STACKED DIAGNOSTICS
+            v_state   = RETURNED_SQLSTATE,
+            v_msg     = MESSAGE_TEXT,
+            v_detail  = PG_EXCEPTION_DETAIL,
+            v_hint    = PG_EXCEPTION_HINT,
+            v_context = PG_EXCEPTION_CONTEXT ;
+        raise notice E'Unhandled error:
+            state  : %
+            message: %
+            detail : %
+            hint   : %
+            context: %', v_state, v_msg, v_detail, v_hint, v_context ;
+        RETURN false ;
+END ;
+$$
+LANGUAGE plpgsql
+VOLATILE
+LEAKPROOF
+SECURITY DEFINER;
+
+ALTER FUNCTION pr_grapher.delete_graph(bigint) OWNER TO opm ;
+REVOKE ALL ON FUNCTION pr_grapher.delete_graph(bigint) FROM public ;
+GRANT EXECUTE ON FUNCTION pr_grapher.delete_graph(bigint) TO opm_admins ;
+
+COMMENT ON FUNCTION pr_grapher.delete_graph(bigint)
+    IS 'Delete a graph' ;
+

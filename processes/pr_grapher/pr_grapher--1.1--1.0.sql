@@ -23,3 +23,4 @@ GRANT EXECUTE ON FUNCTION pr_grapher.js_time(timestamptz) TO opm_roles;
 COMMENT ON FUNCTION pr_grapher.js_time(timestamptz) IS 'Return a timestamp without time zone formatted for javascript use.' ;
 
 DROP FUNCTION pr_grapher.js_timetz(timestamptz);
+DROP FUNCTION pr_grapher.delete_graph(bigint) ;
