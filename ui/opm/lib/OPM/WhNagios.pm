@@ -101,10 +101,10 @@ sub services {
         }
 
         # Generate needed class for template, service state
-        my $class = 'inverse';
+        my $class = 'default';
         $class = 'success'   if ( lc( $row->{'state'} ) eq 'ok' );
         $class = 'warning'   if ( lc( $row->{'state'} ) eq 'warning' );
-        $class = 'important' if ( lc( $row->{'state'} ) eq 'critical' );
+        $class = 'danger' if ( lc( $row->{'state'} ) eq 'critical' );
 
         # Generate needed class for template, service retention state
         my $need_purge = 'info';
@@ -183,7 +183,7 @@ sub service {
     }
 
     # Generate needed class for template, service state
-    my $badge = "inverse";
+    my $badge = "default";
     if ( $servicerow->{state} eq "OK" ) {
         $badge = "success";
     }
@@ -191,7 +191,7 @@ sub service {
         $badge = "warning";
     }
     elsif ( $servicerow->{state} eq "CRITICAL" ) {
-        $badge = "important";
+        $badge = "danger";
     }
     $servicerow->{badge} = $badge;
 

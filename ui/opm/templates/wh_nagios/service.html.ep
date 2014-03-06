@@ -11,9 +11,9 @@
 % my %service = %{stash 'service'};
 % my $hostname = stash 'hostname';
 
+<h2><%=l 'Service' %> <u><%= $service->{'service'} %></u> <%=l 'on server' %> <u><%= $hostname %></u>:</h2>
 <div class="box" id="labels_list">
-  <h1 class="page-header"><%=l 'Service' %> <u><%= $service->{'service'} %></u> <%=l 'on server' %> <u><%= $hostname %></u>:</h1>
-  <%= form_for wh_nagios_service_post => (method => 'POST') => begin %>
+  <%= form_for wh_nagios_service_post => (role => 'form', method => 'POST') => begin %>
     <table class="table table-condensed table-striped table-hover span6">
       <thead>
         <tr>
@@ -56,16 +56,16 @@
         <tr>
           <td colspan="2">
             <%= link_to wh_nagios_cleanup => { id => $service->{id} } => begin %>
-              <label class="btn btn-inverse"><span><i class="icon-tasks icon-white"></i></span> <%=l 'Cleanup now' %></label>
+              <label class="btn btn-inverse"><span><i class="icon-tasks"></i></span> <%=l 'Cleanup now' %></label>
             <% end %>
             <%= link_to wh_nagios_purge => { id => $service->{id} } => begin %>
-              <label class="btn btn-inverse"><span><i class="icon-trash icon-white"></i></span> <%=l 'Purge now' %></label>
+              <label class="btn btn-inverse"><span><i class="icon-trash"></i></span> <%=l 'Purge now' %></label>
             <% end %>
             <br />
             <%= link_to wh_nagios_delete_service => { id => $service->{id} } => ( onclick => "return confirmDelService('$service->{service}', '$service->{service}');" ) => begin %>
-              <label class="btn btn-danger"><span><i class="icon-remove icon-white"></i></span> <%=l 'Delete service' %></label>
+              <label class="btn btn-danger"><span><i class="icon-remove"></i></span> <%=l 'Delete service' %></label>
             <% end %>
-            <label class="btn btn-info" for="servalid_<%= $service->{'id'} %>" id="lbl_servalid"><span><i class="icon-edit icon-white"></i></span> <%=l 'Update retention' %></label>
+            <label class="btn btn-info" for="servalid_<%= $service->{'id'} %>" id="lbl_servalid"><span><i class="icon-edit"></i></span> <%=l 'Update retention' %></label>
             <%= submit_button l('Update retention'), id => 'servalid_' . $service->{'id'}, name => 'servalid', class => 'hidden btn btn-info' %>&nbsp;
           </td>
         </tr>
@@ -107,9 +107,9 @@
                   <td><%= $s->{max_rec} %></td>
                   <td class="label-<%= $s->{label_purge_class} %>"><%= $s->{stored_interval} %></td>
                   <td>
-                    % #<span class="badge badge-important"><i class="icon-remove icon-white"></i></span></td>
+                    % #<span class="badge badge-important"><i class="icon-remove"></i></span></td>
                     <%= link_to wh_nagios_delete_label => { id_s => $service->{id}, id_l => $s->{id_label} } => ( onclick => "return confirmDelLabel('$hostname', '$service->{service}', '$s->{label}');" ) => begin %>
-                      <label class="btn btn-danger" title="<%=l 'Delete label' %>"><span><i class="icon-remove icon-white"></i></span></label>
+                      <label class="btn btn-danger" title="<%=l 'Delete label' %>"><span><i class="icon-remove"></i></span></label>
                     <% end %>
                   </td>
                 </tr>
@@ -121,7 +121,7 @@
                   <a href="#" class="checkall"><%=l 'All' %></a>
                   <a href="#" class="uncheckall"><%=l 'None' %></a>
                   <a href="#" class="invertcheck"><%=l 'Invert Sel.' %></a>
-                  <label class="btn btn-danger" for="delete_<%= $service->{'id'} %>"><span><i class="icon-remove icon-white"></i></span> <%=l 'Delete' %></label>
+                  <label class="btn btn-danger" for="delete_<%= $service->{'id'} %>"><span><i class="icon-remove"></i></span> <%=l 'Delete' %></label>
                   <%= submit_button l('Delete'), id => 'delete_' . $service->{'id'}, name => 'delete', class => 'hidden btn btn-inverse', onclick => "return confirmDelLabel('$hostname', '$service->{service}', '');" %>&nbsp;
                 </td>
             </tfoot>
