@@ -563,7 +563,7 @@ pod2usage(
 pod2usage(
     -message => 'FATAL: "command" is mandatory with "' . $args{'service'} . '" service.',
     -exitval => 127
-) if !$args{'command'} and $args{'service'} eq 'process';
+) if !$args{'command'} and ( $args{'service'} eq 'process_age' or $args{'service'} eq 'process_exists' );
 
 
 
